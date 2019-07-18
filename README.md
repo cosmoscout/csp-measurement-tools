@@ -1,6 +1,6 @@
 # Measurement tools for CosmoScout VR
 
-A CosmoScout VR plugin with several tools for terrain measurements. This plugin is built as part of CosmoScout's build process. See the [main repository](https://github.com/cosmoscout/cosmoscout-vr) for instructions.
+A CosmoScout VR plugin with several tools for terrain measurements. For example, it supports the measurement of distances, height profiles, volumes or areas. The plugin is built as part of CosmoScout's build process. See the [main repository](https://github.com/cosmoscout/cosmoscout-vr) for instructions.
 
 * **Location Flag:** Displays the geographic coordinates and the address of the selected point as accurately as possible.
 * **Landing Ellipse:** Puts an ellipse on the body, which is controllable by the center and two points. The center also has a Location Flag.
