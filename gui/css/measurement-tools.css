@@ -1,0 +1,69 @@
+.flag {
+    position: relative;
+    width: 500px;
+    height: 400px;
+    top: 0px;
+    transition: opacity 0.3s linear, top 0.3s ease;
+}
+
+.flag,
+.text-input {
+    font-size: 150% !important;
+}
+
+.flag.minimized {
+    opacity: 0;
+    top: 500px
+}
+
+.flag .pole {
+    position: absolute;
+    left: 5px;
+    height: 400px;
+    width: 5px;
+    background-color: #ccf;
+}
+
+.flag .banner {
+    position: absolute;
+    left: 15px;
+    right: 0;
+    height: 150px;
+    background-color: rgba(20, 20, 20, 0.5);
+    border-top: 5px solid #ccf;
+}
+
+.linechart {
+    position: absolute;
+    transition: opacity 0.3s linear, top 0.3s ease;
+    opacity: 1;
+    top: 0px;
+    font-size: 150%;
+    background-color: rgba(20, 20, 20, 0.5);
+    border: 5px solid #ccf;
+}
+
+.linechart.minimized {
+    opacity: 0;
+    top: 350px
+}
+
+/* Charts ------------------------------------------------------------------- */
+svg:not(:root) {
+    overflow: visible;
+}
+
+svg .axis path,
+svg .axis line {
+    fill: none;
+    stroke: #ddf;
+    shape-rendering: crispEdges;
+}
+
+svg text {
+    fill: #ddf;
+}
+
+.tick line {
+    opacity: 0.2;
+}

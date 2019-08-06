@@ -1,0 +1,210 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="utf-8">
+
+    <link type="text/css" rel="stylesheet" href="third-party/css/materialize.min.css" />
+    <link type="text/css" rel="stylesheet" href="css/gui.css">
+    <link type="text/css" rel="stylesheet" href="css/tools.css">
+    <link type="text/css" rel="stylesheet" href="css/measurement-tools.css">
+
+    <script type="text/javascript" src="third-party/js/jquery-2.2.3.min.js"></script>
+    <script type="text/javascript" src="third-party/js/materialize.min.js"></script>
+
+    <script type="text/javascript" src="../locations/mars.js"></script>
+    <script type="text/javascript" src="../locations/moon.js"></script>
+
+    <script type="text/javascript">
+
+        // API calls -----------------------------------------------------------
+        function set_text(text) {}
+        function set_position(long, lat, height) {}
+        function set_active_planet(center, frame) {}
+        function set_minimized(minimize) {}
+
+        function setHeader(xhr) {
+            xhr.setRequestHeader('Access-Control-Allow-Origin', '*');
+        }
+
+        // private methods used in this file only ------------------------------
+        function format_height(height) {
+            height = Math.round(height);
+            if (height >= 1000000) {
+                return '(' + (height * 0.001).toFixed(0) + ' km)';
+            } else if (height >= 100000) {
+                return '(' + (height * 0.001).toFixed(1) + ' km)';
+            } else if (height >= 10000) {
+                return '(' + (height * 0.001).toFixed(2) + ' km)';
+            } else {
+                return '(' + (height * 1.000) + ' m)';
+            }
+        }
+
+        function format_latitude(lat) {
+            if (lat < 0)
+                return (-lat).toFixed(4) + "° S ";
+            else
+                return (lat).toFixed(4) + "° N ";
+        }
+
+        function format_longitude(long) {
+            if (long < 0)
+                return (-long).toFixed(4) + "° W ";
+            else
+                return (long).toFixed(4) + "° E ";
+        }
+
+        function to_cartesian(longitude, latitude) {
+            var lon = longitude * Math.PI / 180.0;
+            var lat = latitude * Math.PI / 180.0;
+
+            var x = Math.cos(lat) * Math.sin(lon);
+            var y = Math.sin(lat);
+            var z = Math.cos(lat) * Math.cos(lon);
+
+            return [x, y, z];
+        }
+
+        function dist_squared(a, b) {
+            return Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2) + Math.pow(a[2] - b[2], 2);
+        }
+
+        function geo_code_reverse(longitude, latitude, callback) {
+            var planet = activePlanetCenter.toLowerCase();
+
+            if (planet === "earth")
+            {
+                $.ajax({
+                    url: "https://nominatim.openstreetmap.org/reverse?format=json&lat=" + latitude + "&lon=" + longitude,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(data) {
+                        var location = "Unknown Location";
+                        var a = data.address;
+
+                        if (a) {
+                            if (a.country) {
+                                location = a.country;
+                            }
+
+                            if (a.city) {
+                                location = a.city + ", " + location;
+                            } else if (a.town) {
+                                location = a.town + ", " + location;
+                            }
+
+                            var street = a.road;
+
+                            if (!street) {
+                                street = a.pedestrian;
+                            }
+
+                            if (street) {
+                                if (a.house_number) {
+                                    location = street + " " + a.house_number + ", " + location;
+                                } else {
+                                    location = street + ", " + location;
+                                }
+                            }
+                        }
+
+                        callback(location);
+                    },
+                    error: function() {
+                        console.log("Error requesting Data from openstreetmap")
+                    },
+                    beforeSend: setHeader
+                });
+            } else {
+               if (locations[planet]) {
+                    var bestScore;
+                    var location = "Unknown Location";
+
+                    var queryPos = to_cartesian(longitude, latitude);
+
+                    var all = Object.keys(locations[planet]);
+                    for (var i = all.length - 1; i >= 0; i--) {
+                        var loc = locations[planet][all[i]];
+                        var pos = to_cartesian(loc[2], loc[1]);
+                        var dist = dist_squared(pos, queryPos);
+
+                        if (!bestScore || dist < bestScore)
+                        {
+                            bestScore = dist;
+                            location = all[i];
+                        }
+
+                    }
+
+                    callback(location);
+               }
+            }
+        }
+
+        // overridden API calls ------------------------------------------------
+        var requestTimer;                //timer identifier
+        function set_position(long, lat, height) {
+            $("#placeholder-1").text(format_longitude(long) + format_latitude(lat) + format_height(height));
+
+            clearTimeout(requestTimer);
+            requestTimer = setTimeout(function(){
+                geo_code_reverse(long, lat, function(location){
+                    $("#placeholder-2").text(location);
+                });
+            }, 500);
+        }
+
+        function set_text(text) {
+            $(".text-input").val(text);
+        }
+
+        var activePlanetCenter = "";
+        var activePlanetFrame = "";
+        function set_active_planet(center, frame) {
+            activePlanetCenter = center;
+            activePlanetFrame = frame;
+        }
+
+        function set_minimized(minimize) {
+            if (minimize) $('.flag').addClass('minimized');
+            else $('.flag').removeClass('minimized');
+        }
+
+        // entry point ---------------------------------------------------------
+        $(document).ready(function () {
+          $('.flag .text-input').on('input',function(e){
+            window.call_native('on_set_text', $(this).val());
+          });
+        });
+
+    </script>
+
+</head>
+<body style="overflow: hidden">
+    <div class="flag">
+        <div class="pole"></div>
+        <div class="banner">
+            <div class="row">
+                <div class="col s8">
+                    <input type='text' class='text-input' value=''/>
+                </div>
+                <div class="col s2">
+                    <a class="waves-effect waves-light btn glass tooltipped" data-position='bottom' data-delay='50' data-tooltip='Minimize' onclick="window.call_native('minimize_me')"><i class=" material-icons">file_download</i></a>
+                </div>
+                <div class="col s2">
+                    <a class="waves-effect waves-light btn glass tooltipped" data-position='bottom' data-delay='50' data-tooltip='Delete' onclick="window.call_native('delete_me')"><i class=" material-icons">delete_forever</i></a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12">
+                    <i class="material-icons">language</i> <span id="placeholder-1">0° 0° 0m</span>
+                </div>
+                <div class="col s12" style="font-size: 70%">
+                    <i class="material-icons">location_on</i> <span id="placeholder-2">Unknown Location</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

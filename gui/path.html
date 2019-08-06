@@ -1,0 +1,216 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="utf-8">
+
+    <link type="text/css" rel="stylesheet" href="third-party/css/materialize.min.css" />
+    <link type="text/css" rel="stylesheet" href="css/gui.css">
+    <link type="text/css" rel="stylesheet" href="css/tools.css">
+    <link type="text/css" rel="stylesheet" href="css/measurement-tools.css">
+
+    <script type="text/javascript" src="third-party/js/jquery-2.2.3.min.js"></script>
+    <script type="text/javascript" src="third-party/js/materialize.min.js"></script>
+    <script type="text/javascript" src="third-party/js/d3.min.js"></script>
+
+    <script type="text/javascript">
+
+        var graph = null;
+        var line = null;
+        var data = [];
+        
+        function set_data(points)
+        {
+            data = JSON.parse(points);
+            update_profile_line_chart();
+        }
+
+        function set_minimized(minimize) {
+            if (minimize) $('.linechart').addClass('minimized');
+            else $('.linechart').removeClass('minimized');
+        }
+
+        function format_height(height) {
+            if (height == 0) return "0";
+            else if (Math.abs(height) < 0.1)          return d3.format("f")(height*1000) + ' mm';
+            else if (Math.abs(height) < 1)            return d3.format("f")(height*100) + ' cm';
+            else if (Math.abs(height) < 1e4)          return d3.format("f")(height) + ' m';
+            else if (Math.abs(height) < 1e7)          return d3.format("f")(height/1e3) + ' km';
+            
+            return d3.format("f")(height/1e6) + ' Tsd km';
+        }
+
+        function format_length(length) {
+            if (length == 0) return "0";
+            else if (Math.abs(length) < 0.1)          return d3.format("f")(length*1000) + ' mm';
+            else if (Math.abs(length) < 1)            return d3.format("f")(length*100) + ' cm';
+            else if (Math.abs(length) < 1e3)          return d3.format("f")(length) + ' m';
+            else if (Math.abs(length) < 1e6)          return d3.format("f")(length/1e3) + ' km';
+            
+            return d3.format("f")(length/1e6) + ' Tsd km';
+        }
+
+        function init_profile_line_graph() {
+
+            var height = 250;
+            var width = 500;
+            var margin_left = 110;
+            var margin_bottom = 40;
+            var margin_right = 0;
+            var margin_top = 80;
+
+            var chart_container = d3.select("svg#profile-line-chart")
+                .attr("width", width + margin_left + margin_right)
+                .attr("height", height + margin_bottom + margin_top)
+
+            graph = chart_container.append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("x", margin_left)
+                .attr("y", margin_top);
+
+            // define the y scale (vertical) -----------------------------------
+            graph.yScalePrimary = d3.scale.linear()
+                .domain([0, 1])
+                .range([height, 0]);
+
+            // define the y axis
+            graph.yAxisPrimary = d3.svg.axis()
+                .innerTickSize(-width)
+                .ticks(5)
+                .orient("left")
+                .scale(graph.yScalePrimary)
+                .tickFormat(function(d) {
+                    return format_height(d);
+                });
+
+            graph.append("g")
+                .attr("class", "yaxis-primary axis")
+                .call(graph.yAxisPrimary);
+
+            // define the secondary scale (vertical) ---------------------------
+            graph.yScaleSecondary = d3.scale.linear()
+                .domain([0, 1])
+                .range([height, 0]);
+
+            // define the y axis
+            graph.yAxisSecondary = d3.svg.axis()
+                .ticks(5)
+                .orient("right")
+                .scale(graph.yScaleSecondary)
+                .tickFormat(function(d) {
+                    return format_height(d);
+                });
+
+            graph.append("g")
+                .attr("class", "yaxis-secondary axis")
+                .attr("transform", "translate(" + width + " ,0)")   
+                .call(graph.yAxisSecondary);
+
+
+            // draw x axis -----------------------------------------------------
+            graph.xScale = d3.scale.linear()
+                .domain([0, 255])
+                .range([0, width]);
+
+            // define the x axis
+            graph.xAxis = d3.svg.axis()
+                .ticks(4)
+                .innerTickSize(-height)
+                .orient("bottom")
+                .scale(graph.xScale)
+                .tickFormat(function(d) {
+                    return format_length(d);
+                });
+
+            graph.append("g")
+                .attr("class", "xaxis axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(graph.xAxis);
+
+            // now add titles to the y axis
+            graph.append("text")
+                .attr("class", "yaxis_label")
+                .attr("text-anchor", "middle")
+                .attr("transform", "translate(0,-30)")
+                .text("Absolute Height");
+
+            // now add titles to the secondary y axis
+            graph.append("text")
+                .attr("class", "xaxis_label")
+                .attr("text-anchor", "middle")
+                .attr("transform", "translate(" + width + ", -30)")
+                .text("Relative Height");
+
+            // add profile line
+            line = graph.append("path")
+                .attr("stroke", "rgb(192, 192, 255)")
+                .attr("stroke-width", "2px")
+                .attr("fill", "none")
+        }
+
+        function update_profile_line_chart() {
+            var maxX = d3.max(data, function(array) {
+              return array[0];
+            });
+
+            var maxY = d3.max(data, function(array) {
+              return array[1];
+            });
+
+            var minX = d3.min(data, function(array) {
+              return array[0];
+            });
+
+            var minY = d3.min(data, function(array) {
+              return array[1];
+            });
+
+            graph.xScale.domain([minX, maxX]);
+            graph.select(".xaxis")
+                .transition().duration(400).ease("sin-in-out")
+                .call(graph.xAxis);
+
+            graph.yScalePrimary.domain([minY, maxY]);
+            graph.select(".yaxis-primary")
+                .transition().duration(400).ease("sin-in-out")
+                .call(graph.yAxisPrimary);
+
+            graph.yScaleSecondary.domain([0, maxY-minY]);
+            graph.select(".yaxis-secondary")
+                .transition().duration(400).ease("sin-in-out")
+                .call(graph.yAxisSecondary);
+
+            var line_func = d3.svg.line()
+                .x(function (s) { return graph.xScale(s[0]); })
+                .y(function (s) { return graph.yScalePrimary(s[1]); });
+
+            line.data([data]).attr("d", line_func);
+        }
+
+
+        // entry point ---------------------------------------------------------
+        $(document).ready(function () {
+            init_profile_line_graph();
+        });
+
+    </script>
+
+</head>
+<body class="loaded" style="overflow: hidden">
+    <div class="linechart" style="width: 750px">
+        <div class="row">
+            <div class="col s8">
+                <input type='text' class='text-input' value='Path'/>
+            </div>
+            <div class="col s2">
+                <a class="waves-effect waves-light btn glass tooltipped" data-position='bottom' data-delay='50' data-tooltip='Add new Points' onclick="window.call_native('set_add_point_mode', true)"><i class=" material-icons">add</i></a>
+            </div>
+            <div class="col s2">
+                <a class="waves-effect waves-light btn glass tooltipped" data-position='bottom' data-delay='50' data-tooltip='Delete' onclick="window.call_native('delete_me')"><i class=" material-icons">delete_forever</i></a>
+            </div>
+        </div>
+        <svg id="profile-line-chart"></svg>
+    </div>
+</body>
+</html>
