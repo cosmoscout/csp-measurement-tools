@@ -4,9 +4,6 @@
 #                         Copyright: (c) 2019 German Aerospace Center (DLR)                        #
 # ------------------------------------------------------------------------------------------------ #
 
-find_package(OpenMP)
-
-
 # build plugin -------------------------------------------------------------------------------------
 
 file(GLOB SOURCE_FILES src/*.cpp src/voronoi/*.cpp)
@@ -21,7 +18,6 @@ target_link_libraries(csp-measurement-tools
     cs-gui
     cs-graphics
     cs-scene
-    OpenMP::OpenMP_CXX
 )
 
 # install plugin -----------------------------------------------------------------------------------
