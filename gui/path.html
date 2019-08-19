@@ -4,13 +4,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="utf-8">
 
-    <link type="text/css" rel="stylesheet" href="third-party/css/materialize.min.css" />
+    <link type="text/css" rel="stylesheet" href="third-party/css/bootstrap.min.css" />
     <link type="text/css" rel="stylesheet" href="css/gui.css">
     <link type="text/css" rel="stylesheet" href="css/tools.css">
     <link type="text/css" rel="stylesheet" href="css/measurement-tools.css">
 
     <script type="text/javascript" src="third-party/js/jquery-2.2.3.min.js"></script>
-    <script type="text/javascript" src="third-party/js/materialize.min.js"></script>
+    <script type="text/javascript" src="third-party/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="third-party/js/d3.min.js"></script>
 
     <script type="text/javascript">
@@ -18,7 +18,7 @@
         var graph = null;
         var line = null;
         var data = [];
-        
+
         function set_data(points)
         {
             data = JSON.parse(points);
@@ -36,7 +36,7 @@
             else if (Math.abs(height) < 1)            return d3.format("f")(height*100) + ' cm';
             else if (Math.abs(height) < 1e4)          return d3.format("f")(height) + ' m';
             else if (Math.abs(height) < 1e7)          return d3.format("f")(height/1e3) + ' km';
-            
+
             return d3.format("f")(height/1e6) + ' Tsd km';
         }
 
@@ -46,7 +46,7 @@
             else if (Math.abs(length) < 1)            return d3.format("f")(length*100) + ' cm';
             else if (Math.abs(length) < 1e3)          return d3.format("f")(length) + ' m';
             else if (Math.abs(length) < 1e6)          return d3.format("f")(length/1e3) + ' km';
-            
+
             return d3.format("f")(length/1e6) + ' Tsd km';
         }
 
@@ -104,7 +104,7 @@
 
             graph.append("g")
                 .attr("class", "yaxis-secondary axis")
-                .attr("transform", "translate(" + width + " ,0)")   
+                .attr("transform", "translate(" + width + " ,0)")
                 .call(graph.yAxisSecondary);
 
 
@@ -151,19 +151,19 @@
 
         function update_profile_line_chart() {
             var maxX = d3.max(data, function(array) {
-              return array[0];
+                return array[0];
             });
 
             var maxY = d3.max(data, function(array) {
-              return array[1];
+                return array[1];
             });
 
             var minX = d3.min(data, function(array) {
-              return array[0];
+                return array[0];
             });
 
             var minY = d3.min(data, function(array) {
-              return array[1];
+                return array[1];
             });
 
             graph.xScale.domain([minX, maxX]);
@@ -192,25 +192,26 @@
         // entry point ---------------------------------------------------------
         $(document).ready(function () {
             init_profile_line_graph();
+            $('[data-toggle="tooltip"]').tooltip({delay: 500, placement: "auto", html: false});
         });
 
     </script>
 
 </head>
 <body class="loaded" style="overflow: hidden">
-    <div class="linechart" style="width: 750px">
-        <div class="row">
-            <div class="col s8">
-                <input type='text' class='text-input' value='Path'/>
-            </div>
-            <div class="col s2">
-                <a class="waves-effect waves-light btn glass tooltipped" data-position='bottom' data-delay='50' data-tooltip='Add new Points' onclick="window.call_native('set_add_point_mode', true)"><i class=" material-icons">add</i></a>
-            </div>
-            <div class="col s2">
-                <a class="waves-effect waves-light btn glass tooltipped" data-position='bottom' data-delay='50' data-tooltip='Delete' onclick="window.call_native('delete_me')"><i class=" material-icons">delete_forever</i></a>
-            </div>
+<div class="linechart" style="width: 750px">
+    <div class="row">
+        <div class="col-8">
+            <input type='text' class='text-input' value='Path'/>
         </div>
-        <svg id="profile-line-chart"></svg>
+        <div class="col-2">
+            <a class="waves-effect waves-light btn glass" data-toggle="tooltip" title='Add new Points' onclick="window.call_native('set_add_point_mode', true)"><i class=" material-icons">add</i></a>
+        </div>
+        <div class="col-2">
+            <a class="waves-effect waves-light btn glass" data-toggle="tooltip" title='Delete' onclick="window.call_native('delete_me')"><i class=" material-icons">delete_forever</i></a>
+        </div>
     </div>
+    <svg id="profile-line-chart"></svg>
+</div>
 </body>
 </html>

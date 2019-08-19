@@ -2,7 +2,7 @@
     position: relative;
     width: 500px;
     height: 400px;
-    top: 0px;
+    top: 0;
     transition: opacity 0.3s linear, top 0.3s ease;
 }
 
@@ -46,6 +46,19 @@
 .linechart.minimized {
     opacity: 0;
     top: 350px
+}
+
+.banner-button {
+    padding: 0 2px;
+}
+
+.banner-button a {
+    margin-top: 0;
+    height: 80%;
+}
+
+.banner-text {
+    height: 80%;
 }
 
 /* Charts ------------------------------------------------------------------- */
