@@ -194,7 +194,7 @@ void PathTool::onPointAdded() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void PathTool::onPointRemoved() {
+void PathTool::onPointRemoved(int index) {
   updateLineVertices();
 }
 

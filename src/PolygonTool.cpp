@@ -959,7 +959,7 @@ void PolygonTool::onPointAdded() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void PolygonTool::onPointRemoved() {
+void PolygonTool::onPointRemoved(int index) {
   // Don't allow to become only one line
   if (mPoints.size() == 2)
     pAddPointMode = true;
