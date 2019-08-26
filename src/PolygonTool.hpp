@@ -95,7 +95,7 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
   // These are called by the base class MultiPointTool
   virtual void onPointMoved() override;
   virtual void onPointAdded() override;
-  virtual void onPointRemoved() override;
+  virtual void onPointRemoved(int index) override;
 
   VistaOpenGLNode*                                mGuiNode      = nullptr;
   VistaTransformNode*                             mGuiTransform = nullptr;

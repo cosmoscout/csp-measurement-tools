@@ -220,7 +220,7 @@ void DipStrikeTool::onPointAdded() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void DipStrikeTool::onPointRemoved() {
+void DipStrikeTool::onPointRemoved(int index) {
   calculateDipAndStrike();
 }
 

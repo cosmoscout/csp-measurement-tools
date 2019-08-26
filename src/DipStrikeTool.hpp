@@ -65,7 +65,7 @@ class DipStrikeTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPoin
   /// These are called by the base class MultiPointTool.
   void onPointMoved() override;
   void onPointAdded() override;
-  void onPointRemoved() override;
+  void onPointRemoved(int index) override;
 
   VistaOpenGLNode*                                mGuiNode      = nullptr;
   VistaTransformNode*                             mGuiTransform = nullptr;
