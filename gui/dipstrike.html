@@ -65,28 +65,34 @@
             <input type='text' class='text-input banner-text' value='Dip & Strike'/>
         </div>
         <div class="col-2 banner-button">
-            <a class="ripple btn glass light-glass" data-toggle="tooltip" title='Add new Points' onclick="window.call_native('set_add_point_mode', true)"><i
-                    class=" material-icons">add</i></a>
+            <a class="ripple btn glass light-glass" data-toggle="tooltip" title='Add new Points'
+               onclick="window.call_native('set_add_point_mode', true)" style="height: 88% !important;">
+                <i class=" material-icons">add</i>
+            </a>
         </div>
         <div class="col-2 banner-button">
-            <a class="ripple btn glass light-glass" data-toggle="tooltip" title='Delete' onclick="window.call_native('delete_me')"><i
-                    class=" material-icons">delete_forever</i></a>
+            <a class="ripple btn glass light-glass" data-toggle="tooltip" title='Delete'
+               onclick="window.call_native('delete_me')" style="height: 88% !important;">
+                <i class=" material-icons">delete_forever</i>
+            </a>
         </div>
     </div>
-    <div class="row">
-        <div class="col-6">Dip: <span class="dip-value"></span></div>
-        <div class="col-6">Strike: <span class="strike-value"></span></div>
-    </div>
-    <div class="row">
-        <div class="col-5">Opacity:</div>
-        <div class="col-7">
-            <div id="set_opacity"></div>
+    <div class="tool-body">
+        <div class="row">
+            <div class="col-6">Dip: <span class="dip-value"></span></div>
+            <div class="col-6">Strike: <span class="strike-value"></span></div>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-5">Size:</div>
-        <div class="col-7">
-            <div id="set_size"></div>
+        <div class="row">
+            <div class="col-5">Opacity:</div>
+            <div class="col-7">
+                <div id="set_opacity"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-5">Size:</div>
+            <div class="col-7">
+                <div id="set_size"></div>
+            </div>
         </div>
     </div>
 </div>
