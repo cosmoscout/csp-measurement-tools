@@ -8,7 +8,7 @@
 
 .flag,
 .text-input {
-    font-size: 150% !important;
+    font-size: 130% !important;
 }
 
 .flag.minimized {
@@ -33,6 +33,10 @@
     border-top: 5px solid #ccf;
 }
 
+.flag .banner span {
+    font-size: 80%;
+}
+
 .linechart {
     position: absolute;
     transition: opacity 0.3s linear, top 0.3s ease;
@@ -41,6 +45,11 @@
     font-size: 150%;
     background-color: rgba(20, 20, 20, 0.5);
     border: 5px solid #ccf;
+}
+
+.linechart .tool-body div,
+.linechart .tool-body span {
+    font-size: 90%;
 }
 
 .linechart.minimized {
@@ -54,7 +63,7 @@
 
 .banner-button a {
     margin-top: 0;
-    height: 80%;
+    height: 77%;
 }
 
 .banner-text {
