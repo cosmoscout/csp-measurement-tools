@@ -6,7 +6,7 @@ function add_measurement_tool(name, icon) {
                     <label style="width: 100%; height: 100%">
                         <input id='set_tool_${icon}' type='checkbox' name='measurement-tool' class='radio-button' />
                         <div class='ripple block btn glass'>
-                            <i style="font-size: 80px" class='material-icons'>${icon}</i> 
+                            <i style="font-size: 60px" class='material-icons'>${icon}</i> 
                             <br> 
                             <span>${name}</span>
                         </div>
