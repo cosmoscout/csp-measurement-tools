@@ -1,11 +1,11 @@
 ﻿<!DOCTYPE html>
 <html>
+
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta charset="utf-8">
 
-    <link type="text/css" rel="stylesheet" href="third-party/css/bootstrap.min.css"/>
-    <link type="text/css" rel="stylesheet" href="third-party/css/nouislider.css"/>
+    <link type="text/css" rel="stylesheet" href="third-party/css/bootstrap.min.css" />
+    <link type="text/css" rel="stylesheet" href="third-party/css/nouislider.css" />
     <link type="text/css" rel="stylesheet" href="css/gui.css">
     <link type="text/css" rel="stylesheet" href="css/tools.css">
     <link type="text/css" rel="stylesheet" href="css/measurement-tools.css">
@@ -32,7 +32,7 @@
                 start: start,
                 connect: (start.length === 1 ? "lower" : true),
                 step: step,
-                range: {'min': min, 'max': max},
+                range: { 'min': min, 'max': max },
                 format: wNumb({})
             });
 
@@ -52,43 +52,45 @@
 
             set_data(10, 10);
 
-            $('[data-toggle="tooltip"]').tooltip({delay: 500, placement: "auto", html: false});
+            $('[data-toggle="tooltip"]').tooltip({ delay: 500, placement: "auto", html: false });
         });
 
     </script>
 
 </head>
+
 <body style="overflow: hidden">
-<div class="linechart" style="width: 400px">
-    <div class="row">
-        <div class="col-8">
-            <input type='text' class='text-input banner-text' value='Dip & Strike'/>
+    <div class="linechart" style="width: 400px">
+        <div class="row">
+            <div class="col-8">
+                <input type='text' class='text-input banner-text' value='Dip & Strike' />
+            </div>
+            <div class="col-2 banner-button">
+                <a class="ripple btn glass light-glass" data-toggle="tooltip" title='Add new Points'
+                    onclick="window.call_native('set_add_point_mode', true)"><i class=" material-icons">add</i></a>
+            </div>
+            <div class="col-2 banner-button">
+                <a class="ripple btn glass light-glass" data-toggle="tooltip" title='Delete'
+                    onclick="window.call_native('delete_me')"><i class=" material-icons">delete_forever</i></a>
+            </div>
         </div>
-        <div class="col-2 banner-button">
-            <a class="ripple btn glass light-glass" data-toggle="tooltip" title='Add new Points' onclick="window.call_native('set_add_point_mode', true)"><i
-                    class=" material-icons">add</i></a>
+        <div class="row">
+            <div class="col-6">Dip: <span class="dip-value"></span></div>
+            <div class="col-6">Strike: <span class="strike-value"></span></div>
         </div>
-        <div class="col-2 banner-button">
-            <a class="ripple btn glass light-glass" data-toggle="tooltip" title='Delete' onclick="window.call_native('delete_me')"><i
-                    class=" material-icons">delete_forever</i></a>
+        <div class="row">
+            <div class="col-5">Opacity:</div>
+            <div class="col-7">
+                <div id="set_opacity"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-5">Size:</div>
+            <div class="col-7">
+                <div id="set_size"></div>
+            </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col-6">Dip: <span class="dip-value"></span></div>
-        <div class="col-6">Strike: <span class="strike-value"></span></div>
-    </div>
-    <div class="row">
-        <div class="col-5">Opacity:</div>
-        <div class="col-7">
-            <div id="set_opacity"></div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-5">Size:</div>
-        <div class="col-7">
-            <div id="set_size"></div>
-        </div>
-    </div>
-</div>
 </body>
+
 </html>
