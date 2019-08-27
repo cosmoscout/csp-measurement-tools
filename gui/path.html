@@ -25,8 +25,8 @@
         }
 
         function set_minimized(minimize) {
-            if (minimize) $('.linechart').addClass('minimized');
-            else $('.linechart').removeClass('minimized');
+            if (minimize) $('.tool-body').addClass('minimized');
+            else $('.tool-body').removeClass('minimized');
         }
 
         function format_height(height) {
@@ -203,42 +203,28 @@
 </head>
 
 <body class="loaded" style="overflow: hidden">
-    <<<<<<< HEAD <div class="linechart" style="width: 750px">
+    <div class="tool-body" style="width: 750px">
         <div class="row">
-            <div class="col-8">
+            <div class="col-9">
                 <input type='text' class='text-input' value='Path' />
             </div>
-            <div class="col-2">
-                <a class="waves-effect waves-light btn glass" data-toggle="tooltip" title='Add new Points'
-                    onclick="window.call_native('set_add_point_mode', true)"><i class=" material-icons">add</i></a>
+            <div class="row col-3">
+                <div class="col-6">
+                    <a class="btn glass block" data-toggle="tooltip" title='Add new Points'
+                        onclick="window.call_native('set_add_point_mode', true)">
+                        <i class=" material-icons">add</i>
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a class="btn glass block" data-toggle="tooltip" title='Delete'
+                        onclick="window.call_native('delete_me')">
+                        <i class=" material-icons">delete_forever</i>
+                    </a>
+                </div>
             </div>
-            <div class="col-2">
-                <a class="waves-effect waves-light btn glass" data-toggle="tooltip" title='Delete'
-                    onclick="window.call_native('delete_me')"><i class=" material-icons">delete_forever</i></a>
-                =======
-                <div class="linechart" style="width: 750px">
-                    <div class="row">
-                        <div class="col-9">
-                            <input type='text' class='text-input banner-text' value='Path' />
-                        </div>
-                        <div class="row col-3">
-                            <div class="col-6 banner-button">
-                                <a class="waves-effect waves-light btn glass" data-toggle="tooltip"
-                                    title='Add new Points' onclick="window.call_native('set_add_point_mode', true)"
-                                    style="height: 88%">
-                                    <i class=" material-icons">add</i>
-                                </a>
-                            </div>
-                            <div class="col-6 banner-button">
-                                <a class="waves-effect waves-light btn glass" data-toggle="tooltip" title='Delete'
-                                    onclick="window.call_native('delete_me')" style="height: 88%">
-                                    <i class=" material-icons">delete_forever</i>
-                                </a>
-                                >>>>>>> 2d3095fa719daafc32f85aee5d2ce04d3af5d2d6
-                            </div>
-                        </div>
-                        <svg id="profile-line-chart"></svg>
-                    </div>
+            <svg id="profile-line-chart"></svg>
+        </div>
+    </div>
 </body>
 
 </html>

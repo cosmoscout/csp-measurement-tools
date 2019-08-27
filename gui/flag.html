@@ -12,8 +12,8 @@
     <script type="text/javascript" src="third-party/js/jquery-2.2.3.min.js"></script>
     <script type="text/javascript" src="third-party/js/bootstrap.bundle.min.js"></script>
 
-    <script type="text/javascript" src="../locations/mars.js"></script>
-    <script type="text/javascript" src="../locations/moon.js"></script>
+    <script type="text/javascript" src="js/mars.js"></script>
+    <script type="text/javascript" src="js/moon.js"></script>
 
     <script type="text/javascript">
 
@@ -179,10 +179,6 @@
 
         // entry point ---------------------------------------------------------
         $(document).ready(function () {
-            $('.flag .text-input').on('input', function (e) {
-                window.call_native('on_set_text', $(this).val());
-            });
-
             $('[data-toggle="tooltip"]').tooltip({ delay: 500, placement: "auto", html: false });
         });
 
@@ -195,24 +191,28 @@
         <div class="pole"></div>
         <div class="banner">
             <div class="row">
-                <div class="col-8">
-                    <input type='text' class='text-input banner-text' value='' />
+                <div class="col-7">
+                    <input type='text' class='text-input' value='' />
                 </div>
-                <div class="col-2 banner-button">
-                    <a class="btn glass light-glass" data-toggle="tooltip" title='Minimize'
-                        onclick="window.call_native('minimize_me')"><i class=" material-icons">file_download</i></a>
-                </div>
-                <div class="col-2 banner-button">
-                    <a class="btn glass light-glass tooltipped" data-toggle="tooltip" title='Delete'
-                        onclick="window.call_native('delete_me')"><i class=" material-icons">delete_forever</i></a>
+                <div class="row col-5">
+                    <div class="col-6">
+                        <a class="btn glass block" data-toggle="tooltip" title='Minimize'
+                            onclick="window.call_native('minimize_me')"><i class=" material-icons">file_download</i></a>
+                    </div>
+                    <div class="col-6">
+                        <a class="btn glass block" data-toggle="tooltip" title='Delete'
+                            onclick="window.call_native('delete_me')"><i class=" material-icons">delete_forever</i></a>
+                    </div>
                 </div>
             </div>
             <div class="row">
                 <div class="col-12">
-                    <i class="material-icons">language</i> <span id="placeholder-1">0° 0° 0m</span>
+                    <i style="position: relative; top: 6px" class="material-icons">language</i> <span
+                        id="placeholder-1">0° 0° 0m</span>
                 </div>
-                <div class="col-12" style="font-size: 70%">
-                    <i class="material-icons">location_on</i> <span id="placeholder-2">Unknown Location</span>
+                <div class="col-12" style="font-size: 80%">
+                    <i style="position: relative; top: 6px" class="material-icons">location_on</i> <span
+                        id="placeholder-2">Unknown Location</span>
                 </div>
             </div>
         </div>

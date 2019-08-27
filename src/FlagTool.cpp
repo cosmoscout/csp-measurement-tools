@@ -30,13 +30,13 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
     std::string const& sFrame)
     : Mark(pInputManager, pSolarSystem, graphicsEngine, pGuiManager, pTimeControl, sCenter, sFrame)
-    , mGuiArea(new cs::gui::WorldSpaceGuiArea(500, 400))
+    , mGuiArea(new cs::gui::WorldSpaceGuiArea(420, 400))
     , mGuiItem(new cs::gui::GuiItem("file://../share/resources/gui/flag.html")) {
   auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
 
   mGuiTransform = pSG->NewTransformNode(mAnchor.get());
   mGuiTransform->Translate(0.5f - 7.5f / 500.f, 0.5f, 0.f);
-  mGuiTransform->Scale(0.3f, 0.3f * 400.f / 500.f, 1.f);
+  mGuiTransform->Scale(0.001f * mGuiArea->getWidth(), 0.001f * mGuiArea->getHeight(), 1.f);
   mGuiTransform->Rotate(VistaAxisAndAngle(VistaVector3D(0.0, 1.0, 0.0), -glm::pi<float>() / 2.f));
   mGuiArea->addItem(mGuiItem.get());
   mGuiArea->setUseLinearDepthBuffer(true);
@@ -45,7 +45,7 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
   mInputManager->registerSelectable(mGuiNode);
 
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-      mGuiTransform, static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
+      mGuiNode, static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
   mGuiItem->registerCallback("delete_me", [this]() { pShouldDelete = true; });
   mGuiItem->setCursorChangeCallback(

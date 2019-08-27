@@ -110,7 +110,7 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
   // Create the user interface
   mGuiTransform = pSG->NewTransformNode(mGuiAnchor.get());
   mGuiTransform->Translate(0.0f, 0.9f, 0.0f);
-  mGuiTransform->Scale(0.4f, 0.4f * 300.f / 600.f, 1.f);
+  mGuiTransform->Scale(0.001f * mGuiArea->getWidth(), 0.001f * mGuiArea->getHeight(), 1.f);
   mGuiTransform->Rotate(VistaAxisAndAngle(VistaVector3D(0.0, 1.0, 0.0), -glm::pi<float>() / 2.f));
   mGuiArea->addItem(mGuiItem.get());
   mGuiArea->setUseLinearDepthBuffer(true);
@@ -131,7 +131,7 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
   mGuiItem->waitForFinishedLoading();
 
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-      mGuiNode, static_cast<int>(cs::utils::DrawOrder::eGui));
+      mGuiNode, static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
   // Whenever the height scale changes our vertex positions need to be updated
   mScaleConnection = mGraphicsEngine->pHeightScale.onChange().connect([this](float const& h) {

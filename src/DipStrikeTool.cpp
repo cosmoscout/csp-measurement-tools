@@ -101,7 +101,7 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
     std::string const& sFrame)
     : MultiPointTool(
           pInputManager, pSolarSystem, graphicsEngine, pGuiManager, pTimeControl, sCenter, sFrame)
-    , mGuiArea(new cs::gui::WorldSpaceGuiArea(520, 225))
+    , mGuiArea(new cs::gui::WorldSpaceGuiArea(420, 225))
     , mGuiItem(new cs::gui::GuiItem("file://../share/resources/gui/dipstrike.html"))
     , mVAO(new VistaVertexArrayObject())
     , mVBO(new VistaBufferObject())
@@ -136,7 +136,7 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
   // create the user interface
   mGuiTransform = pSG->NewTransformNode(mGuiAnchor.get());
   mGuiTransform->Translate(0.f, 0.9f, 0.f);
-  mGuiTransform->Scale(0.4f, 0.4f * 225.f / 520.f, 1.f);
+  mGuiTransform->Scale(0.001f * mGuiArea->getWidth(), 0.001f * mGuiArea->getHeight(), 1.f);
   mGuiTransform->Rotate(VistaAxisAndAngle(VistaVector3D(0.f, 1.f, 0.f), -glm::pi<float>() / 2.f));
   mGuiArea->addItem(mGuiItem.get());
   mGuiArea->setUseLinearDepthBuffer(true);
@@ -159,7 +159,7 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
   mGuiItem->waitForFinishedLoading();
 
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-      mGuiAnchor.get(), static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
+      mGuiNode, static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
   // update on height scale change
   mScaleConnection = mGraphicsEngine->pHeightScale.onChange().connect(

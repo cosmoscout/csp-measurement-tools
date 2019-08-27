@@ -100,7 +100,7 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
   // create the user interface
   mGuiTransform = pSG->NewTransformNode(mGuiAnchor.get());
   mGuiTransform->Translate(0.f, 0.9f, 0.f);
-  mGuiTransform->Scale(0.5f, 0.5f * 475.f / 760.f, 1.f);
+  mGuiTransform->Scale(0.001f * mGuiArea->getWidth(), 0.001f * mGuiArea->getHeight(), 1.f);
   mGuiTransform->Rotate(VistaAxisAndAngle(VistaVector3D(0.0, 1.0, 0.0), -glm::pi<float>() / 2.f));
   mGuiArea->addItem(mGuiItem.get());
   mGuiArea->setUseLinearDepthBuffer(true);

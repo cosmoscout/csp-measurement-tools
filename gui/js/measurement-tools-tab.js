@@ -1,8 +1,8 @@
-init_slider("set_widget_scale", 0.2, 2.0, 0.01, [0.8]);
+init_slider("set_widget_scale", 0.2, 2.0, 0.01, [0.6]);
 
 function add_measurement_tool(name, icon) {
     const area = $('#measurement-tools');
-    area.append(`<div class='col-4 center' style='padding: 5px'>
+    area.append(`<div class='col-4 center' style='padding: 0 5px'>
                     <label style="width: 100%; height: 100%">
                         <input id='set_tool_${icon}' type='checkbox' name='measurement-tool' class='radio-button' />
                         <div class='block btn glass'>

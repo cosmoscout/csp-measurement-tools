@@ -22,8 +22,8 @@
         }
 
         function set_minimized(minimize) {
-            if (minimize) $('.linechart').addClass('minimized');
-            else $('.linechart').removeClass('minimized');
+            if (minimize) $('.tool-body').addClass('minimized');
+            else $('.tool-body').removeClass('minimized');
         }
 
         function init_slider(id, min, max, step, start) {
@@ -60,37 +60,23 @@
 </head>
 
 <body style="overflow: hidden">
-    <div class="linechart" style="width: 400px">
+    <div class="tool-body" style="width: 400px">
         <div class="row">
             <div class="col-8">
-                <input type='text' class='text-input banner-text' value='Dip & Strike' />
+                <input type='text' class='text-input' value='Dip & Strike' />
             </div>
-            <div class="col-2 banner-button">
-                <a class="btn glass light-glass" data-toggle="tooltip" title='Add new Points'
+            <div class="col-2">
+                <a class="btn glass block" data-toggle="tooltip" title='Add new Points'
                     onclick="window.call_native('set_add_point_mode', true)"><i class=" material-icons">add</i></a>
             </div>
-            <div class="col-2 banner-button">
-                <a class="btn glass light-glass" data-toggle="tooltip" title='Delete'
+            <div class="col-2">
+                <a class="btn glass block" data-toggle="tooltip" title='Delete'
                     onclick="window.call_native('delete_me')"><i class=" material-icons">delete_forever</i></a>
             </div>
         </div>
-        <div class="col-2 banner-button">
-            <a class="ripple btn glass light-glass" data-toggle="tooltip" title='Add new Points'
-                onclick="window.call_native('set_add_point_mode', true)" style="height: 88% !important;">
-                <i class=" material-icons">add</i>
-            </a>
-        </div>
-        <div class="col-2 banner-button">
-            <a class="ripple btn glass light-glass" data-toggle="tooltip" title='Delete'
-                onclick="window.call_native('delete_me')" style="height: 88% !important;">
-                <i class=" material-icons">delete_forever</i>
-            </a>
-        </div>
-    </div>
-    <div class="tool-body">
         <div class="row">
-            <div class="col-6">Dip: <span class="dip-value"></span></div>
-            <div class="col-6">Strike: <span class="strike-value"></span></div>
+            <div class="col-6">Dip: <span class="dip-value"></span>°</div>
+            <div class="col-6">Strike: <span class="strike-value"></span>°</div>
         </div>
         <div class="row">
             <div class="col-5">Opacity:</div>
@@ -104,7 +90,6 @@
                 <div id="set_size"></div>
             </div>
         </div>
-    </div>
     </div>
 </body>
 
