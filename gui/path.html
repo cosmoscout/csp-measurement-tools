@@ -1,16 +1,16 @@
 ﻿<!DOCTYPE html>
 <html>
+
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="utf-8">
 
-    <link type="text/css" rel="stylesheet" href="third-party/css/materialize.min.css" />
+    <link type="text/css" rel="stylesheet" href="third-party/css/bootstrap.min.css" />
     <link type="text/css" rel="stylesheet" href="css/gui.css">
     <link type="text/css" rel="stylesheet" href="css/tools.css">
     <link type="text/css" rel="stylesheet" href="css/measurement-tools.css">
 
     <script type="text/javascript" src="third-party/js/jquery-2.2.3.min.js"></script>
-    <script type="text/javascript" src="third-party/js/materialize.min.js"></script>
+    <script type="text/javascript" src="third-party/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="third-party/js/d3.min.js"></script>
 
     <script type="text/javascript">
@@ -18,36 +18,35 @@
         var graph = null;
         var line = null;
         var data = [];
-        
-        function set_data(points)
-        {
+
+        function set_data(points) {
             data = JSON.parse(points);
             update_profile_line_chart();
         }
 
         function set_minimized(minimize) {
-            if (minimize) $('.linechart').addClass('minimized');
-            else $('.linechart').removeClass('minimized');
+            if (minimize) $('.tool-body').addClass('minimized');
+            else $('.tool-body').removeClass('minimized');
         }
 
         function format_height(height) {
             if (height == 0) return "0";
-            else if (Math.abs(height) < 0.1)          return d3.format("f")(height*1000) + ' mm';
-            else if (Math.abs(height) < 1)            return d3.format("f")(height*100) + ' cm';
-            else if (Math.abs(height) < 1e4)          return d3.format("f")(height) + ' m';
-            else if (Math.abs(height) < 1e7)          return d3.format("f")(height/1e3) + ' km';
-            
-            return d3.format("f")(height/1e6) + ' Tsd km';
+            else if (Math.abs(height) < 0.1) return d3.format("f")(height * 1000) + ' mm';
+            else if (Math.abs(height) < 1) return d3.format("f")(height * 100) + ' cm';
+            else if (Math.abs(height) < 1e4) return d3.format("f")(height) + ' m';
+            else if (Math.abs(height) < 1e7) return d3.format("f")(height / 1e3) + ' km';
+
+            return d3.format("f")(height / 1e6) + ' Tsd km';
         }
 
         function format_length(length) {
             if (length == 0) return "0";
-            else if (Math.abs(length) < 0.1)          return d3.format("f")(length*1000) + ' mm';
-            else if (Math.abs(length) < 1)            return d3.format("f")(length*100) + ' cm';
-            else if (Math.abs(length) < 1e3)          return d3.format("f")(length) + ' m';
-            else if (Math.abs(length) < 1e6)          return d3.format("f")(length/1e3) + ' km';
-            
-            return d3.format("f")(length/1e6) + ' Tsd km';
+            else if (Math.abs(length) < 0.1) return d3.format("f")(length * 1000) + ' mm';
+            else if (Math.abs(length) < 1) return d3.format("f")(length * 100) + ' cm';
+            else if (Math.abs(length) < 1e3) return d3.format("f")(length) + ' m';
+            else if (Math.abs(length) < 1e6) return d3.format("f")(length / 1e3) + ' km';
+
+            return d3.format("f")(length / 1e6) + ' Tsd km';
         }
 
         function init_profile_line_graph() {
@@ -80,7 +79,7 @@
                 .ticks(5)
                 .orient("left")
                 .scale(graph.yScalePrimary)
-                .tickFormat(function(d) {
+                .tickFormat(function (d) {
                     return format_height(d);
                 });
 
@@ -98,13 +97,13 @@
                 .ticks(5)
                 .orient("right")
                 .scale(graph.yScaleSecondary)
-                .tickFormat(function(d) {
+                .tickFormat(function (d) {
                     return format_height(d);
                 });
 
             graph.append("g")
                 .attr("class", "yaxis-secondary axis")
-                .attr("transform", "translate(" + width + " ,0)")   
+                .attr("transform", "translate(" + width + " ,0)")
                 .call(graph.yAxisSecondary);
 
 
@@ -119,7 +118,7 @@
                 .innerTickSize(-height)
                 .orient("bottom")
                 .scale(graph.xScale)
-                .tickFormat(function(d) {
+                .tickFormat(function (d) {
                     return format_length(d);
                 });
 
@@ -150,20 +149,20 @@
         }
 
         function update_profile_line_chart() {
-            var maxX = d3.max(data, function(array) {
-              return array[0];
+            var maxX = d3.max(data, function (array) {
+                return array[0];
             });
 
-            var maxY = d3.max(data, function(array) {
-              return array[1];
+            var maxY = d3.max(data, function (array) {
+                return array[1];
             });
 
-            var minX = d3.min(data, function(array) {
-              return array[0];
+            var minX = d3.min(data, function (array) {
+                return array[0];
             });
 
-            var minY = d3.min(data, function(array) {
-              return array[1];
+            var minY = d3.min(data, function (array) {
+                return array[1];
             });
 
             graph.xScale.domain([minX, maxX]);
@@ -176,14 +175,18 @@
                 .transition().duration(400).ease("sin-in-out")
                 .call(graph.yAxisPrimary);
 
-            graph.yScaleSecondary.domain([0, maxY-minY]);
+            graph.yScaleSecondary.domain([0, maxY - minY]);
             graph.select(".yaxis-secondary")
                 .transition().duration(400).ease("sin-in-out")
                 .call(graph.yAxisSecondary);
 
             var line_func = d3.svg.line()
-                .x(function (s) { return graph.xScale(s[0]); })
-                .y(function (s) { return graph.yScalePrimary(s[1]); });
+                .x(function (s) {
+                    return graph.xScale(s[0]);
+                })
+                .y(function (s) {
+                    return graph.yScalePrimary(s[1]);
+                });
 
             line.data([data]).attr("d", line_func);
         }
@@ -192,25 +195,36 @@
         // entry point ---------------------------------------------------------
         $(document).ready(function () {
             init_profile_line_graph();
+            $('[data-toggle="tooltip"]').tooltip({ delay: 500, placement: "auto", html: false });
         });
 
     </script>
 
 </head>
+
 <body class="loaded" style="overflow: hidden">
-    <div class="linechart" style="width: 750px">
+    <div class="tool-body" style="width: 750px">
         <div class="row">
-            <div class="col s8">
-                <input type='text' class='text-input' value='Path'/>
+            <div class="col-9">
+                <input type='text' class='text-input' value='Path' />
             </div>
-            <div class="col s2">
-                <a class="waves-effect waves-light btn glass tooltipped" data-position='bottom' data-delay='50' data-tooltip='Add new Points' onclick="window.call_native('set_add_point_mode', true)"><i class=" material-icons">add</i></a>
+            <div class="row col-3">
+                <div class="col-6">
+                    <a class="btn glass block" data-toggle="tooltip" title='Add new Points'
+                        onclick="window.call_native('set_add_point_mode', true)">
+                        <i class=" material-icons">add</i>
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a class="btn glass block" data-toggle="tooltip" title='Delete'
+                        onclick="window.call_native('delete_me')">
+                        <i class=" material-icons">delete_forever</i>
+                    </a>
+                </div>
             </div>
-            <div class="col s2">
-                <a class="waves-effect waves-light btn glass tooltipped" data-position='bottom' data-delay='50' data-tooltip='Delete' onclick="window.call_native('delete_me')"><i class=" material-icons">delete_forever</i></a>
-            </div>
+            <svg id="profile-line-chart"></svg>
         </div>
-        <svg id="profile-line-chart"></svg>
     </div>
 </body>
+
 </html>
