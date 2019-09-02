@@ -1,44 +1,42 @@
 ﻿<!DOCTYPE html>
 <html>
+
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="utf-8">
 
-    <link type="text/css" rel="stylesheet" href="third-party/css/materialize.min.css" />
+    <link type="text/css" rel="stylesheet" href="third-party/css/bootstrap.min.css" />
     <link type="text/css" rel="stylesheet" href="third-party/css/nouislider.css" />
     <link type="text/css" rel="stylesheet" href="css/gui.css">
     <link type="text/css" rel="stylesheet" href="css/tools.css">
     <link type="text/css" rel="stylesheet" href="css/measurement-tools.css">
 
     <script type="text/javascript" src="third-party/js/jquery-2.2.3.min.js"></script>
-    <script type="text/javascript" src="third-party/js/materialize.min.js"></script>
+    <script type="text/javascript" src="third-party/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="third-party/js/nouislider.min.js"></script>
 
     <script type="text/javascript">
-        
-        function set_data(dip, strike)
-        {
+
+        function set_data(dip, strike) {
             $(".dip-value").text(dip.toFixed(2));
             $(".strike-value").text(strike.toFixed(2));
         }
 
         function set_minimized(minimize) {
-            if (minimize) $('.linechart').addClass('minimized');
-            else $('.linechart').removeClass('minimized');
+            if (minimize) $('.tool-body').addClass('minimized');
+            else $('.tool-body').removeClass('minimized');
         }
 
-        function init_slider(id, min, max, step, start)
-        {
+        function init_slider(id, min, max, step, start) {
             slider = document.getElementById(id);
             noUiSlider.create(slider, {
-                start : start,
-                connect : (start.length == 1 ? "lower" : true),
-                step : step,
-                range : { 'min' : min, 'max' : max },
-                format : wNumb({})
+                start: start,
+                connect: (start.length === 1 ? "lower" : true),
+                step: step,
+                range: { 'min': min, 'max': max },
+                format: wNumb({})
             });
 
-            slider.noUiSlider.on('slide', function(values, handle, unencoded) {
+            slider.noUiSlider.on('slide', function (values, handle, unencoded) {
                 if (Array.isArray(unencoded))
                     window.call_native(id, unencoded[handle], handle);
                 else
@@ -49,38 +47,50 @@
 
         // entry point ---------------------------------------------------------
         $(document).ready(function () {
-            init_slider("set_opacity", 0, 1, 0.1, [ 0.5 ]);
-            init_slider("set_size", 0.1, 5, 0.1, [ 1.5 ]);
+            init_slider("set_opacity", 0, 1, 0.1, [0.5]);
+            init_slider("set_size", 0.1, 5, 0.1, [1.5]);
+
+            set_data(10, 10);
+
+            $('[data-toggle="tooltip"]').tooltip({ delay: 500, placement: "auto", html: false });
         });
 
     </script>
 
 </head>
+
 <body style="overflow: hidden">
-    <div class="linechart" style="width: 400px">
+    <div class="tool-body" style="width: 400px">
         <div class="row">
-            <div class="col s8">
-                <input type='text' class='text-input' value='Dip & Strike'/>
+            <div class="col-8">
+                <input type='text' class='text-input' value='Dip & Strike' />
             </div>
-            <div class="col s2">
-                <a class="waves-effect waves-light btn glass tooltipped" data-position='bottom' data-delay='50' data-tooltip='Add new Points' onclick="window.call_native('set_add_point_mode', true)"><i class=" material-icons">add</i></a>
+            <div class="col-2">
+                <a class="btn glass block" data-toggle="tooltip" title='Add new Points'
+                    onclick="window.call_native('set_add_point_mode', true)"><i class=" material-icons">add</i></a>
             </div>
-            <div class="col s2">
-                <a class="waves-effect waves-light btn glass tooltipped" data-position='bottom' data-delay='50' data-tooltip='Delete' onclick="window.call_native('delete_me')"><i class=" material-icons">delete_forever</i></a>
+            <div class="col-2">
+                <a class="btn glass block" data-toggle="tooltip" title='Delete'
+                    onclick="window.call_native('delete_me')"><i class=" material-icons">delete_forever</i></a>
             </div>
         </div>
         <div class="row">
-            <div class="col s6">Dip: <span class="dip-value"></span></div>            
-            <div class="col s6">Strike: <span class="strike-value"></span></div>
+            <div class="col-6">Dip: <span class="dip-value"></span>°</div>
+            <div class="col-6">Strike: <span class="strike-value"></span>°</div>
         </div>
         <div class="row">
-            <div class="col s5">Opacity:</div>
-            <div class="col s7"><div id="set_opacity"></div></div>
+            <div class="col-5">Opacity:</div>
+            <div class="col-7">
+                <div id="set_opacity"></div>
+            </div>
         </div>
         <div class="row">
-            <div class="col s5">Size:</div>
-            <div class="col s7"><div id="set_size"></div></div>
+            <div class="col-5">Size:</div>
+            <div class="col-7">
+                <div id="set_size"></div>
+            </div>
         </div>
     </div>
 </body>
+
 </html>

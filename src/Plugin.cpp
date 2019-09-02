@@ -82,7 +82,7 @@ void Plugin::init() {
       "add_measurement_tool", "Location Flag", "edit_location");
   mGuiManager->getSideBar()->callJavascript(
       "add_measurement_tool", "Landing Ellipse", "location_searching");
-  mGuiManager->getSideBar()->callJavascript("add_measurement_tool", "Path Measurement", "timeline");
+  mGuiManager->getSideBar()->callJavascript("add_measurement_tool", "Path", "timeline");
   mGuiManager->getSideBar()->callJavascript("add_measurement_tool", "Dip & Strike", "clear_all");
   mGuiManager->getSideBar()->callJavascript("add_measurement_tool", "Polygon", "crop_landscape");
 
@@ -120,7 +120,7 @@ void Plugin::init() {
                                                 .xy();
           tool->setNumSamples(mPluginSettings.mEllipse.mNumSamples);
           mGuiManager->registerTool(tool);
-        } else if (mNextTool == "Path Measurement") {
+        } else if (mNextTool == "Path") {
           auto tool = std::make_shared<PathTool>(mInputManager, mSolarSystem, mGraphicsEngine,
               mGuiManager, mTimeControl, body->getCenterName(), body->getFrameName());
           tool->setNumSamples(mPluginSettings.mPath.mNumSamples);

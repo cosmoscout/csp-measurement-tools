@@ -1,66 +1,63 @@
 ﻿<!DOCTYPE html>
 <html>
+
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta charset="utf-8">
 
-    <link type="text/css" rel="stylesheet" href="third-party/css/materialize.min.css" />
+    <link type="text/css" rel="stylesheet" href="third-party/css/bootstrap.min.css" />
     <link type="text/css" rel="stylesheet" href="third-party/css/nouislider.css" />
     <link type="text/css" rel="stylesheet" href="css/gui.css">
     <link type="text/css" rel="stylesheet" href="css/tools.css">
     <link type="text/css" rel="stylesheet" href="css/measurement-tools.css">
 
     <script type="text/javascript" src="third-party/js/jquery-2.2.3.min.js"></script>
-    <script type="text/javascript" src="third-party/js/materialize.min.js"></script>
+    <script type="text/javascript" src="third-party/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="third-party/js/nouislider.min.js"></script>
 
     <!-- Sidebar JavaScript -->
     <script type="text/javascript" src="js/sidebar.js"></script>
-    
+
     <script type="text/javascript">
-        
+
         function format_number(number) {
-            if      (Math.abs(number) < 10)   return number.toFixed(2);
-            else if (Math.abs(number) < 100)  return number.toFixed(1);
-            else                              return number.toFixed(0)
+            if (Math.abs(number) < 10) return number.toFixed(2);
+            else if (Math.abs(number) < 100) return number.toFixed(1);
+            else return number.toFixed(0)
         }
-        
-        function format_area(area)
-        {
-        	if		(Math.abs(area) == 0)			return '0 km²';
-        	else if (Math.abs(area) < 0.001)          return format_number(area*1e6) + ' mm²';
-            else if (Math.abs(area) < 1)            return format_number(area*1e4) + ' cm²';
-            else if (Math.abs(area) < 1e6)          return format_number(area) + ' m²';
-            else if (Math.abs(area) < 1e13)          return format_number(area/1e6) + ' km²';
-            
-            return format_number(area/1e12) + ' Tsd km²';
+
+        function format_area(area) {
+            if (Math.abs(area) == 0) return '0 km²';
+            else if (Math.abs(area) < 0.001) return format_number(area * 1e6) + ' mm²';
+            else if (Math.abs(area) < 1) return format_number(area * 1e4) + ' cm²';
+            else if (Math.abs(area) < 1e6) return format_number(area) + ' m²';
+            else if (Math.abs(area) < 1e13) return format_number(area / 1e6) + ' km²';
+
+            return format_number(area / 1e12) + ' Tsd km²';
         }
-        
-        function set_area(area)
-        {
-        	$("#area-value").text(format_area(area));
+
+        function set_area(area) {
+            $("#area-value").text(format_area(area));
         }
-        
-        function format_volume(volume)
-        {
-        	if		(Math.abs(volume) == 0)			return '0 km³';
-        	else if (Math.abs(volume) < 1e-5)          return format_number(volume*1e9) + ' mm³';
-            else if (Math.abs(volume) < 1)            return format_number(volume*1e6) + ' cm³';
-            else if (Math.abs(volume) < 1e9)          return format_number(volume) + ' m³';
-            else if (Math.abs(volume) < 1e18)          return format_number(volume/1e9) + ' km³';
-            
-            return format_number(volume/1e18) + ' Tsd km³';
+
+        function format_volume(volume) {
+            if (Math.abs(volume) == 0) return '0 km³';
+            else if (Math.abs(volume) < 1e-5) return format_number(volume * 1e9) + ' mm³';
+            else if (Math.abs(volume) < 1) return format_number(volume * 1e6) + ' cm³';
+            else if (Math.abs(volume) < 1e9) return format_number(volume) + ' m³';
+            else if (Math.abs(volume) < 1e18) return format_number(volume / 1e9) + ' km³';
+
+            return format_number(volume / 1e18) + ' Tsd km³';
         }
-        
-        function set_volume(volume1, volume2)
-        {
-        	$("#volume-value").text('+' + format_volume(volume1) + ',     ' + format_volume(volume2));
+
+        function set_volume(volume1, volume2) {
+            $("#volume-value").text('+' + format_volume(volume1) + ',     ' + format_volume(volume2));
         }
-        
+
         function set_minimized(minimize) {
-            if (minimize) $('.linechart').addClass('minimized');
-            else $('.linechart').removeClass('minimized');
+            if (minimize) $('.tool-body').addClass('minimized');
+            else $('.tool-body').removeClass('minimized');
         }
-        
+
         function format_latitude(lat) {
             if (lat < 0)
                 return (-lat).toFixed(4) + "° S ";
@@ -74,51 +71,68 @@
             else
                 return (long).toFixed(4) + "° E ";
         }
-        
+
         function set_boundary_position(minLong, minLat, maxLong, maxLat) {
             $("#placeholder-1").text(format_longitude(minLong) + format_latitude(minLat));
             $("#placeholder-2").text(format_longitude(maxLong) + format_latitude(maxLat));
         }
+
+        $(document).ready(function () {
+            $('[data-toggle="tooltip"]').tooltip({ delay: 500, placement: "auto", html: false });
+        })
     </script>
 
 </head>
+
 <body style="overflow: hidden">
-    <div class="linechart" style="width: 580px">
+    <div class="tool-body" style="width: 580px">
         <div class="row">
-            <div class="col s6">
-                <input type='text' class='text-input' value='Polygon'/>
+            <div class="col-7">
+                <input type='text' class='text-input' value='Polygon' />
             </div>
-            <div class="col s2">
-                <a class="waves-effect waves-light btn glass tooltipped" data-position='bottom' data-delay='50' data-tooltip='Show Delaunay-Triangulation mesh' onclick="window.call_native('show_mesh', true)"><i class=" material-icons">ac_unit</i></a>
-            </div>
-            <div class="col s2">
-                <a class="waves-effect waves-light btn glass tooltipped" data-position='bottom' data-delay='50' data-tooltip='Add new Points' onclick="window.call_native('set_add_point_mode', true)"><i class=" material-icons">add</i></a>
-            </div>
-            <div class="col s2">
-                <a class="waves-effect waves-light btn glass tooltipped" data-position='bottom' data-delay='50' data-tooltip='Delete' onclick="window.call_native('delete_me')"><i class=" material-icons">delete_forever</i></a>
+            <div class="row col-5">
+                <div class="col-4">
+                    <a class="btn glass block" data-toggle="tooltip" title='Show Delaunay-Triangulation mesh'
+                        onclick="window.call_native('show_mesh', true)">
+                        <i class=" material-icons">ac_unit</i>
+                    </a>
+                </div>
+                <div class="col-4">
+                    <a class="btn glass block" data-toggle="tooltip" title='Add new Points'
+                        onclick="window.call_native('set_add_point_mode', true)">
+                        <i class=" material-icons">add</i>
+                    </a>
+                </div>
+                <div class="col-4">
+                    <a class="btn glass block" data-toggle="tooltip" title='Delete'
+                        onclick="window.call_native('delete_me')">
+                        <i class=" material-icons">delete_forever</i>
+                    </a>
+                </div>
             </div>
         </div>
 
         <div class="row">
-            <div class="col s5">Area:</div>
-            <div class="col s7" align="right"><span id="area-value">0 km²</span></div>                      
+            <div class="col-5">Area:</div>
+            <div class="col-7" align="right"><span id="area-value">0 km²</span></div>
         </div>
         <div class="row">
-            <div class="col s3">Volume:</div>
-            <div class="col s9" align="right"><span id="volume-value">0 km³</span></div>                      
+            <div class="col-3">Volume:</div>
+            <div class="col-9" align="right"><span id="volume-value">0 km³</span></div>
         </div>
         <div class="row">
-            <div class="col s5">Bounding box:</div>
-            <div class="col s7" align="right">
+            <div class="col-5">Bounding box:</div>
+            <div class="col-7" align="right">
                 <i class="material-icons">language</i> <span id="placeholder-1">0° 0°</span>
             </div>
         </div>
         <div class="row">
-            <div class="col s5"></div>
-            <div class="col s7" align="right">
+            <div class="col-5"></div>
+            <div class="col-7" align="right">
                 <i class="material-icons">language</i> <span id="placeholder-2">0° 0°</span>
             </div>
         </div>
     </div>
 </body>
+
 </html>
