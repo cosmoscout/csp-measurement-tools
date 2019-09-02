@@ -35,30 +35,35 @@ namespace csp::measurementtools {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void from_json(const nlohmann::json& j, Plugin::Settings::Polygon& o) {
-  o.mHeightDiff = j.at("heightDiff").get<float>();
-  o.mMaxAttempt = j.at("maxAttempt").get<int>();
-  o.mMaxPoints  = j.at("maxPoints").get<int>();
-  o.mSleekness  = j.at("sleekness").get<int>();
+  o.mHeightDiff = cs::core::parseProperty<float>("heightDiff", j);
+  o.mMaxAttempt = cs::core::parseProperty<int>("maxAttempt", j);
+  o.mMaxPoints  = cs::core::parseProperty<int>("maxPoints", j);
+  o.mSleekness  = cs::core::parseProperty<int>("sleekness", j);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void from_json(const nlohmann::json& j, Plugin::Settings::Ellipse& o) {
-  o.mNumSamples = j.at("numSamples").get<int>();
+  o.mNumSamples = cs::core::parseProperty<int>("numSamples", j);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void from_json(const nlohmann::json& j, Plugin::Settings::Path& o) {
-  o.mNumSamples = j.at("numSamples").get<int>();
+  o.mNumSamples = cs::core::parseProperty<int>("numSamples", j);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void from_json(const nlohmann::json& j, Plugin::Settings& o) {
-  o.mPolygon = j.at("polygon").get<Plugin::Settings::Polygon>();
-  o.mEllipse = j.at("ellipse").get<Plugin::Settings::Ellipse>();
-  o.mPath    = j.at("path").get<Plugin::Settings::Path>();
+  cs::core::parseSettingsSection("csp-measurement-tools", [&] {
+    cs::core::parseSettingsSection(
+        "polygon", [&] { o.mPolygon = j.at("polygon").get<Plugin::Settings::Polygon>(); });
+    cs::core::parseSettingsSection(
+        "ellipse", [&] { o.mEllipse = j.at("ellipse").get<Plugin::Settings::Ellipse>(); });
+    cs::core::parseSettingsSection(
+        "path", [&] { o.mPath = j.at("path").get<Plugin::Settings::Path>(); });
+  });
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
