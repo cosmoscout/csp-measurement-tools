@@ -56,13 +56,10 @@ void from_json(const nlohmann::json& j, Plugin::Settings::Path& o) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void from_json(const nlohmann::json& j, Plugin::Settings& o) {
-  cs::core::parseSettingsSection("csp-measurement-tools", [&] {
-    cs::core::parseSettingsSection(
-        "polygon", [&] { o.mPolygon = j.at("polygon").get<Plugin::Settings::Polygon>(); });
-    cs::core::parseSettingsSection(
-        "ellipse", [&] { o.mEllipse = j.at("ellipse").get<Plugin::Settings::Ellipse>(); });
-    cs::core::parseSettingsSection(
-        "path", [&] { o.mPath = j.at("path").get<Plugin::Settings::Path>(); });
+  cs::core::parseSection("csp-measurement-tools", [&] {
+    o.mPolygon = cs::core::parseSection<Plugin::Settings::Polygon>("polygon", j);
+    o.mEllipse = cs::core::parseSection<Plugin::Settings::Ellipse>("ellipse", j);
+    o.mPath    = cs::core::parseSection<Plugin::Settings::Path>("path", j);
   });
 }
 
