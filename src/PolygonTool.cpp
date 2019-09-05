@@ -30,7 +30,7 @@ const int PolygonTool::NUM_SAMPLES = 256;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const std::string PolygonTool::SHADER_VERT = R"(
-#version 400 compatibility
+#version 330
 
 layout(location=0) in vec3 iPosition;
 
@@ -49,7 +49,7 @@ void main()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const std::string PolygonTool::SHADER_FRAG = R"(
-#version 400 compatibility
+#version 330
 
 in vec4 vPosition;
 //in vec2 vTexcoord;
