@@ -76,12 +76,12 @@ void Plugin::init() {
   mGuiManager->addScriptToSideBarFromJS("../share/resources/gui/js/measurement-tools-tab.js");
 
   mGuiManager->getSideBar()->callJavascript(
-      "add_measurement_tool", "Location Flag", "edit_location");
+      "CosmoScout.call", "sidebar", "addMeasurementTool", "Location Flag", "edit_location");
   mGuiManager->getSideBar()->callJavascript(
-      "add_measurement_tool", "Landing Ellipse", "location_searching");
-  mGuiManager->getSideBar()->callJavascript("add_measurement_tool", "Path", "timeline");
-  mGuiManager->getSideBar()->callJavascript("add_measurement_tool", "Dip & Strike", "clear_all");
-  mGuiManager->getSideBar()->callJavascript("add_measurement_tool", "Polygon", "crop_landscape");
+      "CosmoScout.call", "sidebar", "addMeasurementTool", "Landing Ellipse", "location_searching");
+  mGuiManager->getSideBar()->callJavascript("CosmoScout.call", "sidebar", "addMeasurementTool", "Path", "timeline");
+  mGuiManager->getSideBar()->callJavascript("CosmoScout.call", "sidebar", "addMeasurementTool", "Dip & Strike", "clear_all");
+  mGuiManager->getSideBar()->callJavascript("CosmoScout.call", "sidebar", "addMeasurementTool", "Polygon", "crop_landscape");
 
   mGuiManager->getSideBar()->registerCallback<std::string>(
       "set_measurement_tool", [this](std::string const& name) { mNextTool = name; });
