@@ -79,9 +79,12 @@ void Plugin::init() {
       "CosmoScout.call", "sidebar", "addMeasurementTool", "Location Flag", "edit_location");
   mGuiManager->getGui()->callJavascript(
       "CosmoScout.call", "sidebar", "addMeasurementTool", "Landing Ellipse", "location_searching");
-  mGuiManager->getGui()->callJavascript("CosmoScout.call", "sidebar", "addMeasurementTool", "Path", "timeline");
-  mGuiManager->getGui()->callJavascript("CosmoScout.call", "sidebar", "addMeasurementTool", "Dip & Strike", "clear_all");
-  mGuiManager->getGui()->callJavascript("CosmoScout.call", "sidebar", "addMeasurementTool", "Polygon", "crop_landscape");
+  mGuiManager->getGui()->callJavascript(
+      "CosmoScout.call", "sidebar", "addMeasurementTool", "Path", "timeline");
+  mGuiManager->getGui()->callJavascript(
+      "CosmoScout.call", "sidebar", "addMeasurementTool", "Dip & Strike", "clear_all");
+  mGuiManager->getGui()->callJavascript(
+      "CosmoScout.call", "sidebar", "addMeasurementTool", "Polygon", "crop_landscape");
 
   mGuiManager->getGui()->registerCallback<std::string>(
       "set_measurement_tool", [this](std::string const& name) { mNextTool = name; });
@@ -138,7 +141,8 @@ void Plugin::init() {
           std::cout << mNextTool << " is not implemented yet." << std::endl;
         }
         mNextTool = "none";
-        mGuiManager->getGui()->callJavascript("CosmoScout.call", "sidebar", "deselectMeasurementTool");
+        mGuiManager->getGui()->callJavascript(
+            "CosmoScout.call", "sidebar", "deselectMeasurementTool");
       }
     }
   });
@@ -151,7 +155,8 @@ void Plugin::init() {
   mInputManager->pButtons[1].onChange().connect([this](bool pressed) {
     if (pressed) {
       mNextTool = "none";
-      mGuiManager->getGui()->callJavascript("CosmoScout.call", "sidebar", "deselectMeasurementTool");
+      mGuiManager->getGui()->callJavascript(
+          "CosmoScout.call", "sidebar", "deselectMeasurementTool");
     }
   });
 }
