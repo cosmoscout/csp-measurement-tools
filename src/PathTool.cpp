@@ -267,7 +267,7 @@ void PathTool::updateLineVertices() {
     ++currMark;
   }
 
-  mGuiItem->callJavascript("set_data", "[" + json.str() + "]");
+  mGuiItem->callJavascript("CosmoScout.call", "statistics", "setData", "[" + json.str() + "]");
 
   mIndexCount = mSampledPositions.size();
 

@@ -80,7 +80,7 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
 
   mGuiItem->registerCallback("minimize_me", [this]() { pMinimized = true; });
   mGuiItem->waitForFinishedLoading();
-  mGuiItem->callJavascript("set_active_planet", sCenter, sFrame);
+  mGuiItem->callJavascript("CosmoScout.call", "timeline", "setActivePlanet", sCenter, sFrame);
 
   pText.touch();
 }
