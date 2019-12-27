@@ -108,7 +108,7 @@ void Plugin::init() {
           tool->pLngLat = cs::utils::convert::toLngLatHeight(
               mInputManager->pHoveredObject.get().mPosition, radii[0], radii[0])
                               .xy();
-          mGuiManager->registerTool(tool);
+          mTools.push_back(tool);
         } else if (mNextTool == "Landing Ellipse") {
           auto tool = std::make_shared<EllipseTool>(mInputManager, mSolarSystem, mGraphicsEngine,
               mTimeControl, body->getCenterName(), body->getFrameName());
@@ -116,16 +116,16 @@ void Plugin::init() {
               mInputManager->pHoveredObject.get().mPosition, radii[0], radii[0])
                                                 .xy();
           tool->setNumSamples(mPluginSettings.mEllipse.mNumSamples);
-          mGuiManager->registerTool(tool);
+          mTools.push_back(tool);
         } else if (mNextTool == "Path") {
           auto tool = std::make_shared<PathTool>(mInputManager, mSolarSystem, mGraphicsEngine,
               mTimeControl, body->getCenterName(), body->getFrameName());
           tool->setNumSamples(mPluginSettings.mPath.mNumSamples);
-          mGuiManager->registerTool(tool);
+          mTools.push_back(tool);
         } else if (mNextTool == "Dip & Strike") {
           auto tool = std::make_shared<DipStrikeTool>(mInputManager, mSolarSystem, mGraphicsEngine,
               mTimeControl, body->getCenterName(), body->getFrameName());
-          mGuiManager->registerTool(tool);
+          mTools.push_back(tool);
         } else if (mNextTool == "Polygon") {
           auto tool = std::make_shared<PolygonTool>(mInputManager, mSolarSystem, mGraphicsEngine,
               mTimeControl, body->getCenterName(), body->getFrameName());
@@ -133,7 +133,7 @@ void Plugin::init() {
           tool->setMaxAttempt(mPluginSettings.mPolygon.mMaxAttempt);
           tool->setMaxPoints(mPluginSettings.mPolygon.mMaxPoints);
           tool->setSleekness(mPluginSettings.mPolygon.mSleekness);
-          mGuiManager->registerTool(tool);
+          mTools.push_back(tool);
         } else if (mNextTool != "none") {
           std::cout << mNextTool << " is not implemented yet." << std::endl;
         }
@@ -155,6 +155,22 @@ void Plugin::deInit() {
   mGuiManager->getSideBar()->unregisterCallback("set_measurement_tool");
   mInputManager->pButtons[0].onChange().disconnect(mOnClickConnection);
   mInputManager->sOnDoubleClick.disconnect(mOnDoubleClickConnection);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void Plugin::update() {
+
+  // Update all registered tools. If the pShouldDelete property is set, the Tool is removed from the
+  // list.
+  for (auto it = mTools.begin(); it != mTools.end();) {
+    if ((*it)->pShouldDelete.get()) {
+      it = mTools.erase(it);
+    } else {
+      (*it)->update();
+      ++it;
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

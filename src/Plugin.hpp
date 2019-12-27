@@ -9,7 +9,12 @@
 
 #include "../../../src/cs-core/PluginBase.hpp"
 
+#include <list>
 #include <string>
+
+namespace cs::core::tools {
+class Tool;
+}
 
 namespace csp::measurementtools {
 
@@ -44,10 +49,13 @@ class Plugin : public cs::core::PluginBase {
 
   void init() override;
   void deInit() override;
+  void update() override;
 
  private:
   Settings    mPluginSettings;
   std::string mNextTool = "none";
+
+  std::list<std::shared_ptr<cs::core::tools::Tool>> mTools;
 
   int mOnClickConnection       = -1;
   int mOnDoubleClickConnection = -1;
