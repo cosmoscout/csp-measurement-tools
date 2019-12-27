@@ -104,14 +104,14 @@ void Plugin::init() {
       if (body) {
         if (mNextTool == "Location Flag") {
           auto tool     = std::make_shared<FlagTool>(mInputManager, mSolarSystem, mGraphicsEngine,
-              mGuiManager, mTimeControl, body->getCenterName(), body->getFrameName());
+              mTimeControl, body->getCenterName(), body->getFrameName());
           tool->pLngLat = cs::utils::convert::toLngLatHeight(
               mInputManager->pHoveredObject.get().mPosition, radii[0], radii[0])
                               .xy();
           mGuiManager->registerTool(tool);
         } else if (mNextTool == "Landing Ellipse") {
           auto tool = std::make_shared<EllipseTool>(mInputManager, mSolarSystem, mGraphicsEngine,
-              mGuiManager, mTimeControl, body->getCenterName(), body->getFrameName());
+              mTimeControl, body->getCenterName(), body->getFrameName());
           tool->getCenterHandle().pLngLat = cs::utils::convert::toLngLatHeight(
               mInputManager->pHoveredObject.get().mPosition, radii[0], radii[0])
                                                 .xy();
@@ -119,16 +119,16 @@ void Plugin::init() {
           mGuiManager->registerTool(tool);
         } else if (mNextTool == "Path") {
           auto tool = std::make_shared<PathTool>(mInputManager, mSolarSystem, mGraphicsEngine,
-              mGuiManager, mTimeControl, body->getCenterName(), body->getFrameName());
+              mTimeControl, body->getCenterName(), body->getFrameName());
           tool->setNumSamples(mPluginSettings.mPath.mNumSamples);
           mGuiManager->registerTool(tool);
         } else if (mNextTool == "Dip & Strike") {
           auto tool = std::make_shared<DipStrikeTool>(mInputManager, mSolarSystem, mGraphicsEngine,
-              mGuiManager, mTimeControl, body->getCenterName(), body->getFrameName());
+              mTimeControl, body->getCenterName(), body->getFrameName());
           mGuiManager->registerTool(tool);
         } else if (mNextTool == "Polygon") {
           auto tool = std::make_shared<PolygonTool>(mInputManager, mSolarSystem, mGraphicsEngine,
-              mGuiManager, mTimeControl, body->getCenterName(), body->getFrameName());
+              mTimeControl, body->getCenterName(), body->getFrameName());
           tool->setHeightDiff(mPluginSettings.mPolygon.mHeightDiff);
           tool->setMaxAttempt(mPluginSettings.mPolygon.mMaxAttempt);
           tool->setMaxPoints(mPluginSettings.mPolygon.mMaxPoints);

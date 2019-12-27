@@ -23,7 +23,6 @@ class EllipseTool : public IVistaOpenGLDraw, public cs::core::tools::Tool {
   EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
       std::shared_ptr<cs::core::SolarSystem> const&          pSolarSystem,
       std::shared_ptr<cs::core::GraphicsEngine> const&       graphicsEngine,
-      std::shared_ptr<cs::core::GuiManager> const&           pGuiManager,
       std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
       std::string const& sFrame);
   ~EllipseTool() override;
