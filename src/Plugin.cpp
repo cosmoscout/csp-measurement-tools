@@ -86,7 +86,7 @@ void Plugin::init() {
   mGuiManager->getSideBar()->registerCallback<std::string>(
       "set_measurement_tool", [this](std::string const& name) { mNextTool = name; });
 
-  mInputManager->pButtons[0].onChange().connect([this](bool pressed) {
+  mOnClickConnection = mInputManager->pButtons[0].onChange().connect([this](bool pressed) {
     if (!pressed && !mInputManager->pHoveredGuiNode.get()) {
       auto intersection = mInputManager->pHoveredObject.get().mObject;
 
@@ -143,16 +143,9 @@ void Plugin::init() {
     }
   });
 
-  mInputManager->sOnDoubleClick.connect([this]() {
+  mOnDoubleClickConnection = mInputManager->sOnDoubleClick.connect([this]() {
     mNextTool = "none";
     mGuiManager->getSideBar()->callJavascript("deselect_measurement_tool");
-  });
-
-  mInputManager->pButtons[1].onChange().connect([this](bool pressed) {
-    if (pressed) {
-      mNextTool = "none";
-      mGuiManager->getSideBar()->callJavascript("deselect_measurement_tool");
-    }
   });
 }
 
@@ -160,6 +153,8 @@ void Plugin::init() {
 
 void Plugin::deInit() {
   mGuiManager->getSideBar()->unregisterCallback("set_measurement_tool");
+  mInputManager->pButtons[0].onChange().disconnect(mOnClickConnection);
+  mInputManager->sOnDoubleClick.disconnect(mOnDoubleClickConnection);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

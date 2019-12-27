@@ -48,6 +48,9 @@ class Plugin : public cs::core::PluginBase {
  private:
   Settings    mPluginSettings;
   std::string mNextTool = "none";
+
+  int mOnClickConnection       = -1;
+  int mOnDoubleClickConnection = -1;
 };
 
 } // namespace csp::measurementtools
