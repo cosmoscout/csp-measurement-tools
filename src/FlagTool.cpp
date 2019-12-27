@@ -88,6 +88,9 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
 FlagTool::~FlagTool() {
   mInputManager->sOnDoubleClick.disconnect(mDoubleClickConnection);
   mInputManager->unregisterSelectable(mGuiNode);
+  mGuiItem->unregisterCallback("minimize_me");
+  mGuiItem->unregisterCallback("delete_me");
+  mGuiItem->unregisterCallback("on_set_text");
   mGuiArea->removeItem(mGuiItem.get());
 
   delete mGuiNode;

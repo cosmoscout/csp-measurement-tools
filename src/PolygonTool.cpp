@@ -150,6 +150,9 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
 
 PolygonTool::~PolygonTool() {
   mGraphicsEngine->pHeightScale.onChange().disconnect(mScaleConnection);
+  mGuiItem->unregisterCallback("delete_me");
+  mGuiItem->unregisterCallback("set_add_point_mode");
+  mGuiItem->unregisterCallback("show_mesh");
 
   mInputManager->pHoveredNode    = nullptr;
   mInputManager->pHoveredGuiNode = nullptr;

@@ -189,6 +189,10 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
 
 DipStrikeTool::~DipStrikeTool() {
   mGraphicsEngine->pHeightScale.onChange().disconnect(mScaleConnection);
+  mGuiItem->unregisterCallback("delete_me");
+  mGuiItem->unregisterCallback("set_add_point_mode");
+  mGuiItem->unregisterCallback("set_size");
+  mGuiItem->unregisterCallback("set_opacity");
 
   mInputManager->pHoveredNode    = nullptr;
   mInputManager->pHoveredGuiNode = nullptr;

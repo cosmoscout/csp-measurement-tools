@@ -135,6 +135,8 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
 
 PathTool::~PathTool() {
   mGraphicsEngine->pHeightScale.onChange().disconnect(mScaleConnection);
+  mGuiItem->unregisterCallback("delete_me");
+  mGuiItem->unregisterCallback("set_add_point_mode");
 
   mInputManager->pHoveredNode    = nullptr;
   mInputManager->pHoveredGuiNode = nullptr;
