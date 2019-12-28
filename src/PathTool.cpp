@@ -65,11 +65,9 @@ void main()
 PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     std::shared_ptr<cs::core::SolarSystem> const&                 pSolarSystem,
     std::shared_ptr<cs::core::GraphicsEngine> const&              graphicsEngine,
-    std::shared_ptr<cs::core::GuiManager> const&                  pGuiManager,
     std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
     std::string const& sFrame)
-    : MultiPointTool(
-          pInputManager, pSolarSystem, graphicsEngine, pGuiManager, pTimeControl, sCenter, sFrame)
+    : MultiPointTool(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
     , mGuiArea(new cs::gui::WorldSpaceGuiArea(760, 475))
     , mGuiItem(new cs::gui::GuiItem("file://../share/resources/gui/path.html"))
     , mVAO(new VistaVertexArrayObject())
@@ -114,8 +112,7 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     pAddPointMode = enable;
   });
 
-  mGuiItem->setCursorChangeCallback(
-      [pGuiManager](cs::gui::Cursor c) { pGuiManager->setCursor(c); });
+  mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 
   mGuiItem->waitForFinishedLoading();
 
@@ -138,6 +135,8 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
 
 PathTool::~PathTool() {
   mGraphicsEngine->pHeightScale.onChange().disconnect(mScaleConnection);
+  mGuiItem->unregisterCallback("delete_me");
+  mGuiItem->unregisterCallback("set_add_point_mode");
 
   mInputManager->pHoveredNode    = nullptr;
   mInputManager->pHoveredGuiNode = nullptr;

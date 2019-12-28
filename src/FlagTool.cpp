@@ -26,10 +26,9 @@ namespace csp::measurementtools {
 FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     std::shared_ptr<cs::core::SolarSystem> const&                 pSolarSystem,
     std::shared_ptr<cs::core::GraphicsEngine> const&              graphicsEngine,
-    std::shared_ptr<cs::core::GuiManager> const&                  pGuiManager,
     std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
     std::string const& sFrame)
-    : Mark(pInputManager, pSolarSystem, graphicsEngine, pGuiManager, pTimeControl, sCenter, sFrame)
+    : Mark(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
     , mGuiArea(new cs::gui::WorldSpaceGuiArea(420, 400))
     , mGuiItem(new cs::gui::GuiItem("file://../share/resources/gui/flag.html")) {
   auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
@@ -48,8 +47,7 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
       mGuiNode, static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
   mGuiItem->registerCallback("delete_me", [this]() { pShouldDelete = true; });
-  mGuiItem->setCursorChangeCallback(
-      [pGuiManager](cs::gui::Cursor c) { pGuiManager->setCursor(c); });
+  mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 
   // update text -------------------------------------------------------------
   mTextConnection = pText.onChange().connect(
@@ -90,6 +88,9 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
 FlagTool::~FlagTool() {
   mInputManager->sOnDoubleClick.disconnect(mDoubleClickConnection);
   mInputManager->unregisterSelectable(mGuiNode);
+  mGuiItem->unregisterCallback("minimize_me");
+  mGuiItem->unregisterCallback("delete_me");
+  mGuiItem->unregisterCallback("on_set_text");
   mGuiArea->removeItem(mGuiItem.get());
 
   delete mGuiNode;

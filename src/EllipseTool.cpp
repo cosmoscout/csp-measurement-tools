@@ -7,6 +7,7 @@
 #include "EllipseTool.hpp"
 
 #include "../../../src/cs-core/GraphicsEngine.hpp"
+#include "../../../src/cs-core/GuiManager.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-scene/CelestialAnchorNode.hpp"
 #include "../../../src/cs-utils/convert.hpp"
@@ -57,19 +58,17 @@ void main()
 EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     std::shared_ptr<cs::core::SolarSystem> const&                       pSolarSystem,
     std::shared_ptr<cs::core::GraphicsEngine> const&                    graphicsEngine,
-    std::shared_ptr<cs::core::GuiManager> const&                        pGuiManager,
     std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
     std::string const& sFrame)
     : mSolarSystem(pSolarSystem)
     , mGraphicsEngine(graphicsEngine)
-    , mCenterHandle(
-          pInputManager, pSolarSystem, graphicsEngine, pGuiManager, pTimeControl, sCenter, sFrame)
+    , mCenterHandle(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
     , mAxes({glm::dvec3(pSolarSystem->getObserver().getAnchorScale(), 0.0, 0.0),
           glm::dvec3(0.0, pSolarSystem->getObserver().getAnchorScale(), 0.0)})
-    , mHandles({cs::core::tools::Mark(pInputManager, pSolarSystem, graphicsEngine, pGuiManager,
-                    pTimeControl, sCenter, sFrame),
-          cs::core::tools::Mark(pInputManager, pSolarSystem, graphicsEngine, pGuiManager,
-              pTimeControl, sCenter, sFrame)})
+    , mHandles({cs::core::tools::Mark(
+                    pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame),
+          cs::core::tools::Mark(
+              pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)})
     , mVAO(new VistaVertexArrayObject())
     , mVBO(new VistaBufferObject())
     , mShader(new VistaGLSLShader()) {
