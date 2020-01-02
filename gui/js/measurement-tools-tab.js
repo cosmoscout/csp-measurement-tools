@@ -1,5 +1,5 @@
 class MeasurementToolApi extends IApi {
-    name = 'measurement_tool';
+    name = 'measurementTool';
 
     /**
      * TODO
