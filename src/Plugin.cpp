@@ -76,7 +76,7 @@ void Plugin::init() {
   mGuiManager->addPluginTabToSideBarFromHTML(
       "Measurement Tools", "multiline_chart", "../share/resources/gui/measurement-tools-tab.html");
 
-    mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/measurement-tools-tab.js");
+    mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/measurement_tool.js");
 
   mGuiManager->getGui()->callJavascript("CosmoScout.measurementTool.addMeasurementTool",
       "Location Flag", "edit_location");
