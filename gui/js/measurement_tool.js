@@ -1,6 +1,17 @@
+/* global IApi, CosmoScout */
+
+/**
+ * Measurement Tools
+ */
 class MeasurementToolApi extends IApi {
+  /**
+   * @inheritDoc
+   */
   name = 'measurementTool';
 
+  /**
+   * @inheritDoc
+   */
   init() {
     CosmoScout.initSlider('set_widget_scale', 0.2, 2.0, 0.01, [0.6]);
   }
@@ -10,6 +21,7 @@ class MeasurementToolApi extends IApi {
    * @param name {string}
    * @param icon {string}
    */
+  // eslint-disable-next-line class-methods-use-this
   addMeasurementTool(name, icon) {
     const area = document.getElementById('measurement-tools');
 
@@ -44,6 +56,7 @@ class MeasurementToolApi extends IApi {
   /**
    * Deselect all measurement tools
    */
+  // eslint-disable-next-line class-methods-use-this
   deselectMeasurementTool() {
     document.querySelectorAll('#measurement-tools .radio-button').forEach((node) => {
       node.checked = false;
@@ -51,6 +64,7 @@ class MeasurementToolApi extends IApi {
   }
 }
 
-(function () {
+// Init class on load
+(() => {
   CosmoScout.init(MeasurementToolApi);
-}());
+})();
