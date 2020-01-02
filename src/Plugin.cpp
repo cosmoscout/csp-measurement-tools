@@ -76,12 +76,12 @@ void Plugin::init() {
   mGuiManager->addPluginTabToSideBarFromHTML(
       "Measurement Tools", "multiline_chart", "../share/resources/gui/measurement-tools-tab.html");
 
-    mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/measurement_tool.js");
+  mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/measurement_tool.js");
 
-  mGuiManager->getGui()->callJavascript("CosmoScout.measurementTool.addMeasurementTool",
-      "Location Flag", "edit_location");
-  mGuiManager->getGui()->callJavascript("CosmoScout.measurementTool.addMeasurementTool",
-      "Landing Ellipse", "location_searching");
+  mGuiManager->getGui()->callJavascript(
+      "CosmoScout.measurementTool.addMeasurementTool", "Location Flag", "edit_location");
+  mGuiManager->getGui()->callJavascript(
+      "CosmoScout.measurementTool.addMeasurementTool", "Landing Ellipse", "location_searching");
   mGuiManager->getGui()->callJavascript(
       "CosmoScout.measurementTool.addMeasurementTool", "Path", "timeline");
   mGuiManager->getGui()->callJavascript(
@@ -144,23 +144,20 @@ void Plugin::init() {
           std::cout << mNextTool << " is not implemented yet." << std::endl;
         }
         mNextTool = "none";
-        mGuiManager->getGui()->callJavascript(
-            "CosmoScout.measurementTool.deselectMeasurementTool");
+        mGuiManager->getGui()->callJavascript("CosmoScout.measurementTool.deselectMeasurementTool");
       }
     }
   });
 
   mInputManager->sOnDoubleClick.connect([this]() {
     mNextTool = "none";
-    mGuiManager->getGui()->callJavascript(
-        "CosmoScout.measurementTool.deselectMeasurementTool");
+    mGuiManager->getGui()->callJavascript("CosmoScout.measurementTool.deselectMeasurementTool");
   });
 
   mInputManager->pButtons[1].onChange().connect([this](bool pressed) {
     if (pressed) {
       mNextTool = "none";
-      mGuiManager->getGui()->callJavascript(
-          "CosmoScout.measurementTool.deselectMeasurementTool");
+      mGuiManager->getGui()->callJavascript("CosmoScout.measurementTool.deselectMeasurementTool");
     }
   });
 }
