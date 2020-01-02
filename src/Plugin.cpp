@@ -79,15 +79,15 @@ void Plugin::init() {
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/measurement_tool.js");
 
   mGuiManager->getGui()->callJavascript(
-      "CosmoScout.measurementTool.addMeasurementTool", "Location Flag", "edit_location");
+      "CosmoScout.measurementTools.add", "Location Flag", "edit_location");
   mGuiManager->getGui()->callJavascript(
-      "CosmoScout.measurementTool.addMeasurementTool", "Landing Ellipse", "location_searching");
+      "CosmoScout.measurementTools.add", "Landing Ellipse", "location_searching");
   mGuiManager->getGui()->callJavascript(
-      "CosmoScout.measurementTool.addMeasurementTool", "Path", "timeline");
+      "CosmoScout.measurementTools.add", "Path", "timeline");
   mGuiManager->getGui()->callJavascript(
-      "CosmoScout.measurementTool.addMeasurementTool", "Dip & Strike", "clear_all");
+      "CosmoScout.measurementTools.add", "Dip & Strike", "clear_all");
   mGuiManager->getGui()->callJavascript(
-      "CosmoScout.measurementTool.addMeasurementTool", "Polygon", "crop_landscape");
+      "CosmoScout.measurementTools.add", "Polygon", "crop_landscape");
 
   mGuiManager->getGui()->registerCallback<std::string>(
       "set_measurement_tool", [this](std::string const& name) { mNextTool = name; });
@@ -144,20 +144,20 @@ void Plugin::init() {
           std::cout << mNextTool << " is not implemented yet." << std::endl;
         }
         mNextTool = "none";
-        mGuiManager->getGui()->callJavascript("CosmoScout.measurementTool.deselectMeasurementTool");
+        mGuiManager->getGui()->callJavascript("CosmoScout.measurementTools.deselect");
       }
     }
   });
 
   mInputManager->sOnDoubleClick.connect([this]() {
     mNextTool = "none";
-    mGuiManager->getGui()->callJavascript("CosmoScout.measurementTool.deselectMeasurementTool");
+    mGuiManager->getGui()->callJavascript("CosmoScout.measurementTools.deselect");
   });
 
   mInputManager->pButtons[1].onChange().connect([this](bool pressed) {
     if (pressed) {
       mNextTool = "none";
-      mGuiManager->getGui()->callJavascript("CosmoScout.measurementTool.deselectMeasurementTool");
+      mGuiManager->getGui()->callJavascript("CosmoScout.measurementTools.deselect");
     }
   });
 }

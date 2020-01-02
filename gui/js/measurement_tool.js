@@ -3,11 +3,11 @@
 /**
  * Measurement Tools
  */
-class MeasurementToolApi extends IApi {
+class MeasurementToolsApi extends IApi {
   /**
    * @inheritDoc
    */
-  name = 'measurementTool';
+  name = 'measurementTools';
 
   /**
    * @inheritDoc
@@ -22,7 +22,7 @@ class MeasurementToolApi extends IApi {
    * @param icon {string}
    */
   // eslint-disable-next-line class-methods-use-this
-  addMeasurementTool(name, icon) {
+  add(name, icon) {
     const area = document.getElementById('measurement-tools');
 
     const tool = CosmoScout.loadTemplateContent('measurement-tools');
@@ -57,7 +57,7 @@ class MeasurementToolApi extends IApi {
    * Deselect all measurement tools
    */
   // eslint-disable-next-line class-methods-use-this
-  deselectMeasurementTool() {
+  deselect() {
     document.querySelectorAll('#measurement-tools .radio-button').forEach((node) => {
       node.checked = false;
     });
@@ -66,5 +66,5 @@ class MeasurementToolApi extends IApi {
 
 // Init class on load
 (() => {
-  CosmoScout.init(MeasurementToolApi);
+  CosmoScout.init(MeasurementToolsApi);
 })();
