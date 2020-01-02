@@ -77,13 +77,13 @@ void Plugin::init() {
       "Measurement Tools", "multiline_chart", "../share/resources/gui/measurement-tools-tab.html");
 
   mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/measurement_tool.js");
+  mGuiManager->addCssToGui("css/measurement-tools-sidebar.css");
 
   mGuiManager->getGui()->callJavascript(
       "CosmoScout.measurementTools.add", "Location Flag", "edit_location");
   mGuiManager->getGui()->callJavascript(
       "CosmoScout.measurementTools.add", "Landing Ellipse", "location_searching");
-  mGuiManager->getGui()->callJavascript(
-      "CosmoScout.measurementTools.add", "Path", "timeline");
+  mGuiManager->getGui()->callJavascript("CosmoScout.measurementTools.add", "Path", "timeline");
   mGuiManager->getGui()->callJavascript(
       "CosmoScout.measurementTools.add", "Dip & Strike", "clear_all");
   mGuiManager->getGui()->callJavascript(
@@ -167,6 +167,8 @@ void Plugin::init() {
 void Plugin::deInit() {
   mGuiManager->getGui()->unregisterCallback("set_measurement_tool");
   mGuiManager->getGui()->callJavascript("CosmoScout.unregisterHtml", "measurement-tool");
+  mGuiManager->getGui()->callJavascript(
+      "CosmoScout.unregisterCss", "css/measurement-tools-sidebar.css");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
