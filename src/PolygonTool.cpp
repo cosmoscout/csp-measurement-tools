@@ -73,11 +73,9 @@ void main()
 PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     std::shared_ptr<cs::core::SolarSystem> const&                       pSolarSystem,
     std::shared_ptr<cs::core::GraphicsEngine> const&                    graphicsEngine,
-    std::shared_ptr<cs::core::GuiManager> const&                        pGuiManager,
     std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
     std::string const& sFrame)
-    : MultiPointTool(
-          pInputManager, pSolarSystem, graphicsEngine, pGuiManager, pTimeControl, sCenter, sFrame)
+    : MultiPointTool(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
     , mGuiArea(new cs::gui::WorldSpaceGuiArea(600, 300))
     , mGuiItem(new cs::gui::GuiItem("file://../share/resources/gui/polygon.html"))
     , mVAO(new VistaVertexArrayObject())
@@ -125,8 +123,7 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
   });
   mGuiItem->registerCallback("show_mesh", [this]() { mShowMesh = !mShowMesh; });
 
-  mGuiItem->setCursorChangeCallback(
-      [pGuiManager](cs::gui::Cursor c) { pGuiManager->setCursor(c); });
+  mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 
   mGuiItem->waitForFinishedLoading();
 
@@ -153,6 +150,9 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
 
 PolygonTool::~PolygonTool() {
   mGraphicsEngine->pHeightScale.onChange().disconnect(mScaleConnection);
+  mGuiItem->unregisterCallback("delete_me");
+  mGuiItem->unregisterCallback("set_add_point_mode");
+  mGuiItem->unregisterCallback("show_mesh");
 
   mInputManager->pHoveredNode    = nullptr;
   mInputManager->pHoveredGuiNode = nullptr;
