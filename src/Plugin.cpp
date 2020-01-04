@@ -10,6 +10,7 @@
 #include "../../../src/cs-core/InputManager.hpp"
 #include "../../../src/cs-scene/CelestialBody.hpp"
 #include "../../../src/cs-utils/convert.hpp"
+#include "../../../src/cs-utils/logger.hpp"
 
 #include "DipStrikeTool.hpp"
 #include "EllipseTool.hpp"
@@ -65,8 +66,16 @@ void from_json(const nlohmann::json& j, Plugin::Settings& o) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+Plugin::Plugin() {
+  // Create default logger for this plugin.
+  cs::utils::logger::init("csp-measurement-tools");
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Plugin::init() {
-  std::cout << "Loading: CosmoScout VR Plugin Measurement-Tools" << std::endl;
+
+  spdlog::info("Loading plugin...");
 
   mPluginSettings = mAllSettings->mPlugins.at("csp-measurement-tools");
 
@@ -147,14 +156,20 @@ void Plugin::init() {
     mNextTool = "none";
     mGuiManager->getSideBar()->callJavascript("deselect_measurement_tool");
   });
+
+  spdlog::info("Loading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Plugin::deInit() {
+  spdlog::info("Unloading plugin...");
+
   mGuiManager->getSideBar()->unregisterCallback("set_measurement_tool");
   mInputManager->pButtons[0].onChange().disconnect(mOnClickConnection);
   mInputManager->sOnDoubleClick.disconnect(mOnDoubleClickConnection);
+
+  spdlog::info("Unloading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

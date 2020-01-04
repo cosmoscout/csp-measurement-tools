@@ -47,6 +47,8 @@ class Plugin : public cs::core::PluginBase {
     Path mPath;
   };
 
+  Plugin();
+
   void init() override;
   void deInit() override;
   void update() override;
