@@ -144,7 +144,7 @@ void Plugin::init() {
           tool->setSleekness(mPluginSettings.mPolygon.mSleekness);
           mTools.push_back(tool);
         } else if (mNextTool != "none") {
-          std::cout << mNextTool << " is not implemented yet." << std::endl;
+          spdlog::error("{} is not implemented yet.", mNextTool);
         }
         mNextTool = "none";
         mGuiManager->getSideBar()->callJavascript("deselect_measurement_tool");
