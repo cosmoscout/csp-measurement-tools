@@ -2,10 +2,10 @@
     position: absolute;
     transition: opacity 0.3s linear, top 0.3s ease;
     opacity: 1;
-    top: 0px;
+    top: 0;
     font-size: 1.4rem;
     background-color: rgba(20, 20, 20, 0.5);
-    border: 5px solid #ccf;
+    border: 5px solid var(--cs-border-color);
 }
 
 .tool-body.minimized {
@@ -36,7 +36,7 @@
     left: 5px;
     height: 400px;
     width: 5px;
-    background-color: #ccf;
+    background-color: var(--cs-background-color);
 }
 
 .flag .banner {
@@ -44,7 +44,7 @@
     left: 15px;
     right: 0;
     background-color: rgba(20, 20, 20, 0.5);
-    border-top: 5px solid #ccf;
+    border-top: 5px solid var(--cs-border-color);
 }
 
 /* Charts ------------------------------------------------------------------- */
@@ -56,12 +56,12 @@ svg:not(:root) {
 svg .axis path,
 svg .axis line {
     fill: none;
-    stroke: #ddf;
+    stroke: var(--cs-border-color-light);
     shape-rendering: crispEdges;
 }
 
 svg text {
-    fill: #ddf;
+    fill: var(--cs-border-color-light);
 }
 
 .tick line {

@@ -70,20 +70,26 @@ void Plugin::init() {
 
   mPluginSettings = mAllSettings->mPlugins.at("csp-measurement-tools");
 
+  mGuiManager->addHtmlToGui(
+      "measurement-tool", "../share/resources/gui/measurement-tool-template.html");
+
   mGuiManager->addPluginTabToSideBarFromHTML(
       "Measurement Tools", "multiline_chart", "../share/resources/gui/measurement-tools-tab.html");
 
-  mGuiManager->addScriptToSideBarFromJS("../share/resources/gui/js/measurement-tools-tab.js");
+  mGuiManager->addScriptToGuiFromJS("../share/resources/gui/js/csp-measurement-tools.js");
+  mGuiManager->addCssToGui("css/csp-measurement-tools-sidebar.css");
 
-  mGuiManager->getSideBar()->callJavascript(
-      "add_measurement_tool", "Location Flag", "edit_location");
-  mGuiManager->getSideBar()->callJavascript(
-      "add_measurement_tool", "Landing Ellipse", "location_searching");
-  mGuiManager->getSideBar()->callJavascript("add_measurement_tool", "Path", "timeline");
-  mGuiManager->getSideBar()->callJavascript("add_measurement_tool", "Dip & Strike", "clear_all");
-  mGuiManager->getSideBar()->callJavascript("add_measurement_tool", "Polygon", "crop_landscape");
+  mGuiManager->getGui()->callJavascript(
+      "CosmoScout.measurementTools.add", "Location Flag", "edit_location");
+  mGuiManager->getGui()->callJavascript(
+      "CosmoScout.measurementTools.add", "Landing Ellipse", "location_searching");
+  mGuiManager->getGui()->callJavascript("CosmoScout.measurementTools.add", "Path", "timeline");
+  mGuiManager->getGui()->callJavascript(
+      "CosmoScout.measurementTools.add", "Dip & Strike", "clear_all");
+  mGuiManager->getGui()->callJavascript(
+      "CosmoScout.measurementTools.add", "Polygon", "crop_landscape");
 
-  mGuiManager->getSideBar()->registerCallback<std::string>(
+  mGuiManager->getGui()->registerCallback<std::string>(
       "set_measurement_tool", [this](std::string const& name) { mNextTool = name; });
 
   mOnClickConnection = mInputManager->pButtons[0].onChange().connect([this](bool pressed) {
@@ -138,21 +144,25 @@ void Plugin::init() {
           std::cout << mNextTool << " is not implemented yet." << std::endl;
         }
         mNextTool = "none";
-        mGuiManager->getSideBar()->callJavascript("deselect_measurement_tool");
+        mGuiManager->getGui()->callJavascript("CosmoScout.measurementTools.deselect");
       }
     }
   });
 
   mOnDoubleClickConnection = mInputManager->sOnDoubleClick.connect([this]() {
     mNextTool = "none";
-    mGuiManager->getSideBar()->callJavascript("deselect_measurement_tool");
+    mGuiManager->getGui()->callJavascript("CosmoScout.measurementTools.deselect");
   });
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Plugin::deInit() {
-  mGuiManager->getSideBar()->unregisterCallback("set_measurement_tool");
+  mGuiManager->getGui()->unregisterCallback("set_measurement_tool");
+  mGuiManager->getGui()->callJavascript("CosmoScout.unregisterHtml", "measurement-tool");
+  mGuiManager->getGui()->callJavascript(
+      "CosmoScout.unregisterCss", "css/csp-measurement-tools-sidebar.css");
+
   mInputManager->pButtons[0].onChange().disconnect(mOnClickConnection);
   mInputManager->sOnDoubleClick.disconnect(mOnDoubleClickConnection);
 }
@@ -160,7 +170,6 @@ void Plugin::deInit() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Plugin::update() {
-
   // Update all registered tools. If the pShouldDelete property is set, the Tool is removed from the
   // list.
   for (auto it = mTools.begin(); it != mTools.end();) {
