@@ -31,22 +31,22 @@
 
         function format_height(height) {
             if (height == 0) return "0";
-            else if (Math.abs(height) < 0.1) return d3.format("f")(height * 1000) + ' mm';
-            else if (Math.abs(height) < 1) return d3.format("f")(height * 100) + ' cm';
-            else if (Math.abs(height) < 1e4) return d3.format("f")(height) + ' m';
-            else if (Math.abs(height) < 1e7) return d3.format("f")(height / 1e3) + ' km';
+            else if (Math.abs(height) < 0.1) return d3.format("~r")(height * 1000) + ' mm';
+            else if (Math.abs(height) < 1) return d3.format("~r")(height * 100) + ' cm';
+            else if (Math.abs(height) < 1e4) return d3.format("~r")(height) + ' m';
+            else if (Math.abs(height) < 1e7) return d3.format("~r")(height / 1e3) + ' km';
 
-            return d3.format("f")(height / 1e6) + ' Tsd km';
+            return d3.format("~r")(height / 1e6) + ' Tsd km';
         }
 
         function format_length(length) {
             if (length == 0) return "0";
-            else if (Math.abs(length) < 0.1) return d3.format("f")(length * 1000) + ' mm';
-            else if (Math.abs(length) < 1) return d3.format("f")(length * 100) + ' cm';
-            else if (Math.abs(length) < 1e3) return d3.format("f")(length) + ' m';
-            else if (Math.abs(length) < 1e6) return d3.format("f")(length / 1e3) + ' km';
+            else if (Math.abs(length) < 0.1) return d3.format("~r")(length * 1000) + ' mm';
+            else if (Math.abs(length) < 1) return d3.format("~r")(length * 100) + ' cm';
+            else if (Math.abs(length) < 1e3) return d3.format("~r")(length) + ' m';
+            else if (Math.abs(length) < 1e6) return d3.format("~r")(length / 1e3) + ' km';
 
-            return d3.format("f")(length / 1e6) + ' Tsd km';
+            return d3.format("~r")(length / 1e6) + ' Tsd km';
         }
 
         function init_profile_line_graph() {
