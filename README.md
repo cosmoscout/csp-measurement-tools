@@ -12,7 +12,8 @@ This is a default plugin of CosmoScout VR. Hence, any **issues should be reporte
 
 ## Configuration
 
-This plugin can be enabled with the following configuration in your `settings.json`:
+This plugin can be enabled with the following configuration in your `settings.json`.
+The given values present some good starting values for your customization:
 
 ```javascript
 {
@@ -21,16 +22,16 @@ This plugin can be enabled with the following configuration in your `settings.js
     ...
     "csp-measurement-tools": {
       "polygon": {
-        "heightDiff": <float>,
-        "maxAttempt": <int>,
-        "maxPoints": <int>,
-        "sleekness": <int>
+          "heightDiff": 1.002, // Maximum allowed relative height difference along an edged
+          "maxAttempt": 5,     // Maximum mesh refinement operations
+          "maxPoints": 1000,   // Maximum number of vertices in the generated mesh
+          "sleekness": 15      // Minium allowed triangle corner angle
       },
       "ellipse": {
-        "numSamples": <int>
+          "numSamples": 360    // Number of elevation samples taken along the ellipse
       },
       "path": {
-        "numSamples": <int>
+          "numSamples": 256    // Number of elevation samples taken between path control points
       }
     }
   }
