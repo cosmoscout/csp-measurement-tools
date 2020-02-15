@@ -8,11 +8,14 @@
     <link type="text/css" rel="stylesheet" href="third-party/css/nouislider.css" />
     <link type="text/css" rel="stylesheet" href="css/gui.css">
     <link type="text/css" rel="stylesheet" href="css/tools.css">
-    <link type="text/css" rel="stylesheet" href="css/measurement-tools.css">
+    <link type="text/css" rel="stylesheet" href="css/csp-measurement-tools.css">
 
     <script type="text/javascript" src="third-party/js/jquery-2.2.3.min.js"></script>
     <script type="text/javascript" src="third-party/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="third-party/js/nouislider.min.js"></script>
+
+    <script type="text/javascript" src="js/api.js"></script>
+    <script type="text/javascript" src="js/format.js"></script>
 
     <script type="text/javascript">
 
@@ -26,29 +29,11 @@
             else $('.tool-body').removeClass('minimized');
         }
 
-        function init_slider(id, min, max, step, start) {
-            slider = document.getElementById(id);
-            noUiSlider.create(slider, {
-                start: start,
-                connect: (start.length === 1 ? "lower" : true),
-                step: step,
-                range: { 'min': min, 'max': max },
-                format: wNumb({})
-            });
-
-            slider.noUiSlider.on('slide', function (values, handle, unencoded) {
-                if (Array.isArray(unencoded))
-                    window.call_native(id, unencoded[handle], handle);
-                else
-                    window.call_native(id, unencoded, 0);
-            });
-        }
-
 
         // entry point ---------------------------------------------------------
         $(document).ready(function () {
-            init_slider("set_opacity", 0, 1, 0.1, [0.5]);
-            init_slider("set_size", 0.1, 5, 0.1, [1.5]);
+            CosmoScout.initSlider("set_opacity", 0, 1, 0.1, [0.5]);
+            CosmoScout.initSlider("set_size", 0.1, 5, 0.1, [1.5]);
 
             set_data(10, 10);
 
