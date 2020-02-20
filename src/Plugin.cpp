@@ -150,7 +150,7 @@ void Plugin::init() {
           tool->setSleekness(mPluginSettings.mPolygon.mSleekness);
           mTools.push_back(tool);
         } else if (mNextTool != "none") {
-          spdlog::error("Failed to create tool '{}': This is an unknown tool type!", mNextTool);
+          spdlog::warn("Failed to create tool '{}': This is an unknown tool type!", mNextTool);
         }
         mNextTool = "none";
         mGuiManager->getGui()->callJavascript("CosmoScout.measurementTools.deselect");
