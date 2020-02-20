@@ -10,6 +10,7 @@
 #include "../../../src/cs-core/InputManager.hpp"
 #include "../../../src/cs-scene/CelestialBody.hpp"
 #include "../../../src/cs-utils/convert.hpp"
+#include "../../../src/cs-utils/logger.hpp"
 
 #include "DipStrikeTool.hpp"
 #include "EllipseTool.hpp"
@@ -65,8 +66,16 @@ void from_json(const nlohmann::json& j, Plugin::Settings& o) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+Plugin::Plugin() {
+  // Create default logger for this plugin.
+  spdlog::set_default_logger(cs::utils::logger::createLogger("csp-measurement-tools"));
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Plugin::init() {
-  std::cout << "Loading: CosmoScout VR Plugin Measurement-Tools" << std::endl;
+
+  spdlog::info("Loading plugin...");
 
   mPluginSettings = mAllSettings->mPlugins.at("csp-measurement-tools");
 
@@ -141,7 +150,7 @@ void Plugin::init() {
           tool->setSleekness(mPluginSettings.mPolygon.mSleekness);
           mTools.push_back(tool);
         } else if (mNextTool != "none") {
-          std::cout << mNextTool << " is not implemented yet." << std::endl;
+          spdlog::warn("Failed to create tool '{}': This is an unknown tool type!", mNextTool);
         }
         mNextTool = "none";
         mGuiManager->getGui()->callJavascript("CosmoScout.measurementTools.deselect");
@@ -153,11 +162,15 @@ void Plugin::init() {
     mNextTool = "none";
     mGuiManager->getGui()->callJavascript("CosmoScout.measurementTools.deselect");
   });
+
+  spdlog::info("Loading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Plugin::deInit() {
+  spdlog::info("Unloading plugin...");
+
   mGuiManager->getGui()->unregisterCallback("set_measurement_tool");
   mGuiManager->getGui()->callJavascript("CosmoScout.unregisterHtml", "measurement-tool");
   mGuiManager->getGui()->callJavascript(
@@ -165,6 +178,8 @@ void Plugin::deInit() {
 
   mInputManager->pButtons[0].onChange().disconnect(mOnClickConnection);
   mInputManager->sOnDoubleClick.disconnect(mOnDoubleClickConnection);
+
+  spdlog::info("Unloading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

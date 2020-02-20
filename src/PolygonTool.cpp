@@ -20,6 +20,7 @@
 #include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
 #include <VistaKernel/VistaSystem.h>
 #include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
+#include <spdlog/spdlog.h>
 
 namespace csp::measurementtools {
 
@@ -164,8 +165,6 @@ PolygonTool::~PolygonTool() {
   delete mParent;
 
   mSolarSystem->unregisterAnchor(mGuiAnchor);
-
-  std::cout << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -533,14 +532,9 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
 
   // If the voronoi edges are still wrong after 5 cycles of refinement, display the problem
   if (!edgesOK) {
-    std::cout << "\rConcave or self-intersecting polygon - Area calculation can be false!!! - "
-                 "check triangulation mesh!";
-  } else {
-    // Overlaps the warning line with an empty line
-    std::cout << "\r                                                                           "
-                 "                        ";
+    spdlog::warn("Area calculation can be false: Concave or self-intersecting polygon! Check "
+                 "triangulation mesh.");
   }
-  std::cout.flush();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
