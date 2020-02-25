@@ -20,11 +20,11 @@
             </div>
             <div class="col-2">
                 <a class="btn glass block" data-toggle="tooltip" title='Add new Points'
-                    onclick="window.call_native('set_add_point_mode', true)"><i class=" material-icons">add</i></a>
+                    onclick="window.call_native('setAddPointMode', true)"><i class=" material-icons">add</i></a>
             </div>
             <div class="col-2">
                 <a class="btn glass block" data-toggle="tooltip" title='Delete'
-                    onclick="window.call_native('delete_me')"><i class=" material-icons">delete_forever</i></a>
+                    onclick="window.call_native('deleteMe')"><i class=" material-icons">delete_forever</i></a>
             </div>
         </div>
         <div class="row">
@@ -34,13 +34,13 @@
         <div class="row">
             <div class="col-5">Opacity:</div>
             <div class="col-7">
-                <div id="set_opacity"></div>
+                <div id="setOpacity"></div>
             </div>
         </div>
         <div class="row">
             <div class="col-5">Size:</div>
             <div class="col-7">
-                <div id="set_size"></div>
+                <div id="setSize"></div>
             </div>
         </div>
     </div>
@@ -56,12 +56,12 @@
     
     <script type="text/javascript">
 
-    function set_data(dip, strike) {
+    function setData(dip, strike) {
         $(".dip-value").text(dip.toFixed(2));
         $(".strike-value").text(strike.toFixed(2));
     }
 
-    function set_minimized(minimize) {
+    function setMinimized(minimize) {
         if (minimize) $('.tool-body').addClass('minimized');
         else $('.tool-body').removeClass('minimized');
     }
@@ -72,10 +72,10 @@
             GuiApi
         );
             
-        CosmoScout.gui.initSlider("set_opacity", 0, 1, 0.1, [0.5]);
-        CosmoScout.gui.initSlider("set_size", 0.1, 5, 0.1, [1.5]);
+        CosmoScout.gui.initSlider("setOpacity", 0, 1, 0.1, [0.5]);
+        CosmoScout.gui.initSlider("setSize", 0.1, 5, 0.1, [1.5]);
         
-        set_data(10, 10);
+        setData(10, 10);
 
         $('[data-toggle="tooltip"]').tooltip({ delay: 500, placement: "auto", html: false });
     });

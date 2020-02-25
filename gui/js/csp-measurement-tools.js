@@ -13,7 +13,7 @@ class MeasurementToolsApi extends IApi {
    * @inheritDoc
    */
   init() {
-    CosmoScout.gui.initSlider('set_widget_scale', 0.2, 2.0, 0.01, [0.6]);
+    CosmoScout.gui.initSlider('setWidgetScale', 0.2, 2.0, 0.01, [0.6]);
   }
 
   /**
@@ -40,9 +40,9 @@ class MeasurementToolsApi extends IApi {
       });
 
       if (event.target.checked) {
-        CosmoScout.callbacks.set_measurement_tool(name);
+        CosmoScout.callbacks.setMeasurementTool(name);
       } else {
-        CosmoScout.callbacks.set_measurement_tool('none');
+        CosmoScout.callbacks.setMeasurementTool('none');
       }
     });
 

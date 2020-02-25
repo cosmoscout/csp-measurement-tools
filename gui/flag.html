@@ -21,24 +21,12 @@
     <script type="text/javascript">
 
         // API calls -----------------------------------------------------------
-        function set_text(text) {
-        }
-
-        function set_position(long, lat, height) {
-        }
-
-        function set_active_planet(center, frame) {
-        }
-
-        function set_minimized(minimize) {
-        }
-
         function setHeader(xhr) {
             xhr.setRequestHeader('Access-Control-Allow-Origin', '*');
         }
 
         // private methods used in this file only ------------------------------
-        function format_height(height) {
+        function formatHeight(height) {
             height = Math.round(height);
             if (height >= 1000000) {
                 return '(' + (height * 0.001).toFixed(0) + ' km)';
@@ -51,21 +39,21 @@
             }
         }
 
-        function format_latitude(lat) {
+        function formatLatitude(lat) {
             if (lat < 0)
                 return (-lat).toFixed(4) + "° S ";
             else
                 return (lat).toFixed(4) + "° N ";
         }
 
-        function format_longitude(long) {
+        function formatLongitude(long) {
             if (long < 0)
                 return (-long).toFixed(4) + "° W ";
             else
                 return (long).toFixed(4) + "° E ";
         }
 
-        function to_cartesian(longitude, latitude) {
+        function toCartesian(longitude, latitude) {
             var lon = longitude * Math.PI / 180.0;
             var lat = latitude * Math.PI / 180.0;
 
@@ -76,11 +64,11 @@
             return [x, y, z];
         }
 
-        function dist_squared(a, b) {
+        function distSquared(a, b) {
             return Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2) + Math.pow(a[2] - b[2], 2);
         }
 
-        function geo_code_reverse(longitude, latitude, callback) {
+        function geoCodeReverse(longitude, latitude, callback) {
             var planet = activePlanetCenter.toLowerCase();
 
             if (planet === "earth") {
@@ -130,13 +118,13 @@
                     var bestScore;
                     var location = "Unknown Location";
 
-                    var queryPos = to_cartesian(longitude, latitude);
+                    var queryPos = toCartesian(longitude, latitude);
 
                     var all = Object.keys(locations[planet]);
                     for (var i = all.length - 1; i >= 0; i--) {
                         var loc = locations[planet][all[i]];
-                        var pos = to_cartesian(loc[2], loc[1]);
-                        var dist = dist_squared(pos, queryPos);
+                        var pos = toCartesian(loc[2], loc[1]);
+                        var dist = distSquared(pos, queryPos);
 
                         if (!bestScore || dist < bestScore) {
                             bestScore = dist;
@@ -152,30 +140,30 @@
 
         // overridden API calls ------------------------------------------------
         var requestTimer;                //timer identifier
-        function set_position(long, lat, height) {
-            $("#placeholder-1").text(format_longitude(long) + format_latitude(lat) + format_height(height));
+        function setPosition(long, lat, height) {
+            $("#placeholder-1").text(formatLongitude(long) + formatLatitude(lat) + formatHeight(height));
 
             clearTimeout(requestTimer);
             requestTimer = setTimeout(function () {
-                geo_code_reverse(long, lat, function (location) {
+                geoCodeReverse(long, lat, function (location) {
                     $("#placeholder-2").text(location);
                 });
             }, 500);
         }
 
-        function set_text(text) {
+        function setText(text) {
             $(".text-input").val(text);
         }
 
         var activePlanetCenter = "";
         var activePlanetFrame = "";
 
-        function set_active_planet(center, frame) {
+        function setActivePlanet(center, frame) {
             activePlanetCenter = center;
             activePlanetFrame = frame;
         }
 
-        function set_minimized(minimize) {
+        function setMinimized(minimize) {
             if (minimize) $('.flag').addClass('minimized');
             else $('.flag').removeClass('minimized');
         }
@@ -200,11 +188,11 @@
                 <div class="row col-5">
                     <div class="col-6">
                         <a class="btn glass block" data-toggle="tooltip" title='Minimize'
-                            onclick="window.call_native('minimize_me')"><i class=" material-icons">file_download</i></a>
+                            onclick="window.call_native('minimizeMe')"><i class=" material-icons">file_download</i></a>
                     </div>
                     <div class="col-6">
                         <a class="btn glass block" data-toggle="tooltip" title='Delete'
-                            onclick="window.call_native('delete_me')"><i class=" material-icons">delete_forever</i></a>
+                            onclick="window.call_native('deleteMe')"><i class=" material-icons">delete_forever</i></a>
                     </div>
                 </div>
             </div>

@@ -108,8 +108,8 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
 
   mGuiItem->waitForFinishedLoading();
   
-  mGuiItem->registerCallback("delete_me", [this]() { pShouldDelete = true; });
-  mGuiItem->registerCallback<bool>("set_add_point_mode", [this](bool enable) {
+  mGuiItem->registerCallback("deleteMe", [this]() { pShouldDelete = true; });
+  mGuiItem->registerCallback<bool>("setAddPointMode", [this](bool enable) {
     addPoint();
     pAddPointMode = enable;
   });
@@ -126,7 +126,7 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
 
   // minimize gui if no point is selected
   pAnyPointSelected.onChange().connect(
-      [this](bool val) { mGuiItem->callJavascript("set_minimized", !val); });
+      [this](bool val) { mGuiItem->callJavascript("setMinimized", !val); });
 
   // add one point initially
   addPoint();
@@ -136,8 +136,8 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
 
 PathTool::~PathTool() {
   mGraphicsEngine->pHeightScale.onChange().disconnect(mScaleConnection);
-  mGuiItem->unregisterCallback("delete_me");
-  mGuiItem->unregisterCallback("set_add_point_mode");
+  mGuiItem->unregisterCallback("deleteMe");
+  mGuiItem->unregisterCallback("setAddPointMode");
 
   mInputManager->pHoveredNode    = nullptr;
   mInputManager->pHoveredGuiNode = nullptr;
@@ -267,7 +267,7 @@ void PathTool::updateLineVertices() {
     ++currMark;
   }
 
-  mGuiItem->callJavascript("set_data", "[" + json.str() + "]");
+  mGuiItem->callJavascript("setData", "[" + json.str() + "]");
 
   mIndexCount = mSampledPositions.size();
 
