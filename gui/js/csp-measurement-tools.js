@@ -32,10 +32,6 @@ class MeasurementToolsApi extends IApi {
       .replace(/%ICON%/g, icon)
       .trim();
 
-    tool.addEventListener('click', () => {
-      CosmoScout.callNative('set_celestial_body', name);
-    });
-
     tool.addEventListener('change', (event) => {
       document.querySelectorAll('#measurement-tools .radio-button').forEach((node) => {
         if (node.id !== `set_tool_${icon}`) {
@@ -44,9 +40,9 @@ class MeasurementToolsApi extends IApi {
       });
 
       if (event.target.checked) {
-        CosmoScout.callNative('set_measurement_tool', name);
+        CosmoScout.callbacks.set_measurement_tool(name);
       } else {
-        CosmoScout.callNative('set_measurement_tool', 'none');
+        CosmoScout.callbacks.set_measurement_tool('none');
       }
     });
 

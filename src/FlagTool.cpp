@@ -46,6 +46,7 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
       mGuiNode, static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
+  mGuiItem->waitForFinishedLoading();
   mGuiItem->registerCallback("delete_me", [this]() { pShouldDelete = true; });
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 
@@ -77,7 +78,6 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
       [this](bool val) { mGuiItem->callJavascript("set_minimized", val); });
 
   mGuiItem->registerCallback("minimize_me", [this]() { pMinimized = true; });
-  mGuiItem->waitForFinishedLoading();
   mGuiItem->callJavascript("set_active_planet", sCenter, sFrame);
 
   pText.touch();

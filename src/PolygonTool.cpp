@@ -117,6 +117,8 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
 
   mInputManager->registerSelectable(mGuiNode);
 
+  mGuiItem->waitForFinishedLoading();
+  
   mGuiItem->registerCallback("delete_me", [this]() { pShouldDelete = true; });
   mGuiItem->registerCallback<bool>("set_add_point_mode", [this](bool enable) {
     addPoint();
@@ -126,7 +128,6 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
 
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 
-  mGuiItem->waitForFinishedLoading();
 
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
       mGuiNode, static_cast<int>(cs::utils::DrawOrder::eTransparentItems));

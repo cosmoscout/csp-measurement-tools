@@ -106,6 +106,8 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
 
   mInputManager->registerSelectable(mGuiNode);
 
+  mGuiItem->waitForFinishedLoading();
+  
   mGuiItem->registerCallback("delete_me", [this]() { pShouldDelete = true; });
   mGuiItem->registerCallback<bool>("set_add_point_mode", [this](bool enable) {
     addPoint();
@@ -114,7 +116,6 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
 
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 
-  mGuiItem->waitForFinishedLoading();
 
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
       mGuiAnchor.get(), static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
