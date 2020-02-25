@@ -99,7 +99,7 @@ void Plugin::init() {
       "CosmoScout.measurementTools.add", "Polygon", "crop_landscape");
 
   mGuiManager->getGui()->registerCallback<std::string>(
-      "setMeasurementTool", [this](std::string const& name) { mNextTool = name; });
+      "measurementTools.setNext", [this](std::string const& name) { mNextTool = name; });
 
   mOnClickConnection = mInputManager->pButtons[0].onChange().connect([this](bool pressed) {
     if (!pressed && !mInputManager->pHoveredGuiNode.get()) {
@@ -171,7 +171,7 @@ void Plugin::init() {
 void Plugin::deInit() {
   spdlog::info("Unloading plugin...");
 
-  mGuiManager->getGui()->unregisterCallback("setMeasurementTool");
+  mGuiManager->getGui()->unregisterCallback("measurementTools.setNext");
   mGuiManager->getGui()->callJavascript("CosmoScout.gui.unregisterHtml", "measurement-tool");
   mGuiManager->getGui()->callJavascript(
       "CosmoScout.gui.unregisterCss", "css/csp-measurement-tools-sidebar.css");

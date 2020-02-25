@@ -40,9 +40,9 @@ class MeasurementToolsApi extends IApi {
       });
 
       if (event.target.checked) {
-        CosmoScout.callbacks.setMeasurementTool(name);
+        CosmoScout.callbacks.measurementTools.setNext(name);
       } else {
-        CosmoScout.callbacks.setMeasurementTool('none');
+        CosmoScout.callbacks.measurementTools.setNext('none');
       }
     });
 
