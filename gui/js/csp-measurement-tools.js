@@ -13,7 +13,7 @@ class MeasurementToolsApi extends IApi {
    * @inheritDoc
    */
   init() {
-    CosmoScout.initSlider('set_widget_scale', 0.2, 2.0, 0.01, [0.6]);
+    CosmoScout.gui.initSlider('set_widget_scale', 0.2, 2.0, 0.01, [0.6]);
   }
 
   /**
@@ -25,7 +25,7 @@ class MeasurementToolsApi extends IApi {
   add(name, icon) {
     const area = document.getElementById('measurement-tools');
 
-    const tool = CosmoScout.loadTemplateContent('measurement-tools');
+    const tool = CosmoScout.gui.loadTemplateContent('measurement-tools');
 
     tool.innerHTML = tool.innerHTML
       .replace(this.regex('CONTENT'), name)

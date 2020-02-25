@@ -10,38 +10,6 @@
     <link type="text/css" rel="stylesheet" href="css/tools.css">
     <link type="text/css" rel="stylesheet" href="css/csp-measurement-tools.css">
 
-    <script type="text/javascript" src="third-party/js/jquery-2.2.3.min.js"></script>
-    <script type="text/javascript" src="third-party/js/bootstrap.bundle.min.js"></script>
-    <script type="text/javascript" src="third-party/js/nouislider.min.js"></script>
-
-    <script type="text/javascript" src="js/api.js"></script>
-    <script type="text/javascript" src="js/format.js"></script>
-
-    <script type="text/javascript">
-
-        function set_data(dip, strike) {
-            $(".dip-value").text(dip.toFixed(2));
-            $(".strike-value").text(strike.toFixed(2));
-        }
-
-        function set_minimized(minimize) {
-            if (minimize) $('.tool-body').addClass('minimized');
-            else $('.tool-body').removeClass('minimized');
-        }
-
-
-        // entry point ---------------------------------------------------------
-        $(document).ready(function () {
-            CosmoScout.initSlider("set_opacity", 0, 1, 0.1, [0.5]);
-            CosmoScout.initSlider("set_size", 0.1, 5, 0.1, [1.5]);
-
-            set_data(10, 10);
-
-            $('[data-toggle="tooltip"]').tooltip({ delay: 500, placement: "auto", html: false });
-        });
-
-    </script>
-
 </head>
 
 <body style="overflow: hidden">
@@ -76,6 +44,43 @@
             </div>
         </div>
     </div>
+    
+    <script type="text/javascript" src="third-party/js/jquery-2.2.3.min.js"></script>
+    <script type="text/javascript" src="third-party/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="third-party/js/nouislider.min.js"></script>
+    
+    <script type="text/javascript" src="js/api.js"></script>
+    <script type="text/javascript" src="js/cosmoscout.js"></script>
+    <script type="text/javascript" src="js/apis/utils.js"></script>
+    <script type="text/javascript" src="js/apis/gui.js"></script>
+    
+    <script type="text/javascript">
+
+    function set_data(dip, strike) {
+        $(".dip-value").text(dip.toFixed(2));
+        $(".strike-value").text(strike.toFixed(2));
+    }
+
+    function set_minimized(minimize) {
+        if (minimize) $('.tool-body').addClass('minimized');
+        else $('.tool-body').removeClass('minimized');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        CosmoScout.init(
+            UtilsApi,
+            GuiApi
+            );
+            
+        CosmoScout.gui.initSlider("set_opacity", 0, 1, 0.1, [0.5]);
+        CosmoScout.gui.initSlider("set_size", 0.1, 5, 0.1, [1.5]);
+        
+        set_data(10, 10);
+
+        $('[data-toggle="tooltip"]').tooltip({ delay: 500, placement: "auto", html: false });
+    });
+
 </body>
+</script>
 
 </html>

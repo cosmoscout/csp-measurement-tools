@@ -172,9 +172,9 @@ void Plugin::deInit() {
   spdlog::info("Unloading plugin...");
 
   mGuiManager->getGui()->unregisterCallback("set_measurement_tool");
-  mGuiManager->getGui()->callJavascript("CosmoScout.unregisterHtml", "measurement-tool");
+  mGuiManager->getGui()->callJavascript("CosmoScout.gui.unregisterHtml", "measurement-tool");
   mGuiManager->getGui()->callJavascript(
-      "CosmoScout.unregisterCss", "css/csp-measurement-tools-sidebar.css");
+      "CosmoScout.gui.unregisterCss", "css/csp-measurement-tools-sidebar.css");
 
   mInputManager->pButtons[0].onChange().disconnect(mOnClickConnection);
   mInputManager->sOnDoubleClick.disconnect(mOnDoubleClickConnection);
