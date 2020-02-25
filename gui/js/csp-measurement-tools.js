@@ -28,8 +28,8 @@ class MeasurementToolsApi extends IApi {
     const tool = CosmoScout.gui.loadTemplateContent('measurement-tools');
 
     tool.innerHTML = tool.innerHTML
-      .replace(this.regex('CONTENT'), name)
-      .replace(this.regex('ICON'), icon)
+      .replace(/%CONTENT%/g, name)
+      .replace(/%ICON%/g, icon)
       .trim();
 
     tool.addEventListener('click', () => {
