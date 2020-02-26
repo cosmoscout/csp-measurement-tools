@@ -13,7 +13,7 @@ class MeasurementToolsApi extends IApi {
    * @inheritDoc
    */
   init() {
-    CosmoScout.gui.initSlider('setWidgetScale', 0.2, 2.0, 0.01, [0.6]);
+    CosmoScout.gui.initSlider('graphics.setWidgetScale', 0.2, 2.0, 0.01, [0.6]);
   }
 
   /**
