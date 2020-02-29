@@ -102,7 +102,7 @@ void Plugin::init() {
       "measurementTools.setNext", [this](std::string const& name) { mNextTool = name; });
 
   mOnClickConnection = mInputManager->pButtons[0].onChange().connect([this](bool pressed) {
-    if (!pressed && !mInputManager->pHoveredGuiNode.get()) {
+    if (!pressed && !mInputManager->pHoveredGuiItem.get()) {
       auto intersection = mInputManager->pHoveredObject.get().mObject;
 
       if (!intersection) {

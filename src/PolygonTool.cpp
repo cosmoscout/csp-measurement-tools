@@ -137,12 +137,6 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
     updateCalculation();
   });
 
-  // Minimize gui and disable mesh if no point is selected
-  pAnyPointSelected.onChange().connect([this](bool val) {
-    mGuiItem->callJavascript("setMinimized", !val);
-    mShowMesh = 0;
-  });
-
   // Add one point initially
   addPoint();
 }
@@ -156,7 +150,7 @@ PolygonTool::~PolygonTool() {
   mGuiItem->unregisterCallback("showMesh");
 
   mInputManager->pHoveredNode    = nullptr;
-  mInputManager->pHoveredGuiNode = nullptr;
+  mInputManager->pHoveredGuiItem = nullptr;
 
   mInputManager->unregisterSelectable(mGuiNode);
   delete mGuiNode;

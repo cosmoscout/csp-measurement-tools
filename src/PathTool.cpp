@@ -123,10 +123,6 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
   mScaleConnection = mGraphicsEngine->pHeightScale.onChange().connect(
       [this](float const& h) { updateLineVertices(); });
 
-  // minimize gui if no point is selected
-  pAnyPointSelected.onChange().connect(
-      [this](bool val) { mGuiItem->callJavascript("setMinimized", !val); });
-
   // add one point initially
   addPoint();
 }
@@ -139,7 +135,7 @@ PathTool::~PathTool() {
   mGuiItem->unregisterCallback("setAddPointMode");
 
   mInputManager->pHoveredNode    = nullptr;
-  mInputManager->pHoveredGuiNode = nullptr;
+  mInputManager->pHoveredGuiItem = nullptr;
 
   mInputManager->unregisterSelectable(mGuiNode);
   delete mGuiNode;

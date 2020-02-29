@@ -162,10 +162,6 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
   mScaleConnection = mGraphicsEngine->pHeightScale.onChange().connect(
       [this](float const& h) { calculateDipAndStrike(); });
 
-  // minimize gui if no point is selected
-  pAnyPointSelected.onChange().connect(
-      [this](bool val) { mGuiItem->callJavascript("setMinimized", !val); });
-
   // create circle geometry
   std::vector<glm::vec2> vPositions;
   vPositions.reserve(RESOLUTION + 1);
@@ -195,7 +191,7 @@ DipStrikeTool::~DipStrikeTool() {
   mGuiItem->unregisterCallback("setOpacity");
 
   mInputManager->pHoveredNode    = nullptr;
-  mInputManager->pHoveredGuiNode = nullptr;
+  mInputManager->pHoveredGuiItem = nullptr;
 
   mInputManager->unregisterSelectable(mGuiNode);
   delete mGuiNode;
