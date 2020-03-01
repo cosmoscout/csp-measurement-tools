@@ -46,6 +46,7 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
       mGuiNode, static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
+  mGuiItem->setCanScroll(false);
   mGuiItem->waitForFinishedLoading();
   mGuiItem->registerCallback("deleteMe", [this]() { pShouldDelete = true; });
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });

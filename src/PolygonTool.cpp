@@ -117,6 +117,7 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
 
   mInputManager->registerSelectable(mGuiNode);
 
+  mGuiItem->setCanScroll(false);
   mGuiItem->waitForFinishedLoading();
 
   mGuiItem->registerCallback("deleteMe", [this]() { pShouldDelete = true; });

@@ -106,6 +106,7 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
 
   mInputManager->registerSelectable(mGuiNode);
 
+  mGuiItem->setCanScroll(false);
   mGuiItem->waitForFinishedLoading();
 
   mGuiItem->registerCallback("deleteMe", [this]() { pShouldDelete = true; });

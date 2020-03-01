@@ -142,6 +142,7 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
 
   mInputManager->registerSelectable(mGuiNode);
 
+  mGuiItem->setCanScroll(false);
   mGuiItem->waitForFinishedLoading();
 
   mGuiItem->registerCallback("deleteMe", [this]() { pShouldDelete = true; });
