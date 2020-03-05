@@ -55,8 +55,9 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
   mTextConnection = pText.onChange().connect(
       [this](std::string const& value) { mGuiItem->callJavascript("setText", value); });
 
-  mGuiItem->registerCallback<std::string>("onSetText",
-      [this](std::string const& value) { pText.setWithEmitForAllButOne(value, mTextConnection); });
+  mGuiItem->registerCallback("onSetText", std::function([this](std::string&& value) {
+    pText.setWithEmitForAllButOne(value, mTextConnection);
+  }));
 
   // update position ---------------------------------------------------------
   pLngLat.onChange().connect([this](glm::dvec2 const& lngLat) {

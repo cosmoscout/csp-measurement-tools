@@ -120,12 +120,12 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
   mGuiItem->setCanScroll(false);
   mGuiItem->waitForFinishedLoading();
 
-  mGuiItem->registerCallback("deleteMe", [this]() { pShouldDelete = true; });
-  mGuiItem->registerCallback<bool>("setAddPointMode", [this](bool enable) {
+  mGuiItem->registerCallback("deleteMe", std::function([this]() { pShouldDelete = true; }));
+  mGuiItem->registerCallback("setAddPointMode", std::function([this](bool enable) {
     addPoint();
     pAddPointMode = enable;
-  });
-  mGuiItem->registerCallback("showMesh", [this]() { mShowMesh = !mShowMesh; });
+  }));
+  mGuiItem->registerCallback("showMesh", std::function([this]() { mShowMesh = !mShowMesh; }));
 
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 

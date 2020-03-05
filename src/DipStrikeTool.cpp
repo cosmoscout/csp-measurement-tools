@@ -145,14 +145,16 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
   mGuiItem->setCanScroll(false);
   mGuiItem->waitForFinishedLoading();
 
-  mGuiItem->registerCallback("deleteMe", [this]() { pShouldDelete = true; });
-  mGuiItem->registerCallback<bool>("setAddPointMode", [this](bool enable) {
+  mGuiItem->registerCallback("deleteMe", std::function([this]() { pShouldDelete = true; }));
+  mGuiItem->registerCallback("setAddPointMode", std::function([this](bool enable) {
     addPoint();
     pAddPointMode = enable;
-  });
+  }));
 
-  mGuiItem->registerCallback<double>("setSize", [this](double val) { mSizeFactor = (float)val; });
-  mGuiItem->registerCallback<double>("setOpacity", [this](double val) { mOpacity = (float)val; });
+  mGuiItem->registerCallback(
+      "setSize", std::function([this](double val) { mSizeFactor = (float)val; }));
+  mGuiItem->registerCallback(
+      "setOpacity", std::function([this](double val) { mOpacity = (float)val; }));
 
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 

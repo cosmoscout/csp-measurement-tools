@@ -98,8 +98,8 @@ void Plugin::init() {
   mGuiManager->getGui()->callJavascript(
       "CosmoScout.measurementTools.add", "Polygon", "crop_landscape");
 
-  mGuiManager->getGui()->registerCallback<std::string>(
-      "measurementTools.setNext", [this](std::string const& name) { mNextTool = name; });
+  mGuiManager->getGui()->registerCallback(
+      "measurementTools.setNext", std::function([this](std::string&& name) { mNextTool = name; }));
 
   mOnClickConnection = mInputManager->pButtons[0].onChange().connect([this](bool pressed) {
     if (!pressed && !mInputManager->pHoveredGuiItem.get()) {
