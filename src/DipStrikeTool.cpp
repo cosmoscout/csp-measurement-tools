@@ -142,18 +142,25 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
 
   mInputManager->registerSelectable(mGuiNode);
 
-  mGuiItem->registerCallback("delete_me", [this]() { pShouldDelete = true; });
-  mGuiItem->registerCallback<bool>("set_add_point_mode", [this](bool enable) {
-    addPoint();
-    pAddPointMode = enable;
-  });
+  mGuiItem->setCanScroll(false);
+  mGuiItem->waitForFinishedLoading();
 
-  mGuiItem->registerCallback<double>("set_size", [this](double val) { mSizeFactor = (float)val; });
-  mGuiItem->registerCallback<double>("set_opacity", [this](double val) { mOpacity = (float)val; });
+  mGuiItem->registerCallback("deleteMe", "Call this to delete the tool.",
+      std::function([this]() { pShouldDelete = true; }));
+
+  mGuiItem->registerCallback("setAddPointMode", "Call this to enable creation of new points.",
+      std::function([this](bool enable) {
+        addPoint();
+        pAddPointMode = enable;
+      }));
+
+  mGuiItem->registerCallback("setSize", "Sets the size of the dip and strike plane.",
+      std::function([this](double val) { mSizeFactor = (float)val; }));
+
+  mGuiItem->registerCallback("setOpacity", "Sets the opacity of the dip and strike plane.",
+      std::function([this](double val) { mOpacity = (float)val; }));
 
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
-
-  mGuiItem->waitForFinishedLoading();
 
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
       mGuiNode, static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
@@ -161,10 +168,6 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
   // update on height scale change
   mScaleConnection = mGraphicsEngine->pHeightScale.onChange().connect(
       [this](float const& h) { calculateDipAndStrike(); });
-
-  // minimize gui if no point is selected
-  pAnyPointSelected.onChange().connect(
-      [this](bool val) { mGuiItem->callJavascript("set_minimized", !val); });
 
   // create circle geometry
   std::vector<glm::vec2> vPositions;
@@ -189,13 +192,13 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
 
 DipStrikeTool::~DipStrikeTool() {
   mGraphicsEngine->pHeightScale.onChange().disconnect(mScaleConnection);
-  mGuiItem->unregisterCallback("delete_me");
-  mGuiItem->unregisterCallback("set_add_point_mode");
-  mGuiItem->unregisterCallback("set_size");
-  mGuiItem->unregisterCallback("set_opacity");
+  mGuiItem->unregisterCallback("deleteMe");
+  mGuiItem->unregisterCallback("setAddPointMode");
+  mGuiItem->unregisterCallback("setSize");
+  mGuiItem->unregisterCallback("setOpacity");
 
   mInputManager->pHoveredNode    = nullptr;
-  mInputManager->pHoveredGuiNode = nullptr;
+  mInputManager->pHoveredGuiItem = nullptr;
 
   mInputManager->unregisterSelectable(mGuiNode);
   delete mGuiNode;
@@ -325,10 +328,10 @@ void DipStrikeTool::calculateDipAndStrike() {
       fStrike = 360 - fStrike;
     }
 
-    mGuiItem->callJavascript("set_data", fDip, fStrike);
+    mGuiItem->callJavascript("setData", fDip, fStrike);
   } else {
     mMip = glm::normalize(glm::cross(mNormal, glm::vec3(0, 1, 0)));
-    mGuiItem->callJavascript("set_data", 0, 0);
+    mGuiItem->callJavascript("setData", 0, 0);
   }
 }
 

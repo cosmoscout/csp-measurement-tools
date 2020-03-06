@@ -98,11 +98,13 @@ void Plugin::init() {
   mGuiManager->getGui()->callJavascript(
       "CosmoScout.measurementTools.add", "Polygon", "crop_landscape");
 
-  mGuiManager->getGui()->registerCallback<std::string>(
-      "set_measurement_tool", [this](std::string const& name) { mNextTool = name; });
+  mGuiManager->getGui()->registerCallback("measurementTools.setNext",
+      "Selects which tool will be created next. The given string should be either 'Location Flag', "
+      "'Landing Ellipse, 'Path', 'Dip & Strike' or 'Polygon'.",
+      std::function([this](std::string&& name) { mNextTool = name; }));
 
   mOnClickConnection = mInputManager->pButtons[0].onChange().connect([this](bool pressed) {
-    if (!pressed && !mInputManager->pHoveredGuiNode.get()) {
+    if (!pressed && !mInputManager->pHoveredGuiItem.get()) {
       auto intersection = mInputManager->pHoveredObject.get().mObject;
 
       if (!intersection) {
@@ -171,10 +173,10 @@ void Plugin::init() {
 void Plugin::deInit() {
   spdlog::info("Unloading plugin...");
 
-  mGuiManager->getGui()->unregisterCallback("set_measurement_tool");
-  mGuiManager->getGui()->callJavascript("CosmoScout.unregisterHtml", "measurement-tool");
+  mGuiManager->getGui()->unregisterCallback("measurementTools.setNext");
+  mGuiManager->getGui()->callJavascript("CosmoScout.gui.unregisterHtml", "measurement-tool");
   mGuiManager->getGui()->callJavascript(
-      "CosmoScout.unregisterCss", "css/csp-measurement-tools-sidebar.css");
+      "CosmoScout.gui.unregisterCss", "css/csp-measurement-tools-sidebar.css");
 
   mInputManager->pButtons[0].onChange().disconnect(mOnClickConnection);
   mInputManager->sOnDoubleClick.disconnect(mOnDoubleClickConnection);

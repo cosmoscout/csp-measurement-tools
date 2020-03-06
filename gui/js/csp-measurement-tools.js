@@ -13,7 +13,7 @@ class MeasurementToolsApi extends IApi {
    * @inheritDoc
    */
   init() {
-    CosmoScout.initSlider('set_widget_scale', 0.2, 2.0, 0.01, [0.6]);
+    CosmoScout.gui.initSlider('graphics.setWidgetScale', 0.2, 2.0, 0.01, [0.6]);
   }
 
   /**
@@ -25,16 +25,12 @@ class MeasurementToolsApi extends IApi {
   add(name, icon) {
     const area = document.getElementById('measurement-tools');
 
-    const tool = CosmoScout.loadTemplateContent('measurement-tools');
+    const tool = CosmoScout.gui.loadTemplateContent('measurement-tools');
 
     tool.innerHTML = tool.innerHTML
-      .replace(this.regex('CONTENT'), name)
-      .replace(this.regex('ICON'), icon)
+      .replace(/%CONTENT%/g, name)
+      .replace(/%ICON%/g, icon)
       .trim();
-
-    tool.addEventListener('click', () => {
-      CosmoScout.callNative('set_celestial_body', name);
-    });
 
     tool.addEventListener('change', (event) => {
       document.querySelectorAll('#measurement-tools .radio-button').forEach((node) => {
@@ -44,9 +40,9 @@ class MeasurementToolsApi extends IApi {
       });
 
       if (event.target.checked) {
-        CosmoScout.callNative('set_measurement_tool', name);
+        CosmoScout.callbacks.measurementTools.setNext(name);
       } else {
-        CosmoScout.callNative('set_measurement_tool', 'none');
+        CosmoScout.callbacks.measurementTools.setNext('none');
       }
     });
 

@@ -117,16 +117,22 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
 
   mInputManager->registerSelectable(mGuiNode);
 
-  mGuiItem->registerCallback("delete_me", [this]() { pShouldDelete = true; });
-  mGuiItem->registerCallback<bool>("set_add_point_mode", [this](bool enable) {
-    addPoint();
-    pAddPointMode = enable;
-  });
-  mGuiItem->registerCallback("show_mesh", [this]() { mShowMesh = !mShowMesh; });
+  mGuiItem->setCanScroll(false);
+  mGuiItem->waitForFinishedLoading();
+
+  mGuiItem->registerCallback("deleteMe", "Call this to delete the tool.",
+      std::function([this]() { pShouldDelete = true; }));
+
+  mGuiItem->registerCallback("setAddPointMode", "Call this to enable creation of new points.",
+      std::function([this](bool enable) {
+        addPoint();
+        pAddPointMode = enable;
+      }));
+
+  mGuiItem->registerCallback("showMesh", "Enables or disables the rendering of the surface grid.",
+      std::function([this]() { mShowMesh = !mShowMesh; }));
 
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
-
-  mGuiItem->waitForFinishedLoading();
 
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
       mGuiNode, static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
@@ -137,12 +143,6 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
     updateCalculation();
   });
 
-  // Minimize gui and disable mesh if no point is selected
-  pAnyPointSelected.onChange().connect([this](bool val) {
-    mGuiItem->callJavascript("set_minimized", !val);
-    mShowMesh = 0;
-  });
-
   // Add one point initially
   addPoint();
 }
@@ -151,12 +151,12 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
 
 PolygonTool::~PolygonTool() {
   mGraphicsEngine->pHeightScale.onChange().disconnect(mScaleConnection);
-  mGuiItem->unregisterCallback("delete_me");
-  mGuiItem->unregisterCallback("set_add_point_mode");
-  mGuiItem->unregisterCallback("show_mesh");
+  mGuiItem->unregisterCallback("deleteMe");
+  mGuiItem->unregisterCallback("setAddPointMode");
+  mGuiItem->unregisterCallback("showMesh");
 
   mInputManager->pHoveredNode    = nullptr;
-  mInputManager->pHoveredGuiNode = nullptr;
+  mInputManager->pHoveredGuiItem = nullptr;
 
   mInputManager->unregisterSelectable(mGuiNode);
   delete mGuiNode;
@@ -1044,7 +1044,7 @@ void PolygonTool::updateLineVertices() {
   double minLat = cs::utils::convert::toDegrees(mBoundingBox.z);
   double maxLat = cs::utils::convert::toDegrees(mBoundingBox.w);
 
-  mGuiItem->callJavascript("set_boundary_position", minLng, minLat, maxLng, maxLat);
+  mGuiItem->callJavascript("setBoundaryPosition", minLng, minLat, maxLng, maxLat);
 
   mIndexCount = mSampledPositions.size();
 
@@ -1104,8 +1104,8 @@ void PolygonTool::updateCalculation() {
   // If polygon is to big (disable area calculation and mesh generation)
   // Voronoi implementation is designed for a maximal area of one hemisphere
   if (maxDist > radii[0]) {
-    mGuiItem->callJavascript("set_area", 0);
-    mGuiItem->callJavascript("set_volume", 0, 0);
+    mGuiItem->callJavascript("setArea", 0);
+    mGuiItem->callJavascript("setVolume", 0, 0);
     mShowMesh = 0;
     return;
   }
@@ -1291,19 +1291,19 @@ void PolygonTool::updateCalculation() {
 
     // Displays values
     if (!std::isnan(area)) {
-      mGuiItem->callJavascript("set_area", area);
+      mGuiItem->callJavascript("setArea", area);
     } else {
-      mGuiItem->callJavascript("set_area", 0);
+      mGuiItem->callJavascript("setArea", 0);
     }
 
     if ((!std::isnan(posVolume)) && (!std::isnan(negVolume))) {
-      mGuiItem->callJavascript("set_volume", posVolume, negVolume);
+      mGuiItem->callJavascript("setVolume", posVolume, negVolume);
     } else if (!std::isnan(negVolume)) {
-      mGuiItem->callJavascript("set_volume", 0, negVolume);
+      mGuiItem->callJavascript("setVolume", 0, negVolume);
     } else if (!std::isnan(posVolume)) {
-      mGuiItem->callJavascript("set_volume", posVolume, 0);
+      mGuiItem->callJavascript("setVolume", posVolume, 0);
     } else {
-      mGuiItem->callJavascript("set_volume", 0, 0);
+      mGuiItem->callJavascript("setVolume", 0, 0);
     }
   } // while ((!fine) && (attempt < mMaxAttempt) && (pointCount < mMaxPoints))
 

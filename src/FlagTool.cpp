@@ -46,22 +46,27 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
       mGuiNode, static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
-  mGuiItem->registerCallback("delete_me", [this]() { pShouldDelete = true; });
+  mGuiItem->setCanScroll(false);
+  mGuiItem->waitForFinishedLoading();
+  mGuiItem->registerCallback("deleteMe", "Call this to delete the tool.",
+      std::function([this]() { pShouldDelete = true; }));
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 
   // update text -------------------------------------------------------------
   mTextConnection = pText.onChange().connect(
-      [this](std::string const& value) { mGuiItem->callJavascript("set_text", value); });
+      [this](std::string const& value) { mGuiItem->callJavascript("setText", value); });
 
-  mGuiItem->registerCallback<std::string>("on_set_text",
-      [this](std::string const& value) { pText.setWithEmitForAllButOne(value, mTextConnection); });
+  mGuiItem->registerCallback("onSetText",
+      "This is called whenever the text input of the tool's name changes.",
+      std::function(
+          [this](std::string&& value) { pText.setWithEmitForAllButOne(value, mTextConnection); }));
 
   // update position ---------------------------------------------------------
   pLngLat.onChange().connect([this](glm::dvec2 const& lngLat) {
     auto body = mSolarSystem->getBody(mAnchor->getCenterName());
     if (body) {
       double h = body->getHeight(lngLat);
-      mGuiItem->callJavascript("set_position", cs::utils::convert::toDegrees(lngLat.x),
+      mGuiItem->callJavascript("setPosition", cs::utils::convert::toDegrees(lngLat.x),
           cs::utils::convert::toDegrees(lngLat.y), h);
     }
   });
@@ -74,11 +79,11 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
   });
 
   pMinimized.onChange().connect(
-      [this](bool val) { mGuiItem->callJavascript("set_minimized", val); });
+      [this](bool val) { mGuiItem->callJavascript("setMinimized", val); });
 
-  mGuiItem->registerCallback("minimize_me", [this]() { pMinimized = true; });
-  mGuiItem->waitForFinishedLoading();
-  mGuiItem->callJavascript("set_active_planet", sCenter, sFrame);
+  mGuiItem->registerCallback("minimizeMe", "Call this to minimize the flag.",
+      std::function([this]() { pMinimized = true; }));
+  mGuiItem->callJavascript("setActivePlanet", sCenter, sFrame);
 
   pText.touch();
 }
@@ -88,9 +93,9 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
 FlagTool::~FlagTool() {
   mInputManager->sOnDoubleClick.disconnect(mDoubleClickConnection);
   mInputManager->unregisterSelectable(mGuiNode);
-  mGuiItem->unregisterCallback("minimize_me");
-  mGuiItem->unregisterCallback("delete_me");
-  mGuiItem->unregisterCallback("on_set_text");
+  mGuiItem->unregisterCallback("minimizeMe");
+  mGuiItem->unregisterCallback("deleteMe");
+  mGuiItem->unregisterCallback("onSetText");
   mGuiArea->removeItem(mGuiItem.get());
 
   delete mGuiNode;

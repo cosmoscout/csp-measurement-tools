@@ -106,15 +106,19 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
 
   mInputManager->registerSelectable(mGuiNode);
 
-  mGuiItem->registerCallback("delete_me", [this]() { pShouldDelete = true; });
-  mGuiItem->registerCallback<bool>("set_add_point_mode", [this](bool enable) {
-    addPoint();
-    pAddPointMode = enable;
-  });
+  mGuiItem->setCanScroll(false);
+  mGuiItem->waitForFinishedLoading();
+
+  mGuiItem->registerCallback("deleteMe", "Call this to delete the tool.",
+      std::function([this]() { pShouldDelete = true; }));
+
+  mGuiItem->registerCallback("setAddPointMode", "Call this to enable creation of new points.",
+      std::function([this](bool enable) {
+        addPoint();
+        pAddPointMode = enable;
+      }));
 
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
-
-  mGuiItem->waitForFinishedLoading();
 
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
       mGuiAnchor.get(), static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
@@ -122,10 +126,6 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
   // whenever the height scale changes our vertex positions need to be updated
   mScaleConnection = mGraphicsEngine->pHeightScale.onChange().connect(
       [this](float const& h) { updateLineVertices(); });
-
-  // minimize gui if no point is selected
-  pAnyPointSelected.onChange().connect(
-      [this](bool val) { mGuiItem->callJavascript("set_minimized", !val); });
 
   // add one point initially
   addPoint();
@@ -135,11 +135,11 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
 
 PathTool::~PathTool() {
   mGraphicsEngine->pHeightScale.onChange().disconnect(mScaleConnection);
-  mGuiItem->unregisterCallback("delete_me");
-  mGuiItem->unregisterCallback("set_add_point_mode");
+  mGuiItem->unregisterCallback("deleteMe");
+  mGuiItem->unregisterCallback("setAddPointMode");
 
   mInputManager->pHoveredNode    = nullptr;
-  mInputManager->pHoveredGuiNode = nullptr;
+  mInputManager->pHoveredGuiItem = nullptr;
 
   mInputManager->unregisterSelectable(mGuiNode);
   delete mGuiNode;
@@ -266,7 +266,7 @@ void PathTool::updateLineVertices() {
     ++currMark;
   }
 
-  mGuiItem->callJavascript("set_data", "[" + json.str() + "]");
+  mGuiItem->callJavascript("setData", "[" + json.str() + "]");
 
   mIndexCount = mSampledPositions.size();
 
