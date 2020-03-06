@@ -111,6 +111,7 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
 
   mGuiItem->registerCallback("deleteMe", "Call this to delete the tool.",
       std::function([this]() { pShouldDelete = true; }));
+      
   mGuiItem->registerCallback("setAddPointMode", "Call this to enable creation of new points.",
       std::function([this](bool enable) {
         addPoint();

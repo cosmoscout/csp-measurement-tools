@@ -147,6 +147,7 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
 
   mGuiItem->registerCallback("deleteMe", "Call this to delete the tool.",
       std::function([this]() { pShouldDelete = true; }));
+      
   mGuiItem->registerCallback("setAddPointMode", "Call this to enable creation of new points.",
       std::function([this](bool enable) {
         addPoint();
@@ -155,6 +156,7 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
 
   mGuiItem->registerCallback("setSize", "Sets the size of the dip and strike plane.",
       std::function([this](double val) { mSizeFactor = (float)val; }));
+      
   mGuiItem->registerCallback("setOpacity", "Sets the opacity of the dip and strike plane.",
       std::function([this](double val) { mOpacity = (float)val; }));
 
