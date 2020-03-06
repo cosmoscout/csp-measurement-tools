@@ -145,16 +145,18 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
   mGuiItem->setCanScroll(false);
   mGuiItem->waitForFinishedLoading();
 
-  mGuiItem->registerCallback("deleteMe", std::function([this]() { pShouldDelete = true; }));
-  mGuiItem->registerCallback("setAddPointMode", std::function([this](bool enable) {
-    addPoint();
-    pAddPointMode = enable;
-  }));
+  mGuiItem->registerCallback("deleteMe", "Call this to delete the tool.",
+      std::function([this]() { pShouldDelete = true; }));
+  mGuiItem->registerCallback("setAddPointMode", "Call this to enable creation of new points.",
+      std::function([this](bool enable) {
+        addPoint();
+        pAddPointMode = enable;
+      }));
 
-  mGuiItem->registerCallback(
-      "setSize", std::function([this](double val) { mSizeFactor = (float)val; }));
-  mGuiItem->registerCallback(
-      "setOpacity", std::function([this](double val) { mOpacity = (float)val; }));
+  mGuiItem->registerCallback("setSize", "Sets the size of the dip and strike plane.",
+      std::function([this](double val) { mSizeFactor = (float)val; }));
+  mGuiItem->registerCallback("setOpacity", "Sets the opacity of the dip and strike plane.",
+      std::function([this](double val) { mOpacity = (float)val; }));
 
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 

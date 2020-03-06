@@ -109,11 +109,13 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
   mGuiItem->setCanScroll(false);
   mGuiItem->waitForFinishedLoading();
 
-  mGuiItem->registerCallback("deleteMe", std::function([this]() { pShouldDelete = true; }));
-  mGuiItem->registerCallback("setAddPointMode", std::function([this](bool enable) {
-    addPoint();
-    pAddPointMode = enable;
-  }));
+  mGuiItem->registerCallback("deleteMe", "Call this to delete the tool.",
+      std::function([this]() { pShouldDelete = true; }));
+  mGuiItem->registerCallback("setAddPointMode", "Call this to enable creation of new points.",
+      std::function([this](bool enable) {
+        addPoint();
+        pAddPointMode = enable;
+      }));
 
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 

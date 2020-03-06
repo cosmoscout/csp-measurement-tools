@@ -48,16 +48,18 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
 
   mGuiItem->setCanScroll(false);
   mGuiItem->waitForFinishedLoading();
-  mGuiItem->registerCallback("deleteMe", [this]() { pShouldDelete = true; });
+  mGuiItem->registerCallback("deleteMe", "Call this to delete the tool.",
+      std::function([this]() { pShouldDelete = true; }));
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 
   // update text -------------------------------------------------------------
   mTextConnection = pText.onChange().connect(
       [this](std::string const& value) { mGuiItem->callJavascript("setText", value); });
 
-  mGuiItem->registerCallback("onSetText", std::function([this](std::string&& value) {
-    pText.setWithEmitForAllButOne(value, mTextConnection);
-  }));
+  mGuiItem->registerCallback("onSetText",
+      "This is called whenever the text input of the tool's name changes.",
+      std::function(
+          [this](std::string&& value) { pText.setWithEmitForAllButOne(value, mTextConnection); }));
 
   // update position ---------------------------------------------------------
   pLngLat.onChange().connect([this](glm::dvec2 const& lngLat) {
@@ -79,7 +81,8 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
   pMinimized.onChange().connect(
       [this](bool val) { mGuiItem->callJavascript("setMinimized", val); });
 
-  mGuiItem->registerCallback("minimizeMe", [this]() { pMinimized = true; });
+  mGuiItem->registerCallback("minimizeMe", "Call this to minimize the flag.",
+      std::function([this]() { pMinimized = true; }));
   mGuiItem->callJavascript("setActivePlanet", sCenter, sFrame);
 
   pText.touch();
