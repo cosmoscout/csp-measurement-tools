@@ -44,41 +44,43 @@
             </div>
         </div>
     </div>
-    
+
     <script type="text/javascript" src="third-party/js/jquery-2.2.3.min.js"></script>
     <script type="text/javascript" src="third-party/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="third-party/js/nouislider.min.js"></script>
-    
+
     <script type="text/javascript" src="js/api.js"></script>
     <script type="text/javascript" src="js/cosmoscout.js"></script>
     <script type="text/javascript" src="js/apis/utils.js"></script>
     <script type="text/javascript" src="js/apis/gui.js"></script>
-    
+
     <script type="text/javascript">
 
-    function setData(dip, strike) {
-        $(".dip-value").text(dip.toFixed(2));
-        $(".strike-value").text(strike.toFixed(2));
-    }
+        function setData(dip, strike) {
+            $(".dip-value").text(dip.toFixed(2));
+            $(".strike-value").text(strike.toFixed(2));
+        }
 
-    function setMinimized(minimize) {
-        if (minimize) $('.tool-body').addClass('minimized');
-        else $('.tool-body').removeClass('minimized');
-    }
+        function setMinimized(minimize) {
+            if (minimize) $('.tool-body').addClass('minimized');
+            else $('.tool-body').removeClass('minimized');
+        }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        CosmoScout.init(
-            UtilsApi,
-            GuiApi
-        );
-            
-        CosmoScout.gui.initSlider("setOpacity", 0, 1, 0.1, [0.5]);
-        CosmoScout.gui.initSlider("setSize", 0.1, 5, 0.1, [1.5]);
-        
-        setData(10, 10);
+        var CosmoScout = new CosmoScoutAPI();
 
-        $('[data-toggle="tooltip"]').tooltip({ delay: 500, placement: "auto", html: false });
-    });
+        document.addEventListener('DOMContentLoaded', () => {
+            CosmoScout.init(
+                UtilsApi,
+                GuiApi
+            );
+
+            CosmoScout.gui.initSlider("setOpacity", 0, 1, 0.1, [0.5]);
+            CosmoScout.gui.initSlider("setSize", 0.1, 5, 0.1, [1.5]);
+
+            setData(10, 10);
+
+            $('[data-toggle="tooltip"]').tooltip({ delay: 500, placement: "auto", html: false });
+        });
 
     </script>
 </body>
