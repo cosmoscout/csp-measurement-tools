@@ -27,10 +27,7 @@ class MeasurementToolsApi extends IApi {
 
     const tool = CosmoScout.gui.loadTemplateContent('measurement-tools');
 
-    tool.innerHTML = tool.innerHTML
-      .replace(/%CONTENT%/g, name)
-      .replace(/%ICON%/g, icon)
-      .trim();
+    tool.innerHTML = tool.innerHTML.replace(/%CONTENT%/g, name).replace(/%ICON%/g, icon).trim();
 
     tool.addEventListener('change', (event) => {
       document.querySelectorAll('#measurement-tools .radio-button').forEach((node) => {
