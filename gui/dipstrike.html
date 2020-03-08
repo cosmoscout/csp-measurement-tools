@@ -2,87 +2,87 @@
 <html>
 
 <head>
-    <meta charset="utf-8">
+  <meta charset="utf-8">
 
-    <link type="text/css" rel="stylesheet" href="third-party/css/bootstrap.min.css" />
-    <link type="text/css" rel="stylesheet" href="third-party/css/nouislider.css" />
-    <link type="text/css" rel="stylesheet" href="css/gui.css">
-    <link type="text/css" rel="stylesheet" href="css/tools.css">
-    <link type="text/css" rel="stylesheet" href="css/csp-measurement-tools.css">
+  <link type="text/css" rel="stylesheet" href="third-party/css/bootstrap.min.css" />
+  <link type="text/css" rel="stylesheet" href="third-party/css/nouislider.css" />
+  <link type="text/css" rel="stylesheet" href="css/gui.css">
+  <link type="text/css" rel="stylesheet" href="css/tools.css">
+  <link type="text/css" rel="stylesheet" href="css/csp-measurement-tools.css">
 
 </head>
 
 <body style="overflow: hidden">
-    <div class="tool-body" style="width: 400px">
-        <div class="row">
-            <div class="col-8">
-                <input type='text' class='text-input' value='Dip & Strike' />
-            </div>
-            <div class="col-2">
-                <a class="btn glass block" data-toggle="tooltip" title='Add new Points'
-                    onclick="window.callNative('setAddPointMode', true)"><i class=" material-icons">add</i></a>
-            </div>
-            <div class="col-2">
-                <a class="btn glass block" data-toggle="tooltip" title='Delete'
-                    onclick="window.callNative('deleteMe')"><i class=" material-icons">delete_forever</i></a>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-6">Dip: <span class="dip-value"></span>°</div>
-            <div class="col-6">Strike: <span class="strike-value"></span>°</div>
-        </div>
-        <div class="row">
-            <div class="col-5">Opacity:</div>
-            <div class="col-7">
-                <div data-callback="setOpacity"></div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-5">Size:</div>
-            <div class="col-7">
-                <div data-callback="setSize"></div>
-            </div>
-        </div>
+  <div class="tool-body" style="width: 400px">
+    <div class="row">
+      <div class="col-8">
+        <input type='text' class='text-input' value='Dip & Strike' />
+      </div>
+      <div class="col-2">
+        <a class="btn glass block" data-toggle="tooltip" title='Add new Points'
+          onclick="window.callNative('setAddPointMode', true)"><i class=" material-icons">add</i></a>
+      </div>
+      <div class="col-2">
+        <a class="btn glass block" data-toggle="tooltip" title='Delete' onclick="window.callNative('deleteMe')"><i
+            class=" material-icons">delete_forever</i></a>
+      </div>
     </div>
+    <div class="row">
+      <div class="col-6">Dip: <span class="dip-value"></span>°</div>
+      <div class="col-6">Strike: <span class="strike-value"></span>°</div>
+    </div>
+    <div class="row">
+      <div class="col-5">Opacity:</div>
+      <div class="col-7">
+        <div data-callback="setOpacity"></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-5">Size:</div>
+      <div class="col-7">
+        <div data-callback="setSize"></div>
+      </div>
+    </div>
+  </div>
 
-    <script type="text/javascript" src="third-party/js/jquery-2.2.3.min.js"></script>
-    <script type="text/javascript" src="third-party/js/bootstrap.bundle.min.js"></script>
-    <script type="text/javascript" src="third-party/js/nouislider.min.js"></script>
+  <script type="text/javascript" src="third-party/js/jquery-2.2.3.min.js"></script>
+  <script type="text/javascript" src="third-party/js/bootstrap.bundle.min.js"></script>
+  <script type="text/javascript" src="third-party/js/nouislider.min.js"></script>
 
-    <script type="text/javascript" src="js/api.js"></script>
-    <script type="text/javascript" src="js/cosmoscout.js"></script>
-    <script type="text/javascript" src="js/apis/utils.js"></script>
-    <script type="text/javascript" src="js/apis/gui.js"></script>
+  <script type="text/javascript" src="js/api.js"></script>
+  <script type="text/javascript" src="js/cosmoscout.js"></script>
+  <script type="text/javascript" src="js/apis/utils.js"></script>
+  <script type="text/javascript" src="js/apis/gui.js"></script>
 
-    <script type="text/javascript">
+  <script type="text/javascript">
 
-        function setData(dip, strike) {
-            $(".dip-value").text(dip.toFixed(2));
-            $(".strike-value").text(strike.toFixed(2));
-        }
+    function setData(dip, strike) {
+      $(".dip-value").text(dip.toFixed(2));
+      $(".strike-value").text(strike.toFixed(2));
+    }
 
-        function setMinimized(minimize) {
-            if (minimize) $('.tool-body').addClass('minimized');
-            else $('.tool-body').removeClass('minimized');
-        }
+    function setMinimized(minimize) {
+      if (minimize) $('.tool-body').addClass('minimized');
+      else $('.tool-body').removeClass('minimized');
+    }
 
-        var CosmoScout = new CosmoScoutAPI();
+    var CosmoScout = new CosmoScoutAPI();
 
-        document.addEventListener('DOMContentLoaded', () => {
-            CosmoScout.init(
-                UtilsApi,
-                GuiApi
-            );
+    document.addEventListener('DOMContentLoaded', () => {
+      CosmoScout.init(
+        UtilsApi,
+        GuiApi
+      );
 
-            CosmoScout.gui.initSlider("setOpacity", 0, 1, 0.1, [0.5]);
-            CosmoScout.gui.initSlider("setSize", 0.1, 5, 0.1, [1.5]);
+      CosmoScout.gui.initSlider("setOpacity", 0, 1, 0.1, [0.5]);
+      CosmoScout.gui.initSlider("setSize", 0.1, 5, 0.1, [1.5]);
 
-            setData(10, 10);
+      setData(10, 10);
 
-            $('[data-toggle="tooltip"]').tooltip({ delay: 500, placement: "auto", html: false });
-        });
+      $('[data-toggle="tooltip"]').tooltip({ delay: 500, placement: "auto", html: false });
+    });
 
-    </script>
+  </script>
 </body>
 
 </html>
