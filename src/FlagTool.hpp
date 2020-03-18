@@ -38,8 +38,8 @@ class FlagTool : public cs::core::tools::Mark {
   void update() override;
 
  private:
-  VistaOpenGLNode*                            mGuiNode      = nullptr;
-  VistaTransformNode*                         mGuiTransform = nullptr;
+  std::unique_ptr<VistaTransformNode>         mGuiTransform;
+  std::unique_ptr<VistaOpenGLNode>            mGuiNode;
   std::unique_ptr<cs::gui::WorldSpaceGuiArea> mGuiArea;
   std::unique_ptr<cs::gui::GuiItem>           mGuiItem;
 

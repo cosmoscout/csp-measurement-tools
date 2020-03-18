@@ -80,7 +80,7 @@ void Plugin::init() {
   mPluginSettings = mAllSettings->mPlugins.at("csp-measurement-tools");
 
   mGuiManager->addHtmlToGui(
-      "measurement-tool", "../share/resources/gui/measurement-tool-template.html");
+      "measurement-tools", "../share/resources/gui/measurement-tool-template.html");
 
   mGuiManager->addPluginTabToSideBarFromHTML(
       "Measurement Tools", "multiline_chart", "../share/resources/gui/measurement-tools-tab.html");
@@ -173,8 +173,10 @@ void Plugin::init() {
 void Plugin::deInit() {
   spdlog::info("Unloading plugin...");
 
+  mGuiManager->removePluginTab("Measurement Tools");
+
   mGuiManager->getGui()->unregisterCallback("measurementTools.setNext");
-  mGuiManager->getGui()->callJavascript("CosmoScout.gui.unregisterHtml", "measurement-tool");
+  mGuiManager->getGui()->callJavascript("CosmoScout.gui.unregisterHtml", "measurement-tools");
   mGuiManager->getGui()->callJavascript(
       "CosmoScout.gui.unregisterCss", "css/csp-measurement-tools-sidebar.css");
 

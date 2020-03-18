@@ -78,25 +78,21 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
     std::string const& sFrame)
     : MultiPointTool(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
     , mGuiArea(new cs::gui::WorldSpaceGuiArea(600, 300))
-    , mGuiItem(new cs::gui::GuiItem("file://../share/resources/gui/polygon.html"))
-    , mVAO(new VistaVertexArrayObject())
-    , mVAO2(new VistaVertexArrayObject())
-    , mVBO(new VistaBufferObject())
-    , mVBO2(new VistaBufferObject())
-    , mShader(new VistaGLSLShader()) {
+    , mGuiItem(new cs::gui::GuiItem("file://../share/resources/gui/polygon.html")) {
+
   // Create the shader
-  mShader->InitVertexShaderFromString(SHADER_VERT);
-  mShader->InitFragmentShaderFromString(SHADER_FRAG);
-  mShader->Link();
+  mShader.InitVertexShaderFromString(SHADER_VERT);
+  mShader.InitFragmentShaderFromString(SHADER_FRAG);
+  mShader.Link();
 
   // Attach this as OpenGLNode to scenegraph's root (all line vertices
   // will be draw relative to the observer, therfore we do not want
   // any transformation)
   auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
-  mParent  = pSG->NewOpenGLNode(pSG->GetRoot(), this);
+  mParent.reset(pSG->NewOpenGLNode(pSG->GetRoot(), this));
 
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-      mParent, static_cast<int>(cs::utils::DrawOrder::eOpaqueItems));
+      mParent.get(), static_cast<int>(cs::utils::DrawOrder::eOpaqueItems));
 
   // Create a a VistaCelestialAnchorNode for the user interface
   // it will be moved to the center of all points when a point is moved
@@ -107,15 +103,15 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
   mSolarSystem->registerAnchor(mGuiAnchor);
 
   // Create the user interface
-  mGuiTransform = pSG->NewTransformNode(mGuiAnchor.get());
+  mGuiTransform.reset(pSG->NewTransformNode(mGuiAnchor.get()));
   mGuiTransform->Translate(0.0f, 0.9f, 0.0f);
   mGuiTransform->Scale(0.001f * mGuiArea->getWidth(), 0.001f * mGuiArea->getHeight(), 1.f);
   mGuiTransform->Rotate(VistaAxisAndAngle(VistaVector3D(0.0, 1.0, 0.0), -glm::pi<float>() / 2.f));
   mGuiArea->addItem(mGuiItem.get());
   mGuiArea->setUseLinearDepthBuffer(true);
-  mGuiNode = pSG->NewOpenGLNode(mGuiTransform, mGuiArea.get());
+  mGuiNode.reset(pSG->NewOpenGLNode(mGuiTransform.get(), mGuiArea.get()));
 
-  mInputManager->registerSelectable(mGuiNode);
+  mInputManager->registerSelectable(mGuiNode.get());
 
   mGuiItem->setCanScroll(false);
   mGuiItem->waitForFinishedLoading();
@@ -135,13 +131,14 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-      mGuiNode, static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
+      mGuiNode.get(), static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
   // Whenever the height scale changes our vertex positions need to be updated
   mScaleConnection = mGraphicsEngine->pHeightScale.onChange().connect([this](float const& h) {
     updateLineVertices();
     updateCalculation();
   });
+  mGraphicsEngine->pHeightScale.touchFor(mScaleConnection);
 
   // Add one point initially
   addPoint();
@@ -155,16 +152,11 @@ PolygonTool::~PolygonTool() {
   mGuiItem->unregisterCallback("setAddPointMode");
   mGuiItem->unregisterCallback("showMesh");
 
-  mInputManager->pHoveredNode    = nullptr;
-  mInputManager->pHoveredGuiItem = nullptr;
-
-  mInputManager->unregisterSelectable(mGuiNode);
-  delete mGuiNode;
-  delete mGuiTransform;
-
-  delete mParent;
-
+  mInputManager->unregisterSelectable(mGuiNode.get());
   mSolarSystem->unregisterAnchor(mGuiAnchor);
+
+  auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  pSG->GetRoot()->DisconnectChild(mGuiAnchor.get());
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1049,12 +1041,12 @@ void PolygonTool::updateLineVertices() {
   mIndexCount = mSampledPositions.size();
 
   // Upload new data
-  mVBO->Bind(GL_ARRAY_BUFFER);
-  mVBO->BufferData(mSampledPositions.size() * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
-  mVBO->Release();
+  mVBO.Bind(GL_ARRAY_BUFFER);
+  mVBO.BufferData(mSampledPositions.size() * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
+  mVBO.Release();
 
-  mVAO->EnableAttributeArray(0);
-  mVAO->SpecifyAttributeArrayFloat(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0, mVBO.get());
+  mVAO.EnableAttributeArray(0);
+  mVAO.SpecifyAttributeArrayFloat(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0, &mVBO);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1310,12 +1302,12 @@ void PolygonTool::updateCalculation() {
   mIndexCount2 = mTriangulation.size();
 
   // Uploads new data
-  mVBO2->Bind(GL_ARRAY_BUFFER);
-  mVBO2->BufferData(mTriangulation.size() * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
-  mVBO2->Release();
+  mVBO2.Bind(GL_ARRAY_BUFFER);
+  mVBO2.BufferData(mTriangulation.size() * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
+  mVBO2.Release();
 
-  mVAO2->EnableAttributeArray(0);
-  mVAO2->SpecifyAttributeArrayFloat(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0, mVBO2.get());
+  mVAO2.EnableAttributeArray(0);
+  mVAO2.SpecifyAttributeArrayFloat(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0, &mVBO2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1354,9 +1346,9 @@ bool PolygonTool::Do() {
   }
 
   // Uploads the new points to the GPU
-  mVBO->Bind(GL_ARRAY_BUFFER);
-  mVBO->BufferSubData(0, vRelativePositions.size() * sizeof(glm::vec3), vRelativePositions.data());
-  mVBO->Release();
+  mVBO.Bind(GL_ARRAY_BUFFER);
+  mVBO.BufferSubData(0, vRelativePositions.size() * sizeof(glm::vec3), vRelativePositions.data());
+  mVBO.Release();
 
   glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_LINE_BIT);
 
@@ -1373,43 +1365,43 @@ bool PolygonTool::Do() {
   glGetFloatv(GL_MODELVIEW_MATRIX, &glMatMV[0]);
   glGetFloatv(GL_PROJECTION_MATRIX, &glMatP[0]);
 
-  mShader->Bind();
-  mVAO->Bind();
-  glUniformMatrix4fv(mShader->GetUniformLocation("uMatModelView"), 1, GL_FALSE, glMatMV);
-  glUniformMatrix4fv(mShader->GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
+  mShader.Bind();
+  mVAO.Bind();
+  glUniformMatrix4fv(mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glMatMV);
+  glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
 
-  mShader->SetUniform(
-      mShader->GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
+  mShader.SetUniform(
+      mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
 
-  mShader->SetUniform(mShader->GetUniformLocation("uColor"), 1.f, 1.f, 1.f, 1.f);
+  mShader.SetUniform(mShader.GetUniformLocation("uColor"), 1.f, 1.f, 1.f, 1.f);
 
   // Draws the linestrip
   glDrawArrays(GL_LINE_STRIP, 0, mIndexCount);
-  mVAO->Release();
+  mVAO.Release();
 
   // For Delaunay
   if (mShowMesh) {
-    mVBO2->Bind(GL_ARRAY_BUFFER);
-    mVBO2->BufferSubData(
+    mVBO2.Bind(GL_ARRAY_BUFFER);
+    mVBO2.BufferSubData(
         0, vRelativePositions2.size() * sizeof(glm::vec3), vRelativePositions2.data());
-    mVBO2->Release();
+    mVBO2.Release();
 
     glLineWidth(2);
 
-    mVAO2->Bind();
+    mVAO2.Bind();
 
-    mShader->SetUniform(mShader->GetUniformLocation("uColor"), 0.5f, 0.5f, 1.f, 0.8f);
+    mShader.SetUniform(mShader.GetUniformLocation("uColor"), 0.5f, 0.5f, 1.f, 0.8f);
 
     glDisable(GL_DEPTH_TEST);
 
     // Draws the linestrip (Delaunay)
     glDrawArrays(GL_LINES, 0, mIndexCount2);
-    mVAO2->Release();
+    mVAO2.Release();
 
     glEnable(GL_DEPTH_TEST);
   }
 
-  mShader->Release();
+  mShader.Release();
 
   glPopAttrib();
   return true;

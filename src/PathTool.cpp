@@ -69,23 +69,21 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     std::string const& sFrame)
     : MultiPointTool(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
     , mGuiArea(new cs::gui::WorldSpaceGuiArea(760, 475))
-    , mGuiItem(new cs::gui::GuiItem("file://../share/resources/gui/path.html"))
-    , mVAO(new VistaVertexArrayObject())
-    , mVBO(new VistaBufferObject())
-    , mShader(new VistaGLSLShader()) {
+    , mGuiItem(new cs::gui::GuiItem("file://../share/resources/gui/path.html")) {
+
   // create the shader
-  mShader->InitVertexShaderFromString(SHADER_VERT);
-  mShader->InitFragmentShaderFromString(SHADER_FRAG);
-  mShader->Link();
+  mShader.InitVertexShaderFromString(SHADER_VERT);
+  mShader.InitFragmentShaderFromString(SHADER_FRAG);
+  mShader.Link();
 
   // attach this as OpenGLNode to scenegraph's root (all line vertices
   // will be draw relative to the observer, therfore we do not want
   // any transformation)
   auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
-  mParent  = pSG->NewOpenGLNode(pSG->GetRoot(), this);
+  mPathOpenGLNode.reset(pSG->NewOpenGLNode(pSG->GetRoot(), this));
 
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-      mParent, static_cast<int>(cs::utils::DrawOrder::eOpaqueItems));
+      mPathOpenGLNode.get(), static_cast<int>(cs::utils::DrawOrder::eOpaqueItems));
 
   // create a a CelestialAnchorNode for the user interface
   // it will be moved to the center of all points when a point is moved
@@ -96,15 +94,15 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
   mSolarSystem->registerAnchor(mGuiAnchor);
 
   // create the user interface
-  mGuiTransform = pSG->NewTransformNode(mGuiAnchor.get());
+  mGuiTransform.reset(pSG->NewTransformNode(mGuiAnchor.get()));
   mGuiTransform->Translate(0.f, 0.9f, 0.f);
   mGuiTransform->Scale(0.001f * mGuiArea->getWidth(), 0.001f * mGuiArea->getHeight(), 1.f);
   mGuiTransform->Rotate(VistaAxisAndAngle(VistaVector3D(0.0, 1.0, 0.0), -glm::pi<float>() / 2.f));
   mGuiArea->addItem(mGuiItem.get());
   mGuiArea->setUseLinearDepthBuffer(true);
-  mGuiNode = pSG->NewOpenGLNode(mGuiTransform, mGuiArea.get());
+  mGuiOpenGLNode.reset(pSG->NewOpenGLNode(mGuiTransform.get(), mGuiArea.get()));
 
-  mInputManager->registerSelectable(mGuiNode);
+  mInputManager->registerSelectable(mGuiOpenGLNode.get());
 
   mGuiItem->setCanScroll(false);
   mGuiItem->waitForFinishedLoading();
@@ -126,6 +124,7 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
   // whenever the height scale changes our vertex positions need to be updated
   mScaleConnection = mGraphicsEngine->pHeightScale.onChange().connect(
       [this](float const& h) { updateLineVertices(); });
+  mGraphicsEngine->pHeightScale.touchFor(mScaleConnection);
 
   // add one point initially
   addPoint();
@@ -138,16 +137,8 @@ PathTool::~PathTool() {
   mGuiItem->unregisterCallback("deleteMe");
   mGuiItem->unregisterCallback("setAddPointMode");
 
-  mInputManager->pHoveredNode    = nullptr;
-  mInputManager->pHoveredGuiItem = nullptr;
-
-  mInputManager->unregisterSelectable(mGuiNode);
-  delete mGuiNode;
-  delete mGuiTransform;
-
+  mInputManager->unregisterSelectable(mGuiOpenGLNode.get());
   mSolarSystem->unregisterAnchor(mGuiAnchor);
-
-  delete mParent;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -160,11 +151,18 @@ void PathTool::setNumSamples(int const& numSamples) {
 
 glm::dvec4 PathTool::getInterpolatedPosBetweenTwoMarks(cs::core::tools::DeletableMark const& l0,
     cs::core::tools::DeletableMark const& l1, double value, double const& scale) {
-  glm::dvec3 radii = cs::core::SolarSystem::getRadii(mGuiAnchor->getCenterName());
+
+  glm::dvec3 radii = cs::core::SolarSystem::getRadii(getCenterName());
+
+  auto body = mSolarSystem->getBody(getCenterName());
+
+  if (!body) {
+    return glm::dvec4(0.0);
+  }
 
   // Calculate the position for the new segment anchor
-  double h0 = mSolarSystem->pActiveBody.get()->getHeight(l0.pLngLat.get()) * scale;
-  double h1 = mSolarSystem->pActiveBody.get()->getHeight(l1.pLngLat.get()) * scale;
+  double h0 = body->getHeight(l0.pLngLat.get()) * scale;
+  double h1 = body->getHeight(l1.pLngLat.get()) * scale;
 
   // Get cartesian coordinates for interpolation
   glm::dvec3 p0 = cs::utils::convert::toCartesian(l0.pLngLat.get(), radii[0], radii[0], h0);
@@ -173,7 +171,7 @@ glm::dvec4 PathTool::getInterpolatedPosBetweenTwoMarks(cs::core::tools::Deletabl
 
   // Calc final position
   glm::dvec2 ll     = cs::utils::convert::toLngLatHeight(interpolatedPos, radii[0], radii[0]).xy();
-  double     height = mSolarSystem->pActiveBody.get()->getHeight(ll) * scale;
+  double     height = body->getHeight(ll) * scale;
   glm::dvec3 pos    = cs::utils::convert::toCartesian(ll, radii[0], radii[0], height);
 
   return glm::dvec4(pos, height);
@@ -207,16 +205,17 @@ void PathTool::updateLineVertices() {
   // Fill the vertex buffer with sampled data
   mSampledPositions.clear();
 
+  auto body = mSolarSystem->getBody(getCenterName());
+
   glm::dvec3 averagePosition(0.0);
   for (auto const& mark : mPoints)
     averagePosition += mark->getAnchor()->getAnchorPosition() / (double)mPoints.size();
 
   double h_scale      = mGraphicsEngine->pHeightScale.get();
-  auto   radii        = cs::core::SolarSystem::getRadii(mGuiAnchor->getCenterName());
+  auto   radii        = cs::core::SolarSystem::getRadii(getCenterName());
   auto   lngLatHeight = cs::utils::convert::toLngLatHeight(averagePosition, radii[0], radii[0]);
-  double height =
-      mSolarSystem->getBody(mGuiAnchor->getCenterName())->getHeight(lngLatHeight.xy()) * h_scale;
-  auto center = cs::utils::convert::toCartesian(lngLatHeight.xy(), radii[0], radii[0], height);
+  double height       = body ? body->getHeight(lngLatHeight.xy()) * h_scale : 0.0;
+  auto   center = cs::utils::convert::toCartesian(lngLatHeight.xy(), radii[0], radii[0], height);
 
   mGuiAnchor->setAnchorPosition(center);
 
@@ -271,12 +270,12 @@ void PathTool::updateLineVertices() {
   mIndexCount = mSampledPositions.size();
 
   // Upload new data
-  mVBO->Bind(GL_ARRAY_BUFFER);
-  mVBO->BufferData(mSampledPositions.size() * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
-  mVBO->Release();
+  mVBO.Bind(GL_ARRAY_BUFFER);
+  mVBO.BufferData(mSampledPositions.size() * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
+  mVBO.Release();
 
-  mVAO->EnableAttributeArray(0);
-  mVAO->SpecifyAttributeArrayFloat(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0, mVBO.get());
+  mVAO.EnableAttributeArray(0);
+  mVAO.SpecifyAttributeArrayFloat(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0, &mVBO);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -302,7 +301,7 @@ bool PathTool::Do() {
   auto        time     = mTimeControl->pSimulationTime.get();
   auto const& observer = mSolarSystem->getObserver();
 
-  cs::scene::CelestialAnchor centerAnchor(mGuiAnchor->getCenterName(), mGuiAnchor->getFrameName());
+  cs::scene::CelestialAnchor centerAnchor(getCenterName(), getFrameName());
   auto                       mat = observer.getRelativeTransform(time, centerAnchor);
 
   for (int i(0); i < mIndexCount; ++i) {
@@ -310,9 +309,9 @@ bool PathTool::Do() {
   }
 
   // upload the new points to the GPU
-  mVBO->Bind(GL_ARRAY_BUFFER);
-  mVBO->BufferSubData(0, vRelativePositions.size() * sizeof(glm::vec3), vRelativePositions.data());
-  mVBO->Release();
+  mVBO.Bind(GL_ARRAY_BUFFER);
+  mVBO.BufferSubData(0, vRelativePositions.size() * sizeof(glm::vec3), vRelativePositions.data());
+  mVBO.Release();
 
   glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_LINE_BIT);
 
@@ -329,18 +328,18 @@ bool PathTool::Do() {
   glGetFloatv(GL_MODELVIEW_MATRIX, &glMatMV[0]);
   glGetFloatv(GL_PROJECTION_MATRIX, &glMatP[0]);
 
-  mShader->Bind();
-  mVAO->Bind();
-  glUniformMatrix4fv(mShader->GetUniformLocation("uMatModelView"), 1, GL_FALSE, glMatMV);
-  glUniformMatrix4fv(mShader->GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
+  mShader.Bind();
+  mVAO.Bind();
+  glUniformMatrix4fv(mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glMatMV);
+  glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
 
-  mShader->SetUniform(
-      mShader->GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
+  mShader.SetUniform(
+      mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
 
   // draw the linestrip
   glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)mIndexCount);
-  mVAO->Release();
-  mShader->Release();
+  mVAO.Release();
+  mShader.Release();
 
   glPopAttrib();
   return true;
