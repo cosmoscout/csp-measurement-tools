@@ -92,7 +92,7 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
       mOpenGLNode.get(), static_cast<int>(cs::utils::DrawOrder::eOpaqueItems));
 
-  getCenterHandle().pLngLat.onChange().connect([this](glm::dvec2 const& lngLat) {
+  getCenterHandle().pLngLat.connect([this](glm::dvec2 const& lngLat) {
     auto center = getCenterHandle().getAnchor()->getAnchorPosition();
     auto radii  = cs::core::SolarSystem::getRadii(mAnchor->getCenterName());
 
@@ -113,7 +113,7 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
   });
 
   for (int i(0); i < 2; ++i) {
-    mHandleConnections[i] = mHandles[i].pLngLat.onChange().connect([this, i](glm::dvec2 const& p) {
+    mHandleConnections[i] = mHandles[i].pLngLat.connect([this, i](glm::dvec2 const& p) {
       auto center = getCenterHandle().getAnchor()->getAnchorPosition();
       mAxes[i]    = mHandles[i].getAnchor()->getAnchorPosition() - center;
       calculateVertices();
@@ -121,16 +121,15 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
   }
 
   // whenever the height scale changes our vertex positions need to be updated
-  mScaleConnection = mGraphicsEngine->pHeightScale.onChange().connect(
+  mScaleConnection = mGraphicsEngine->pHeightScale.connectAndTouch(
       [this](float const& h) { calculateVertices(); });
-  mGraphicsEngine->pHeightScale.touchFor(mScaleConnection);
 
   pShouldDelete.connectFrom(mCenterHandle.pShouldDelete);
 }
 
 EllipseTool::~EllipseTool() {
   // disconnect slots
-  mGraphicsEngine->pHeightScale.onChange().disconnect(mScaleConnection);
+  mGraphicsEngine->pHeightScale.disconnect(mScaleConnection);
 
   mSolarSystem->unregisterAnchor(mAnchor);
 

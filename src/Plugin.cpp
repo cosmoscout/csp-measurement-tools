@@ -103,7 +103,7 @@ void Plugin::init() {
       "'Landing Ellipse, 'Path', 'Dip & Strike' or 'Polygon'.",
       std::function([this](std::string&& name) { mNextTool = name; }));
 
-  mOnClickConnection = mInputManager->pButtons[0].onChange().connect([this](bool pressed) {
+  mOnClickConnection = mInputManager->pButtons[0].connect([this](bool pressed) {
     if (!pressed && !mInputManager->pHoveredGuiItem.get()) {
       auto intersection = mInputManager->pHoveredObject.get().mObject;
 
@@ -180,7 +180,7 @@ void Plugin::deInit() {
   mGuiManager->getGui()->callJavascript(
       "CosmoScout.gui.unregisterCss", "css/csp-measurement-tools-sidebar.css");
 
-  mInputManager->pButtons[0].onChange().disconnect(mOnClickConnection);
+  mInputManager->pButtons[0].disconnect(mOnClickConnection);
   mInputManager->sOnDoubleClick.disconnect(mOnDoubleClickConnection);
 
   spdlog::info("Unloading done.");

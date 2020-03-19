@@ -122,9 +122,8 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
       mGuiAnchor.get(), static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
   // whenever the height scale changes our vertex positions need to be updated
-  mScaleConnection = mGraphicsEngine->pHeightScale.onChange().connect(
+  mScaleConnection = mGraphicsEngine->pHeightScale.connectAndTouch(
       [this](float const& h) { updateLineVertices(); });
-  mGraphicsEngine->pHeightScale.touchFor(mScaleConnection);
 
   // add one point initially
   addPoint();
@@ -133,7 +132,7 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 PathTool::~PathTool() {
-  mGraphicsEngine->pHeightScale.onChange().disconnect(mScaleConnection);
+  mGraphicsEngine->pHeightScale.disconnect(mScaleConnection);
   mGuiItem->unregisterCallback("deleteMe");
   mGuiItem->unregisterCallback("setAddPointMode");
 

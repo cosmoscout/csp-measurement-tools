@@ -164,9 +164,8 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
       mGuiOpenGLNode.get(), static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
   // update on height scale change
-  mScaleConnection = mGraphicsEngine->pHeightScale.onChange().connect(
+  mScaleConnection = mGraphicsEngine->pHeightScale.connectAndTouch(
       [this](float const& h) { calculateDipAndStrike(); });
-  mGraphicsEngine->pHeightScale.touchFor(mScaleConnection);
 
   // create circle geometry
   std::vector<glm::vec2> vPositions;
@@ -191,7 +190,7 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 DipStrikeTool::~DipStrikeTool() {
-  mGraphicsEngine->pHeightScale.onChange().disconnect(mScaleConnection);
+  mGraphicsEngine->pHeightScale.disconnect(mScaleConnection);
   mGuiItem->unregisterCallback("deleteMe");
   mGuiItem->unregisterCallback("setAddPointMode");
   mGuiItem->unregisterCallback("setSize");

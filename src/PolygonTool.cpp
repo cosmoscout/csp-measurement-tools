@@ -134,11 +134,10 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
       mGuiNode.get(), static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
   // Whenever the height scale changes our vertex positions need to be updated
-  mScaleConnection = mGraphicsEngine->pHeightScale.onChange().connect([this](float const& h) {
+  mScaleConnection = mGraphicsEngine->pHeightScale.connectAndTouch([this](float const& h) {
     updateLineVertices();
     updateCalculation();
   });
-  mGraphicsEngine->pHeightScale.touchFor(mScaleConnection);
 
   // Add one point initially
   addPoint();
@@ -147,7 +146,7 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 PolygonTool::~PolygonTool() {
-  mGraphicsEngine->pHeightScale.onChange().disconnect(mScaleConnection);
+  mGraphicsEngine->pHeightScale.disconnect(mScaleConnection);
   mGuiItem->unregisterCallback("deleteMe");
   mGuiItem->unregisterCallback("setAddPointMode");
   mGuiItem->unregisterCallback("showMesh");

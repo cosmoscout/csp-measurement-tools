@@ -53,7 +53,7 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 
   // update text -------------------------------------------------------------
-  mTextConnection = pText.onChange().connect(
+  mTextConnection = pText.connectAndTouch(
       [this](std::string const& value) { mGuiItem->callJavascript("setText", value); });
 
   mGuiItem->registerCallback("onSetText",
@@ -62,7 +62,7 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
           [this](std::string&& value) { pText.setWithEmitForAllButOne(value, mTextConnection); }));
 
   // update position ---------------------------------------------------------
-  pLngLat.onChange().connect([this](glm::dvec2 const& lngLat) {
+  pLngLat.connect([this](glm::dvec2 const& lngLat) {
     auto body = mSolarSystem->getBody(mAnchor->getCenterName());
     if (body) {
       double h = body->getHeight(lngLat);
@@ -78,14 +78,11 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     }
   });
 
-  pMinimized.onChange().connect(
-      [this](bool val) { mGuiItem->callJavascript("setMinimized", val); });
+  pMinimized.connect([this](bool val) { mGuiItem->callJavascript("setMinimized", val); });
 
   mGuiItem->registerCallback("minimizeMe", "Call this to minimize the flag.",
       std::function([this]() { pMinimized = true; }));
   mGuiItem->callJavascript("setActivePlanet", sCenter, sFrame);
-
-  pText.touch();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
