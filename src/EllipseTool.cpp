@@ -68,20 +68,18 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
     , mHandles({cs::core::tools::Mark(
                     pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame),
           cs::core::tools::Mark(
-              pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)})
-    , mVAO(new VistaVertexArrayObject())
-    , mVBO(new VistaBufferObject())
-    , mShader(new VistaGLSLShader()) {
-  mShader->InitVertexShaderFromString(SHADER_VERT);
-  mShader->InitFragmentShaderFromString(SHADER_FRAG);
-  mShader->Link();
+              pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)}) {
 
-  mVBO->Bind(GL_ARRAY_BUFFER);
-  mVBO->BufferData(mNumSamples * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
-  mVBO->Release();
+  mShader.InitVertexShaderFromString(SHADER_VERT);
+  mShader.InitFragmentShaderFromString(SHADER_FRAG);
+  mShader.Link();
 
-  mVAO->EnableAttributeArray(0);
-  mVAO->SpecifyAttributeArrayFloat(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0, mVBO.get());
+  mVBO.Bind(GL_ARRAY_BUFFER);
+  mVBO.BufferData(mNumSamples * sizeof(glm::vec3), nullptr, GL_DYNAMIC_DRAW);
+  mVBO.Release();
+
+  mVAO.EnableAttributeArray(0);
+  mVAO.SpecifyAttributeArrayFloat(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0, &mVBO);
 
   auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
 
@@ -89,12 +87,12 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
       pSG->GetRoot(), pSG->GetNodeBridge(), "", sCenter, sFrame);
   mSolarSystem->registerAnchor(mAnchor);
 
-  mParent = pSG->NewOpenGLNode(mAnchor.get(), this);
+  mOpenGLNode.reset(pSG->NewOpenGLNode(mAnchor.get(), this));
 
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-      mParent, static_cast<int>(cs::utils::DrawOrder::eOpaqueItems));
+      mOpenGLNode.get(), static_cast<int>(cs::utils::DrawOrder::eOpaqueItems));
 
-  getCenterHandle().pLngLat.onChange().connect([this](glm::dvec2 const& lngLat) {
+  getCenterHandle().pLngLat.connect([this](glm::dvec2 const& lngLat) {
     auto center = getCenterHandle().getAnchor()->getAnchorPosition();
     auto radii  = cs::core::SolarSystem::getRadii(mAnchor->getCenterName());
 
@@ -115,7 +113,7 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
   });
 
   for (int i(0); i < 2; ++i) {
-    mHandleConnections[i] = mHandles[i].pLngLat.onChange().connect([this, i](glm::dvec2 const& p) {
+    mHandleConnections[i] = mHandles[i].pLngLat.connect([this, i](glm::dvec2 const& p) {
       auto center = getCenterHandle().getAnchor()->getAnchorPosition();
       mAxes[i]    = mHandles[i].getAnchor()->getAnchorPosition() - center;
       calculateVertices();
@@ -123,7 +121,7 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
   }
 
   // whenever the height scale changes our vertex positions need to be updated
-  mScaleConnection = mGraphicsEngine->pHeightScale.onChange().connect(
+  mScaleConnection = mGraphicsEngine->pHeightScale.connectAndTouch(
       [this](float const& h) { calculateVertices(); });
 
   pShouldDelete.connectFrom(mCenterHandle.pShouldDelete);
@@ -131,9 +129,12 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
 
 EllipseTool::~EllipseTool() {
   // disconnect slots
-  mGraphicsEngine->pHeightScale.onChange().disconnect(mScaleConnection);
+  mGraphicsEngine->pHeightScale.disconnect(mScaleConnection);
 
-  delete mParent;
+  mSolarSystem->unregisterAnchor(mAnchor);
+
+  auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  pSG->GetRoot()->DisconnectChild(mOpenGLNode.get());
 }
 
 FlagTool const& EllipseTool::getCenterHandle() const {
@@ -193,9 +194,9 @@ void EllipseTool::calculateVertices() {
     vRelativePositions[i] = absPosition - center;
   }
 
-  mVBO->Bind(GL_ARRAY_BUFFER);
-  mVBO->BufferSubData(0, vRelativePositions.size() * sizeof(glm::vec3), vRelativePositions.data());
-  mVBO->Release();
+  mVBO.Bind(GL_ARRAY_BUFFER);
+  mVBO.BufferSubData(0, vRelativePositions.size() * sizeof(glm::vec3), vRelativePositions.data());
+  mVBO.Release();
 }
 
 void EllipseTool::update() {
@@ -220,18 +221,18 @@ bool EllipseTool::Do() {
   glGetFloatv(GL_MODELVIEW_MATRIX, &glMatMV[0]);
   glGetFloatv(GL_PROJECTION_MATRIX, &glMatP[0]);
 
-  mShader->Bind();
-  mVAO->Bind();
-  glUniformMatrix4fv(mShader->GetUniformLocation("uMatModelView"), 1, GL_FALSE, glMatMV);
-  glUniformMatrix4fv(mShader->GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
+  mShader.Bind();
+  mVAO.Bind();
+  glUniformMatrix4fv(mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glMatMV);
+  glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
 
-  mShader->SetUniform(
-      mShader->GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
+  mShader.SetUniform(
+      mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
 
   // draw the linestrip
   glDrawArrays(GL_LINE_STRIP, 0, mNumSamples);
-  mVAO->Release();
-  mShader->Release();
+  mVAO.Release();
+  mShader.Release();
 
   glPopAttrib();
   return true;

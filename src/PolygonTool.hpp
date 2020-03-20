@@ -26,10 +26,6 @@ class GuiItem;
 class WorldSpaceGuiArea;
 } // namespace cs::gui
 
-class VistaBufferObject;
-class VistaGLSLShader;
-class VistaOpenGLNode;
-class VistaVertexArrayObject;
 class VistaTransformNode;
 
 namespace csp::measurementtools {
@@ -96,19 +92,21 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
   virtual void onPointAdded() override;
   virtual void onPointRemoved(int index) override;
 
-  VistaOpenGLNode*                                mGuiNode      = nullptr;
-  VistaTransformNode*                             mGuiTransform = nullptr;
-  std::shared_ptr<cs::scene::CelestialAnchorNode> mGuiAnchor    = nullptr;
-  VistaOpenGLNode*                                mParent       = nullptr;
+  std::shared_ptr<cs::scene::CelestialAnchorNode> mGuiAnchor;
+  std::unique_ptr<cs::gui::WorldSpaceGuiArea>     mGuiArea;
+  std::unique_ptr<cs::gui::GuiItem>               mGuiItem;
+  std::unique_ptr<VistaTransformNode>             mGuiTransform;
+  std::unique_ptr<VistaOpenGLNode>                mGuiNode;
+  std::unique_ptr<VistaOpenGLNode>                mParent;
 
-  std::unique_ptr<cs::gui::WorldSpaceGuiArea> mGuiArea;
-  std::unique_ptr<cs::gui::GuiItem>           mGuiItem;
-  std::unique_ptr<VistaVertexArrayObject>     mVAO;
-  std::unique_ptr<VistaBufferObject>          mVBO;
+  // For Lines
+  VistaVertexArrayObject mVAO;
+  VistaBufferObject      mVBO;
+
   // For Delaunay
-  std::unique_ptr<VistaVertexArrayObject> mVAO2;
-  std::unique_ptr<VistaBufferObject>      mVBO2;
-  std::unique_ptr<VistaGLSLShader>        mShader;
+  VistaVertexArrayObject mVAO2;
+  VistaBufferObject      mVBO2;
+  VistaGLSLShader        mShader;
 
   Plugin::Settings::Polygon mPolygonSettings;
 

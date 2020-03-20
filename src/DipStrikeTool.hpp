@@ -66,17 +66,18 @@ class DipStrikeTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPoin
   void onPointAdded() override;
   void onPointRemoved(int index) override;
 
-  VistaOpenGLNode*                                mGuiNode      = nullptr;
-  VistaTransformNode*                             mGuiTransform = nullptr;
-  std::shared_ptr<cs::scene::CelestialAnchorNode> mGuiAnchor    = nullptr;
-  std::shared_ptr<cs::scene::CelestialAnchorNode> mPlaneAnchor  = nullptr;
-  VistaOpenGLNode*                                mParent       = nullptr;
+  std::shared_ptr<cs::scene::CelestialAnchorNode> mGuiAnchor;
+  std::shared_ptr<cs::scene::CelestialAnchorNode> mPlaneAnchor;
 
   std::unique_ptr<cs::gui::WorldSpaceGuiArea> mGuiArea;
   std::unique_ptr<cs::gui::GuiItem>           mGuiItem;
-  std::unique_ptr<VistaVertexArrayObject>     mVAO;
-  std::unique_ptr<VistaBufferObject>          mVBO;
-  std::unique_ptr<VistaGLSLShader>            mShader;
+  std::unique_ptr<VistaTransformNode>         mGuiTransform;
+  std::unique_ptr<VistaOpenGLNode>            mGuiOpenGLNode;
+  std::unique_ptr<VistaOpenGLNode>            mPlaneOpenGLNode;
+
+  VistaVertexArrayObject mVAO;
+  VistaBufferObject      mVBO;
+  VistaGLSLShader        mShader;
 
   double    mOriginalDistance = -1.0, mSize;
   glm::vec3 mNormal = glm::vec3(0.0), mMip = glm::vec3(0.0);

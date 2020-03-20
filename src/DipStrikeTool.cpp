@@ -99,29 +99,27 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
     std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
     std::string const& sFrame)
     : MultiPointTool(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
-    , mGuiArea(new cs::gui::WorldSpaceGuiArea(420, 225))
-    , mGuiItem(new cs::gui::GuiItem("file://../share/resources/gui/dipstrike.html"))
-    , mVAO(new VistaVertexArrayObject())
-    , mVBO(new VistaBufferObject())
-    , mShader(new VistaGLSLShader()) {
+    , mGuiArea(std::make_unique<cs::gui::WorldSpaceGuiArea>(420, 225))
+    , mGuiItem(std::make_unique<cs::gui::GuiItem>("file://../share/resources/gui/dipstrike.html")) {
+
   // create the shader
-  mShader->InitVertexShaderFromString(SHADER_VERT);
-  mShader->InitFragmentShaderFromString(SHADER_FRAG);
-  mShader->Link();
+  mShader.InitVertexShaderFromString(SHADER_VERT);
+  mShader.InitFragmentShaderFromString(SHADER_FRAG);
+  mShader.Link();
 
   auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
 
-  // create a a CelestialAnchorNode for the larger cirular plane
-  // it will be moved to the center of all points when a point is moved
+  // create a a CelestialAnchorNode for the larger circular plane
+  // it will be moved to the centroid of all points when a point is moved
   mPlaneAnchor = std::make_shared<cs::scene::CelestialAnchorNode>(
       pSG->GetRoot(), pSG->GetNodeBridge(), "", sCenter, sFrame);
   mSolarSystem->registerAnchor(mPlaneAnchor);
 
   // attach this as OpenGLNode to mPlaneAnchor
-  mParent = pSG->NewOpenGLNode(mPlaneAnchor.get(), this);
+  mPlaneOpenGLNode.reset(pSG->NewOpenGLNode(mPlaneAnchor.get(), this));
 
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-      mParent, static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
+      mPlaneOpenGLNode.get(), static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
   // create a a CelestialAnchorNode for the user interface
   // it will be moved to the center of all points when a point is moved
@@ -132,15 +130,15 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
   mSolarSystem->registerAnchor(mGuiAnchor);
 
   // create the user interface
-  mGuiTransform = pSG->NewTransformNode(mGuiAnchor.get());
+  mGuiTransform.reset(pSG->NewTransformNode(mGuiAnchor.get()));
   mGuiTransform->Translate(0.f, 0.9f, 0.f);
   mGuiTransform->Scale(0.001f * mGuiArea->getWidth(), 0.001f * mGuiArea->getHeight(), 1.f);
   mGuiTransform->Rotate(VistaAxisAndAngle(VistaVector3D(0.f, 1.f, 0.f), -glm::pi<float>() / 2.f));
   mGuiArea->addItem(mGuiItem.get());
   mGuiArea->setUseLinearDepthBuffer(true);
-  mGuiNode = pSG->NewOpenGLNode(mGuiTransform, mGuiArea.get());
+  mGuiOpenGLNode.reset(pSG->NewOpenGLNode(mGuiTransform.get(), mGuiArea.get()));
 
-  mInputManager->registerSelectable(mGuiNode);
+  mInputManager->registerSelectable(mGuiOpenGLNode.get());
 
   mGuiItem->setCanScroll(false);
   mGuiItem->waitForFinishedLoading();
@@ -163,10 +161,10 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-      mGuiNode, static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
+      mGuiOpenGLNode.get(), static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
   // update on height scale change
-  mScaleConnection = mGraphicsEngine->pHeightScale.onChange().connect(
+  mScaleConnection = mGraphicsEngine->pHeightScale.connectAndTouch(
       [this](float const& h) { calculateDipAndStrike(); });
 
   // create circle geometry
@@ -178,12 +176,13 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
     vPositions.emplace_back(glm::vec2(std::cos(fFac), std::sin(fFac)));
   }
 
-  mVBO->Bind(GL_ARRAY_BUFFER);
-  mVBO->BufferData(vPositions.size() * sizeof(glm::vec2), vPositions.data(), GL_STATIC_DRAW);
-  mVBO->Release();
+  mVBO.Bind(GL_ARRAY_BUFFER);
+  mVBO.BufferData(vPositions.size() * sizeof(glm::vec2), vPositions.data(), GL_STATIC_DRAW);
+  mVBO.Release();
 
-  mVAO->EnableAttributeArray(0);
-  mVAO->SpecifyAttributeArrayFloat(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), 0, mVBO.get());
+  mVAO.EnableAttributeArray(0);
+  mVAO.SpecifyAttributeArrayFloat(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), 0, &mVBO);
+
   // add one point initially
   addPoint();
 }
@@ -191,20 +190,13 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 DipStrikeTool::~DipStrikeTool() {
-  mGraphicsEngine->pHeightScale.onChange().disconnect(mScaleConnection);
+  mGraphicsEngine->pHeightScale.disconnect(mScaleConnection);
   mGuiItem->unregisterCallback("deleteMe");
   mGuiItem->unregisterCallback("setAddPointMode");
   mGuiItem->unregisterCallback("setSize");
   mGuiItem->unregisterCallback("setOpacity");
 
-  mInputManager->pHoveredNode    = nullptr;
-  mInputManager->pHoveredGuiItem = nullptr;
-
-  mInputManager->unregisterSelectable(mGuiNode);
-  delete mGuiNode;
-  delete mGuiTransform;
-
-  delete mParent;
+  mInputManager->unregisterSelectable(mGuiOpenGLNode.get());
 
   mSolarSystem->unregisterAnchor(mGuiAnchor);
   mSolarSystem->unregisterAnchor(mPlaneAnchor);
@@ -236,6 +228,7 @@ void DipStrikeTool::calculateDipAndStrike() {
   }
 
   auto radii = mSolarSystem->getRadii(mGuiAnchor->getCenterName());
+  auto body  = mSolarSystem->getBody(getCenterName());
 
   glm::dvec3 averagePosition;
   for (auto const& mark : mPoints) {
@@ -251,7 +244,7 @@ void DipStrikeTool::calculateDipAndStrike() {
     // LongLat coordinate
     glm::dvec3 l = cs::utils::convert::toLngLatHeight(pos, radii[0], radii[0]);
     // Height of the point
-    double h = mSolarSystem->pActiveBody.get()->getHeight(l.xy());
+    double h = body ? body->getHeight(l.xy()) : 0.0;
     // Cartesian coordinate with height
     glm::dvec3 posNorm = cs::utils::convert::toCartesian(l, radii[0], radii[0], h);
 
@@ -284,7 +277,7 @@ void DipStrikeTool::calculateDipAndStrike() {
   for (auto const& p : mPoints) {
     glm::dvec3 pos     = glm::normalize(p->getAnchor()->getAnchorPosition()) * radii[0];
     glm::dvec3 l       = cs::utils::convert::toLngLatHeight(pos, radii[0], radii[0]);
-    double     h       = mSolarSystem->pActiveBody.get()->getHeight(l.xy());
+    double     h       = body ? body->getHeight(l.xy()) : 0.0;
     glm::dvec3 posNorm = cs::utils::convert::toCartesian(l, radii[0], radii[0], h);
 
     glm::dvec3 realtivePosition = posNorm - averagePositionNorm;
@@ -370,19 +363,19 @@ bool DipStrikeTool::Do() {
 
   matMV = glm::scale(matMV, glm::vec3(mSize * mSizeFactor));
 
-  mShader->Bind();
-  mVAO->Bind();
+  mShader.Bind();
+  mVAO.Bind();
   glUniformMatrix4fv(
-      mShader->GetUniformLocation("uMatModelView"), 1, GL_FALSE, glm::value_ptr(matMV));
-  glUniformMatrix4fv(mShader->GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
-  mShader->SetUniform(mShader->GetUniformLocation("uOpacity"), mOpacity);
-  mShader->SetUniform(
-      mShader->GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
+      mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glm::value_ptr(matMV));
+  glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
+  mShader.SetUniform(mShader.GetUniformLocation("uOpacity"), mOpacity);
+  mShader.SetUniform(
+      mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
 
   // draw the linestrip
   glDrawArrays(GL_TRIANGLE_FAN, 0, RESOLUTION + 1);
-  mVAO->Release();
-  mShader->Release();
+  mVAO.Release();
+  mShader.Release();
 
   glPopAttrib();
   return true;

@@ -29,22 +29,22 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
     std::string const& sFrame)
     : Mark(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
-    , mGuiArea(new cs::gui::WorldSpaceGuiArea(420, 400))
-    , mGuiItem(new cs::gui::GuiItem("file://../share/resources/gui/flag.html")) {
+    , mGuiArea(std::make_unique<cs::gui::WorldSpaceGuiArea>(420, 400))
+    , mGuiItem(std::make_unique<cs::gui::GuiItem>("file://../share/resources/gui/flag.html")) {
   auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
 
-  mGuiTransform = pSG->NewTransformNode(mAnchor.get());
+  mGuiTransform.reset(pSG->NewTransformNode(mAnchor.get()));
   mGuiTransform->Translate(0.5f - 7.5f / 500.f, 0.5f, 0.f);
   mGuiTransform->Scale(0.001f * mGuiArea->getWidth(), 0.001f * mGuiArea->getHeight(), 1.f);
   mGuiTransform->Rotate(VistaAxisAndAngle(VistaVector3D(0.0, 1.0, 0.0), -glm::pi<float>() / 2.f));
   mGuiArea->addItem(mGuiItem.get());
   mGuiArea->setUseLinearDepthBuffer(true);
 
-  mGuiNode = pSG->NewOpenGLNode(mGuiTransform, mGuiArea.get());
-  mInputManager->registerSelectable(mGuiNode);
+  mGuiNode.reset(pSG->NewOpenGLNode(mGuiTransform.get(), mGuiArea.get()));
+  mInputManager->registerSelectable(mGuiNode.get());
 
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-      mGuiNode, static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
+      mGuiNode.get(), static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
   mGuiItem->setCanScroll(false);
   mGuiItem->waitForFinishedLoading();
@@ -53,7 +53,7 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 
   // update text -------------------------------------------------------------
-  mTextConnection = pText.onChange().connect(
+  mTextConnection = pText.connectAndTouch(
       [this](std::string const& value) { mGuiItem->callJavascript("setText", value); });
 
   mGuiItem->registerCallback("onSetText",
@@ -62,7 +62,7 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
           [this](std::string&& value) { pText.setWithEmitForAllButOne(value, mTextConnection); }));
 
   // update position ---------------------------------------------------------
-  pLngLat.onChange().connect([this](glm::dvec2 const& lngLat) {
+  pLngLat.connect([this](glm::dvec2 const& lngLat) {
     auto body = mSolarSystem->getBody(mAnchor->getCenterName());
     if (body) {
       double h = body->getHeight(lngLat);
@@ -78,28 +78,24 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     }
   });
 
-  pMinimized.onChange().connect(
-      [this](bool val) { mGuiItem->callJavascript("setMinimized", val); });
+  pMinimized.connect([this](bool val) { mGuiItem->callJavascript("setMinimized", val); });
 
   mGuiItem->registerCallback("minimizeMe", "Call this to minimize the flag.",
       std::function([this]() { pMinimized = true; }));
   mGuiItem->callJavascript("setActivePlanet", sCenter, sFrame);
-
-  pText.touch();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 FlagTool::~FlagTool() {
+  auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  pSG->GetRoot()->DisconnectChild(mGuiTransform.get());
+
   mInputManager->sOnDoubleClick.disconnect(mDoubleClickConnection);
-  mInputManager->unregisterSelectable(mGuiNode);
+  mInputManager->unregisterSelectable(mGuiNode.get());
   mGuiItem->unregisterCallback("minimizeMe");
   mGuiItem->unregisterCallback("deleteMe");
   mGuiItem->unregisterCallback("onSetText");
-  mGuiArea->removeItem(mGuiItem.get());
-
-  delete mGuiNode;
-  delete mGuiTransform;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
