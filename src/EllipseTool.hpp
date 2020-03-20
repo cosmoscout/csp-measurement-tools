@@ -11,9 +11,6 @@
 
 #include <array>
 
-class VistaBufferObject;
-class VistaVertexArrayObject;
-
 namespace csp::measurementtools {
 
 /// The ellipse tool uses three points on the surface to draw an ellipse. A center point and two
@@ -59,15 +56,14 @@ class EllipseTool : public IVistaOpenGLDraw, public cs::core::tools::Tool {
   std::array<cs::core::tools::Mark, 2> mHandles;
   std::array<int, 2>                   mHandleConnections;
 
-  VistaOpenGLNode* mParent = nullptr;
+  std::unique_ptr<VistaOpenGLNode> mOpenGLNode;
 
-  std::unique_ptr<VistaVertexArrayObject> mVAO;
-  std::unique_ptr<VistaBufferObject>      mVBO;
-  std::unique_ptr<VistaGLSLShader>        mShader;
+  VistaVertexArrayObject mVAO;
+  VistaBufferObject      mVBO;
+  VistaGLSLShader        mShader;
 
-  int mScaleConnection;
-
-  int mNumSamples = 360;
+  int mScaleConnection = -1;
+  int mNumSamples      = 360;
 
   static const std::string SHADER_VERT;
   static const std::string SHADER_FRAG;

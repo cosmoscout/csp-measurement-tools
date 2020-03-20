@@ -64,16 +64,17 @@ class PathTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointTool
   void onPointAdded() override;
   void onPointRemoved(int index) override;
 
-  VistaOpenGLNode*                                mGuiNode      = nullptr;
-  VistaTransformNode*                             mGuiTransform = nullptr;
-  std::shared_ptr<cs::scene::CelestialAnchorNode> mGuiAnchor    = nullptr;
-  VistaOpenGLNode*                                mParent       = nullptr;
+  std::shared_ptr<cs::scene::CelestialAnchorNode> mGuiAnchor;
 
+  std::unique_ptr<VistaTransformNode>         mGuiTransform;
+  std::unique_ptr<VistaOpenGLNode>            mGuiOpenGLNode;
+  std::unique_ptr<VistaOpenGLNode>            mPathOpenGLNode;
   std::unique_ptr<cs::gui::WorldSpaceGuiArea> mGuiArea;
   std::unique_ptr<cs::gui::GuiItem>           mGuiItem;
-  std::unique_ptr<VistaVertexArrayObject>     mVAO;
-  std::unique_ptr<VistaBufferObject>          mVBO;
-  std::unique_ptr<VistaGLSLShader>            mShader;
+
+  VistaVertexArrayObject mVAO;
+  VistaBufferObject      mVBO;
+  VistaGLSLShader        mShader;
 
   double mOriginalDistance = -1.0;
 
@@ -87,5 +88,7 @@ class PathTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointTool
   static const std::string SHADER_VERT;
   static const std::string SHADER_FRAG;
 };
+
 } // namespace csp::measurementtools
+
 #endif // CSP_MEASUREMENT_TOOLS_PATH_HPP
