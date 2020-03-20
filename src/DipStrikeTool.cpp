@@ -99,8 +99,8 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
     std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
     std::string const& sFrame)
     : MultiPointTool(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
-    , mGuiArea(new cs::gui::WorldSpaceGuiArea(420, 225))
-    , mGuiItem(new cs::gui::GuiItem("file://../share/resources/gui/dipstrike.html")) {
+    , mGuiArea(std::make_unique<cs::gui::WorldSpaceGuiArea>(420, 225))
+    , mGuiItem(std::make_unique<cs::gui::GuiItem>("file://../share/resources/gui/dipstrike.html")) {
 
   // create the shader
   mShader.InitVertexShaderFromString(SHADER_VERT);

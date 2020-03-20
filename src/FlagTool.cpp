@@ -29,8 +29,8 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
     std::string const& sFrame)
     : Mark(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
-    , mGuiArea(new cs::gui::WorldSpaceGuiArea(420, 400))
-    , mGuiItem(new cs::gui::GuiItem("file://../share/resources/gui/flag.html")) {
+    , mGuiArea(std::make_unique<cs::gui::WorldSpaceGuiArea>(420, 400))
+    , mGuiItem(std::make_unique<cs::gui::GuiItem>("file://../share/resources/gui/flag.html")) {
   auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
 
   mGuiTransform.reset(pSG->NewTransformNode(mAnchor.get()));

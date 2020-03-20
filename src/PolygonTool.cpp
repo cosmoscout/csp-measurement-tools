@@ -77,8 +77,8 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
     std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
     std::string const& sFrame)
     : MultiPointTool(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
-    , mGuiArea(new cs::gui::WorldSpaceGuiArea(600, 300))
-    , mGuiItem(new cs::gui::GuiItem("file://../share/resources/gui/polygon.html")) {
+    , mGuiArea(std::make_unique<cs::gui::WorldSpaceGuiArea>(600, 300))
+    , mGuiItem(std::make_unique<cs::gui::GuiItem>("file://../share/resources/gui/polygon.html")) {
 
   // Create the shader
   mShader.InitVertexShaderFromString(SHADER_VERT);
