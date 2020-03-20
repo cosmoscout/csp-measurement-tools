@@ -110,7 +110,7 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
   auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
 
   // create a a CelestialAnchorNode for the larger circular plane
-  // it will be moved to the center of all points when a point is moved
+  // it will be moved to the centroid of all points when a point is moved
   mPlaneAnchor = std::make_shared<cs::scene::CelestialAnchorNode>(
       pSG->GetRoot(), pSG->GetNodeBridge(), "", sCenter, sFrame);
   mSolarSystem->registerAnchor(mPlaneAnchor);
