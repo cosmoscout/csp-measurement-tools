@@ -35,33 +35,52 @@ namespace csp::measurementtools {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void from_json(const nlohmann::json& j, Plugin::Settings::Polygon& o) {
-  o.mHeightDiff = cs::core::parseProperty<float>("heightDiff", j);
-  o.mMaxAttempt = cs::core::parseProperty<int>("maxAttempt", j);
-  o.mMaxPoints  = cs::core::parseProperty<int>("maxPoints", j);
-  o.mSleekness  = cs::core::parseProperty<int>("sleekness", j);
+void from_json(nlohmann::json const& j, Plugin::Settings::Polygon& o) {
+  cs::core::Settings::deserialize(j, "heightDiff", o.mHeightDiff);
+  cs::core::Settings::deserialize(j, "maxAttempt", o.mMaxAttempt);
+  cs::core::Settings::deserialize(j, "maxPoints", o.mMaxPoints);
+  cs::core::Settings::deserialize(j, "sleekness", o.mSleekness);
+}
+
+void to_json(nlohmann::json& j, Plugin::Settings::Polygon const& o) {
+  cs::core::Settings::serialize(j, "heightDiff", o.mHeightDiff);
+  cs::core::Settings::serialize(j, "maxAttempt", o.mMaxAttempt);
+  cs::core::Settings::serialize(j, "maxPoints", o.mMaxPoints);
+  cs::core::Settings::serialize(j, "sleekness", o.mSleekness);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void from_json(const nlohmann::json& j, Plugin::Settings::Ellipse& o) {
-  o.mNumSamples = cs::core::parseProperty<int>("numSamples", j);
+void from_json(nlohmann::json const& j, Plugin::Settings::Ellipse& o) {
+  cs::core::Settings::deserialize(j, "numSamples", o.mNumSamples);
+}
+
+void to_json(nlohmann::json& j, Plugin::Settings::Ellipse const& o) {
+  cs::core::Settings::serialize(j, "numSamples", o.mNumSamples);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void from_json(const nlohmann::json& j, Plugin::Settings::Path& o) {
-  o.mNumSamples = cs::core::parseProperty<int>("numSamples", j);
+void from_json(nlohmann::json const& j, Plugin::Settings::Path& o) {
+  cs::core::Settings::deserialize(j, "numSamples", o.mNumSamples);
+}
+
+void to_json(nlohmann::json& j, Plugin::Settings::Path const& o) {
+  cs::core::Settings::serialize(j, "numSamples", o.mNumSamples);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void from_json(const nlohmann::json& j, Plugin::Settings& o) {
-  cs::core::parseSection("csp-measurement-tools", [&] {
-    o.mPolygon = cs::core::parseSection<Plugin::Settings::Polygon>("polygon", j);
-    o.mEllipse = cs::core::parseSection<Plugin::Settings::Ellipse>("ellipse", j);
-    o.mPath    = cs::core::parseSection<Plugin::Settings::Path>("path", j);
-  });
+void from_json(nlohmann::json const& j, Plugin::Settings& o) {
+  cs::core::Settings::deserialize(j, "polygon", o.mPolygon);
+  cs::core::Settings::deserialize(j, "ellipse", o.mEllipse);
+  cs::core::Settings::deserialize(j, "path", o.mPath);
+}
+
+void to_json(nlohmann::json& j, Plugin::Settings const& o) {
+  cs::core::Settings::serialize(j, "polygon", o.mPolygon);
+  cs::core::Settings::serialize(j, "ellipse", o.mEllipse);
+  cs::core::Settings::serialize(j, "path", o.mPath);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
