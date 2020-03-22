@@ -6,9 +6,9 @@
 
 #include "FlagTool.hpp"
 
-#include "../../../src/cs-core/GraphicsEngine.hpp"
 #include "../../../src/cs-core/GuiManager.hpp"
 #include "../../../src/cs-core/InputManager.hpp"
+#include "../../../src/cs-core/Settings.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-core/TimeControl.hpp"
 #include "../../../src/cs-scene/CelestialAnchorNode.hpp"
@@ -25,10 +25,10 @@ namespace csp::measurementtools {
 
 FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     std::shared_ptr<cs::core::SolarSystem> const&                 pSolarSystem,
-    std::shared_ptr<cs::core::GraphicsEngine> const&              graphicsEngine,
+    std::shared_ptr<cs::core::Settings> const&                    settings,
     std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
     std::string const& sFrame)
-    : Mark(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
+    : Mark(pInputManager, pSolarSystem, settings, pTimeControl, sCenter, sFrame)
     , mGuiArea(std::make_unique<cs::gui::WorldSpaceGuiArea>(420, 400))
     , mGuiItem(std::make_unique<cs::gui::GuiItem>("file://../share/resources/gui/flag.html")) {
   auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
@@ -104,7 +104,7 @@ void FlagTool::update() {
   double simulationTime(mTimeControl->pSimulationTime.get());
 
   cs::core::SolarSystem::scaleRelativeToObserver(*mAnchor, mSolarSystem->getObserver(),
-      simulationTime, mOriginalDistance, mGraphicsEngine->pWidgetScale.get());
+      simulationTime, mOriginalDistance, mSettings->mGraphics.pWidgetScale.get());
   cs::core::SolarSystem::turnToObserver(
       *mAnchor, mSolarSystem->getObserver(), simulationTime, true);
 }

@@ -6,9 +6,9 @@
 
 #include "PolygonTool.hpp"
 
-#include "../../../src/cs-core/GraphicsEngine.hpp"
 #include "../../../src/cs-core/GuiManager.hpp"
 #include "../../../src/cs-core/InputManager.hpp"
+#include "../../../src/cs-core/Settings.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-core/TimeControl.hpp"
 #include "../../../src/cs-core/tools/DeletableMark.hpp"
@@ -73,10 +73,10 @@ void main()
 
 PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     std::shared_ptr<cs::core::SolarSystem> const&                       pSolarSystem,
-    std::shared_ptr<cs::core::GraphicsEngine> const&                    graphicsEngine,
+    std::shared_ptr<cs::core::Settings> const&                          settings,
     std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
     std::string const& sFrame)
-    : MultiPointTool(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
+    : MultiPointTool(pInputManager, pSolarSystem, settings, pTimeControl, sCenter, sFrame)
     , mGuiArea(std::make_unique<cs::gui::WorldSpaceGuiArea>(600, 300))
     , mGuiItem(std::make_unique<cs::gui::GuiItem>("file://../share/resources/gui/polygon.html")) {
 
@@ -134,7 +134,7 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
       mGuiNode.get(), static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
   // Whenever the height scale changes our vertex positions need to be updated
-  mScaleConnection = mGraphicsEngine->pHeightScale.connectAndTouch([this](float const& h) {
+  mScaleConnection = mSettings->mGraphics.pHeightScale.connectAndTouch([this](float const& h) {
     updateLineVertices();
     updateCalculation();
   });
@@ -146,7 +146,7 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 PolygonTool::~PolygonTool() {
-  mGraphicsEngine->pHeightScale.disconnect(mScaleConnection);
+  mSettings->mGraphics.pHeightScale.disconnect(mScaleConnection);
   mGuiItem->unregisterCallback("deleteMe");
   mGuiItem->unregisterCallback("setAddPointMode");
   mGuiItem->unregisterCallback("showMesh");
@@ -186,7 +186,7 @@ void PolygonTool::setSleekness(int const& degree) {
 
 glm::dvec4 PolygonTool::getInterpolatedPosBetweenTwoMarks(cs::core::tools::DeletableMark const& l0,
     cs::core::tools::DeletableMark const& l1, double value) {
-  double     h_scale = mGraphicsEngine->pHeightScale.get();
+  double     h_scale = mSettings->mGraphics.pHeightScale.get();
   glm::dvec3 radii   = mSolarSystem->getRadii(mGuiAnchor->getCenterName());
 
   // Calculates the position for the new segment anchor
@@ -971,7 +971,7 @@ void PolygonTool::updateLineVertices() {
 
   auto   lngLatHeight = cs::utils::convert::toLngLatHeight(averagePosition, radii[0], radii[0]);
   double height = mSolarSystem->getBody(mGuiAnchor->getCenterName())->getHeight(lngLatHeight.xy());
-  height *= mGraphicsEngine->pHeightScale.get();
+  height *= mSettings->mGraphics.pHeightScale.get();
   auto center = cs::utils::convert::toCartesian(lngLatHeight.xy(), radii[0], radii[0], height);
   mGuiAnchor->setAnchorPosition(center);
 
@@ -1062,7 +1062,7 @@ void PolygonTool::updateCalculation() {
   mCornersFine.clear();
   mTriangulation.clear();
 
-  double h_scale = mGraphicsEngine->pHeightScale.get();
+  double h_scale = mSettings->mGraphics.pHeightScale.get();
   auto   radii   = mSolarSystem->getRadii(mGuiAnchor->getCenterName());
 
   // Middle point of cs::core::tools::DeletableMarks
@@ -1317,7 +1317,7 @@ void PolygonTool::update() {
   double simulationTime(mTimeControl->pSimulationTime.get());
 
   cs::core::SolarSystem::scaleRelativeToObserver(*mGuiAnchor, mSolarSystem->getObserver(),
-      simulationTime, mOriginalDistance, mGraphicsEngine->pWidgetScale.get());
+      simulationTime, mOriginalDistance, mSettings->mGraphics.pWidgetScale.get());
   cs::core::SolarSystem::turnToObserver(
       *mGuiAnchor, mSolarSystem->getObserver(), simulationTime, false);
 }

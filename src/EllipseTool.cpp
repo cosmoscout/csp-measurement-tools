@@ -6,8 +6,8 @@
 
 #include "EllipseTool.hpp"
 
-#include "../../../src/cs-core/GraphicsEngine.hpp"
 #include "../../../src/cs-core/GuiManager.hpp"
+#include "../../../src/cs-core/Settings.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-scene/CelestialAnchorNode.hpp"
 #include "../../../src/cs-utils/convert.hpp"
@@ -57,11 +57,11 @@ void main()
 
 EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     std::shared_ptr<cs::core::SolarSystem> const&                       pSolarSystem,
-    std::shared_ptr<cs::core::GraphicsEngine> const&                    graphicsEngine,
+    std::shared_ptr<cs::core::Settings> const&                          graphicsEngine,
     std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
     std::string const& sFrame)
     : mSolarSystem(pSolarSystem)
-    , mGraphicsEngine(graphicsEngine)
+    , mSettings(graphicsEngine)
     , mCenterHandle(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
     , mAxes({glm::dvec3(pSolarSystem->getObserver().getAnchorScale(), 0.0, 0.0),
           glm::dvec3(0.0, pSolarSystem->getObserver().getAnchorScale(), 0.0)})
@@ -121,7 +121,7 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
   }
 
   // whenever the height scale changes our vertex positions need to be updated
-  mScaleConnection = mGraphicsEngine->pHeightScale.connectAndTouch(
+  mScaleConnection = mSettings->mGraphics.pHeightScale.connectAndTouch(
       [this](float const& h) { calculateVertices(); });
 
   pShouldDelete.connectFrom(mCenterHandle.pShouldDelete);
@@ -129,7 +129,7 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
 
 EllipseTool::~EllipseTool() {
   // disconnect slots
-  mGraphicsEngine->pHeightScale.disconnect(mScaleConnection);
+  mSettings->mGraphics.pHeightScale.disconnect(mScaleConnection);
 
   mSolarSystem->unregisterAnchor(mAnchor);
 
@@ -188,7 +188,7 @@ void EllipseTool::calculateVertices() {
 
     double height = mSolarSystem->getBody(mCenterHandle.getAnchor()->getCenterName())
                         ->getHeight(lngLatHeight.xy());
-    height *= mGraphicsEngine->pHeightScale.get();
+    height *= mSettings->mGraphics.pHeightScale.get();
     absPosition = cs::utils::convert::toCartesian(lngLatHeight.xy(), radii[0], radii[0], height);
 
     vRelativePositions[i] = absPosition - center;

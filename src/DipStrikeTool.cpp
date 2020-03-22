@@ -6,9 +6,9 @@
 
 #include "DipStrikeTool.hpp"
 
-#include "../../../src/cs-core/GraphicsEngine.hpp"
 #include "../../../src/cs-core/GuiManager.hpp"
 #include "../../../src/cs-core/InputManager.hpp"
+#include "../../../src/cs-core/Settings.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-core/TimeControl.hpp"
 #include "../../../src/cs-core/tools/DeletableMark.hpp"
@@ -95,10 +95,10 @@ void main()
 
 DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     std::shared_ptr<cs::core::SolarSystem> const&                           pSolarSystem,
-    std::shared_ptr<cs::core::GraphicsEngine> const&                        graphicsEngine,
+    std::shared_ptr<cs::core::Settings> const&                              settings,
     std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
     std::string const& sFrame)
-    : MultiPointTool(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
+    : MultiPointTool(pInputManager, pSolarSystem, settings, pTimeControl, sCenter, sFrame)
     , mGuiArea(std::make_unique<cs::gui::WorldSpaceGuiArea>(420, 225))
     , mGuiItem(std::make_unique<cs::gui::GuiItem>("file://../share/resources/gui/dipstrike.html")) {
 
@@ -164,7 +164,7 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
       mGuiOpenGLNode.get(), static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
   // update on height scale change
-  mScaleConnection = mGraphicsEngine->pHeightScale.connectAndTouch(
+  mScaleConnection = mSettings->mGraphics.pHeightScale.connectAndTouch(
       [this](float const& h) { calculateDipAndStrike(); });
 
   // create circle geometry
@@ -190,7 +190,7 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 DipStrikeTool::~DipStrikeTool() {
-  mGraphicsEngine->pHeightScale.disconnect(mScaleConnection);
+  mSettings->mGraphics.pHeightScale.disconnect(mScaleConnection);
   mGuiItem->unregisterCallback("deleteMe");
   mGuiItem->unregisterCallback("setAddPointMode");
   mGuiItem->unregisterCallback("setSize");
@@ -336,7 +336,7 @@ void DipStrikeTool::update() {
   double simulationTime(mTimeControl->pSimulationTime.get());
 
   cs::core::SolarSystem::scaleRelativeToObserver(*mGuiAnchor, mSolarSystem->getObserver(),
-      simulationTime, mOriginalDistance, mGraphicsEngine->pWidgetScale.get());
+      simulationTime, mOriginalDistance, mSettings->mGraphics.pWidgetScale.get());
   cs::core::SolarSystem::turnToObserver(
       *mGuiAnchor, mSolarSystem->getObserver(), simulationTime, false);
 }

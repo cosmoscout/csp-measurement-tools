@@ -36,7 +36,7 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
  public:
   PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
       std::shared_ptr<cs::core::SolarSystem> const&          pSolarSystem,
-      std::shared_ptr<cs::core::GraphicsEngine> const&       graphicsEngine,
+      std::shared_ptr<cs::core::Settings> const&             settings,
       std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
       std::string const& sFrame);
   virtual ~PolygonTool();

@@ -6,9 +6,9 @@
 
 #include "PathTool.hpp"
 
-#include "../../../src/cs-core/GraphicsEngine.hpp"
 #include "../../../src/cs-core/GuiManager.hpp"
 #include "../../../src/cs-core/InputManager.hpp"
+#include "../../../src/cs-core/Settings.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-core/TimeControl.hpp"
 #include "../../../src/cs-core/tools/DeletableMark.hpp"
@@ -64,10 +64,10 @@ void main()
 
 PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     std::shared_ptr<cs::core::SolarSystem> const&                 pSolarSystem,
-    std::shared_ptr<cs::core::GraphicsEngine> const&              graphicsEngine,
+    std::shared_ptr<cs::core::Settings> const&                    settings,
     std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
     std::string const& sFrame)
-    : MultiPointTool(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
+    : MultiPointTool(pInputManager, pSolarSystem, settings, pTimeControl, sCenter, sFrame)
     , mGuiArea(std::make_unique<cs::gui::WorldSpaceGuiArea>(760, 475))
     , mGuiItem(std::make_unique<cs::gui::GuiItem>("file://../share/resources/gui/path.html")) {
 
@@ -122,7 +122,7 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
       mGuiAnchor.get(), static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
   // whenever the height scale changes our vertex positions need to be updated
-  mScaleConnection = mGraphicsEngine->pHeightScale.connectAndTouch(
+  mScaleConnection = mSettings->mGraphics.pHeightScale.connectAndTouch(
       [this](float const& h) { updateLineVertices(); });
 
   // add one point initially
@@ -132,7 +132,7 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 PathTool::~PathTool() {
-  mGraphicsEngine->pHeightScale.disconnect(mScaleConnection);
+  mSettings->mGraphics.pHeightScale.disconnect(mScaleConnection);
   mGuiItem->unregisterCallback("deleteMe");
   mGuiItem->unregisterCallback("setAddPointMode");
 
@@ -210,7 +210,7 @@ void PathTool::updateLineVertices() {
   for (auto const& mark : mPoints)
     averagePosition += mark->getAnchor()->getAnchorPosition() / (double)mPoints.size();
 
-  double h_scale      = mGraphicsEngine->pHeightScale.get();
+  double h_scale      = mSettings->mGraphics.pHeightScale.get();
   auto   radii        = cs::core::SolarSystem::getRadii(getCenterName());
   auto   lngLatHeight = cs::utils::convert::toLngLatHeight(averagePosition, radii[0], radii[0]);
   double height       = body ? body->getHeight(lngLatHeight.xy()) * h_scale : 0.0;
@@ -285,7 +285,7 @@ void PathTool::update() {
   double simulationTime(mTimeControl->pSimulationTime.get());
 
   cs::core::SolarSystem::scaleRelativeToObserver(*mGuiAnchor, mSolarSystem->getObserver(),
-      simulationTime, mOriginalDistance, mGraphicsEngine->pWidgetScale.get());
+      simulationTime, mOriginalDistance, mSettings->mGraphics.pWidgetScale.get());
   cs::core::SolarSystem::turnToObserver(
       *mGuiAnchor, mSolarSystem->getObserver(), simulationTime, false);
 }

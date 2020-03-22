@@ -19,7 +19,7 @@ class EllipseTool : public IVistaOpenGLDraw, public cs::core::tools::Tool {
  public:
   EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
       std::shared_ptr<cs::core::SolarSystem> const&          pSolarSystem,
-      std::shared_ptr<cs::core::GraphicsEngine> const&       graphicsEngine,
+      std::shared_ptr<cs::core::Settings> const&             settings,
       std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
       std::string const& sFrame);
   ~EllipseTool() override;
@@ -43,9 +43,9 @@ class EllipseTool : public IVistaOpenGLDraw, public cs::core::tools::Tool {
  private:
   void calculateVertices();
 
-  std::shared_ptr<cs::core::SolarSystem>    mSolarSystem;
-  std::shared_ptr<cs::core::GraphicsEngine> mGraphicsEngine;
-  std::shared_ptr<cs::core::TimeControl>    mTimeControl;
+  std::shared_ptr<cs::core::SolarSystem> mSolarSystem;
+  std::shared_ptr<cs::core::Settings>    mSettings;
+  std::shared_ptr<cs::core::TimeControl> mTimeControl;
 
   std::shared_ptr<cs::scene::CelestialAnchorNode> mAnchor;
 
