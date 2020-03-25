@@ -210,11 +210,10 @@ glm::dvec4 PolygonTool::getInterpolatedPosBetweenTwoMarks(cs::core::tools::Delet
 // Based on
 // https://stackoverflow.com/questions/8721406/how-to-determine-if-a-point-is-inside-a-2d-convex-polygon
 bool PolygonTool::checkPoint(glm::dvec2 const& point) {
-  int  i, j;
-  bool result = 0;
+  bool result = false;
 
   // Positive x (other directions could be compared, but it works reliable with only one direction)
-  for (i = 0, j = mCorners.size() - 1; i < mCorners.size(); j = i++) {
+  for (size_t i = 0, j = mCorners.size() - 1; i < mCorners.size(); j = i++) {
     if ((mCorners[i].mY > point.y) != (mCorners[j].mY > point.y) &&
         (point.x < (mCorners[j].mX - mCorners[i].mX) * (point.y - mCorners[i].mY) /
                            (mCorners[j].mY - mCorners[i].mY) +
@@ -248,7 +247,6 @@ bool PolygonTool::findIntersection(Site const& s1, Site const& s2, Site const& s
 
   double m1, m2;
   double c1, c2;
-  double minX, maxX, minY, maxY;
 
   // Line 1 (y = m1 * x + c1)
   m1 = (s2.mY - s1.mY) / (s2.mX - s1.mX);
@@ -302,7 +300,7 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
     voronoi.parse(mCorners);
 
     // Number of the original edges of the polygon
-    int countEdges = mCorners.size();
+    size_t countEdges = mCorners.size();
 
     // Vector of the original edges of the polygon from Delaunay triangulation
     std::vector<Edge2> voronoiEdges;
@@ -570,8 +568,8 @@ bool PolygonTool::checkSleekness(int count) {
       }
       // If not, adds this point to vector
       if (addPoint) {
-        mCornersFine[count].emplace_back(
-            (si1.mX + si2.mX) / 2, (si1.mY + si2.mY) / 2, mCornersFine[count].size());
+        mCornersFine[count].emplace_back((si1.mX + si2.mX) / 2, (si1.mY + si2.mY) / 2,
+            static_cast<uint16_t>(mCornersFine[count].size()));
         addedPoints.emplace_back(si1.mAddr, si2.mAddr);
       }
     }
@@ -586,8 +584,8 @@ bool PolygonTool::checkSleekness(int count) {
           addPoint = 0;
       }
       if (addPoint) {
-        mCornersFine[count].emplace_back(
-            (si1.mX + si3.mX) / 2, (si1.mY + si3.mY) / 2, mCornersFine[count].size());
+        mCornersFine[count].emplace_back((si1.mX + si3.mX) / 2, (si1.mY + si3.mY) / 2,
+            static_cast<uint16_t>(mCornersFine[count].size()));
         addedPoints.emplace_back(si1.mAddr, si3.mAddr);
       }
     }
@@ -602,8 +600,8 @@ bool PolygonTool::checkSleekness(int count) {
           addPoint = 0;
       }
       if (addPoint) {
-        mCornersFine[count].emplace_back(
-            (si2.mX + si3.mX) / 2, (si2.mY + si3.mY) / 2, mCornersFine[count].size());
+        mCornersFine[count].emplace_back((si2.mX + si3.mX) / 2, (si2.mY + si3.mY) / 2,
+            static_cast<uint16_t>(mCornersFine[count].size()));
         addedPoints.emplace_back(si2.mAddr, si3.mAddr);
       }
     }
@@ -663,7 +661,8 @@ void PolygonTool::refineMesh(Edge2 const& edge, double mdist, glm::dvec3 const& 
 
   // Checks height of the middle point
   if ((hAvg / ((h1 + h2) / 2) > mHeightDiff) || (((h1 + h2) / 2) / hAvg > mHeightDiff)) {
-    mCornersFine[count].emplace_back(avgPoint2.x, avgPoint2.y, mCornersFine[count].size());
+    mCornersFine[count].emplace_back(
+        avgPoint2.x, avgPoint2.y, static_cast<uint16_t>(mCornersFine[count].size()));
     fine = 0;
   }
   // Checks height of other points between the two Sites
@@ -686,7 +685,8 @@ void PolygonTool::refineMesh(Edge2 const& edge, double mdist, glm::dvec3 const& 
 
           if ((heAvg3 / ((i * h1 + (j - i) * h2) / j) > mHeightDiff) ||
               (((i * h1 + (j - i) * h2) / j) / heAvg3 > mHeightDiff)) {
-            mCornersFine[count].emplace_back(avgPoint3.x, avgPoint3.y, mCornersFine[count].size());
+            mCornersFine[count].emplace_back(
+                avgPoint3.x, avgPoint3.y, static_cast<uint16_t>(mCornersFine[count].size()));
             fine = 0;
           }
         }
@@ -1205,8 +1205,8 @@ void PolygonTool::updateCalculation() {
   double area          = 0;
   double negVolume     = 0;
   double posVolume     = 0;
-  int    triangleCount = 0;
-  int    pointCount    = 0;
+  size_t triangleCount = 0;
+  size_t pointCount    = 0;
 
   // Counts points of the original Delaunay-mesh
   for (auto const& vect : mCornersFine) {
@@ -1250,7 +1250,7 @@ void PolygonTool::updateCalculation() {
         }
 
         // Checks sleekness of triangles in Delaunay-mesh and refines them, if necessary
-        bool refine = checkSleekness(triangleCount);
+        bool refine = checkSleekness(static_cast<int32_t>(triangleCount));
 
         // Voronoi inside the original triangles - to refine triangle angles
         VoronoiGenerator voronoiRefine;
@@ -1266,7 +1266,8 @@ void PolygonTool::updateCalculation() {
           // If not too many points are addded in checkSleekness and it is not the the last attempt
           // than refines the mesh based on edge length and height differences
           if ((!refine) && (pointCount < mMaxPoints) && (attempt < mMaxAttempt))
-            refineMesh(s, maxDist, east, north, radii, triangleCount, h1, h2, fine);
+            refineMesh(
+                s, maxDist, east, north, radii, static_cast<int32_t>(triangleCount), h1, h2, fine);
         }
 
         std::vector<Triangle> trianglesRefined = voronoiRefine.getTriangles();
@@ -1375,7 +1376,7 @@ bool PolygonTool::Do() {
   mShader.SetUniform(mShader.GetUniformLocation("uColor"), 1.f, 1.f, 1.f, 1.f);
 
   // Draws the linestrip
-  glDrawArrays(GL_LINE_STRIP, 0, mIndexCount);
+  glDrawArrays(GL_LINE_STRIP, 0, static_cast<int32_t>(mIndexCount));
   mVAO.Release();
 
   // For Delaunay
@@ -1394,7 +1395,7 @@ bool PolygonTool::Do() {
     glDisable(GL_DEPTH_TEST);
 
     // Draws the linestrip (Delaunay)
-    glDrawArrays(GL_LINES, 0, mIndexCount2);
+    glDrawArrays(GL_LINES, 0, static_cast<int32_t>(mIndexCount2));
     mVAO2.Release();
 
     glEnable(GL_DEPTH_TEST);
