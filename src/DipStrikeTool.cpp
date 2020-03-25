@@ -265,8 +265,8 @@ void DipStrikeTool::calculateDipAndStrike() {
 
   // calculate center of plane and normal
   // based on http://stackoverflow.com/questions/1400213/3d-least-squares-plane
-  glm::mat3 mat(0);
-  glm::vec3 vec(0);
+  glm::dmat3 mat(0);
+  glm::dvec3 vec(0);
 
   auto      center      = mPlaneAnchor->getAnchorPosition();
   glm::vec3 idealNormal = glm::normalize(center);
@@ -361,7 +361,7 @@ bool DipStrikeTool::Do() {
   auto matMV = glm::make_mat4x4(glMatMV) *
                glm::mat4(x.x, x.y, x.z, 0, y.x, y.y, y.z, 0, z.x, z.y, z.z, 0, 0, 0, mOffset, 1);
 
-  matMV = glm::scale(matMV, glm::vec3(mSize * mSizeFactor));
+  matMV = glm::scale(matMV, glm::vec3(static_cast<float>(mSize) * mSizeFactor));
 
   mShader.Bind();
   mVAO.Bind();

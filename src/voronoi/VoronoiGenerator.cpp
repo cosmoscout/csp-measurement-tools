@@ -145,7 +145,7 @@ void VoronoiGenerator::addTriangulationEdge(Site const& site1, Site const& site2
         // emplace back triangle to vectors
         if (tri.size() == 0) {
           mTriangles.emplace_back(std::make_tuple(site1, site2, s1));
-          tri.emplace_back(s1, mTriangles.size() - 1);
+          tri.emplace_back(s1, static_cast<uint16_t>(mTriangles.size() - 1));
         }
         // if there are already triangles between site1 and site2
         else {
@@ -185,7 +185,7 @@ void VoronoiGenerator::addTriangulationEdge(Site const& site1, Site const& site2
           }
 
           // removes outdated elements from tri
-          for (int i = remove.size() - 1; i > -1; i--) {
+          for (size_t i = remove.size() - 1; i > -1; i--) {
             tri.erase(tri.begin() + i);
           }
         }

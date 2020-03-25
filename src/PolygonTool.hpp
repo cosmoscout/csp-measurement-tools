@@ -130,7 +130,7 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
   size_t                         mIndexCount2 = 0;
 
   // For triangle fineness
-  float mHeightDiff = 1.002;
+  float mHeightDiff = 1.002f;
   int   mMaxAttempt = 10;
   int   mMaxPoints  = 1000;
   int   mSleekness  = 15;
