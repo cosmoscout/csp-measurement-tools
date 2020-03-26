@@ -175,7 +175,7 @@ void VoronoiGenerator::addTriangulationEdge(Site const& site1, Site const& site2
                   mTriangles.at(p.second) = std::make_tuple(site1, site2, s1);
                   tri.emplace_back(s1, p.second);
                   remove.emplace_back(elementTri);
-                } catch (std::exception e) {
+                } catch (std::exception const& e) {
                   spdlog::error("Triangle elimination in VoronoiGenerator: {}", e.what());
                 }
               }
@@ -185,8 +185,8 @@ void VoronoiGenerator::addTriangulationEdge(Site const& site1, Site const& site2
           }
 
           // removes outdated elements from tri
-          for (size_t i = remove.size() - 1; i > -1; i--) {
-            tri.erase(tri.begin() + i);
+          for (size_t i = remove.size(); i > 0; i--) {
+            tri.erase(tri.begin() + i - 1);
           }
         }
       }

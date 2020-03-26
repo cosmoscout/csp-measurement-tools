@@ -342,7 +342,7 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
 
       // Finds the missing edges: search for every original edge in voronoiEdges
       // (the original polygon edges have neighbor addresses -> searches for corners)
-      for (int i = 0; i < mCorners.size(); i++) {
+      for (size_t i = 0; i < mCorners.size(); i++) {
         bool       found = 0;
         glm::ivec2 missingAddr;
 
@@ -397,11 +397,9 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
 
               // Cycles through addCorners vector and saves current intersection into the right
               // place
-              for (int i = 0; i < addCorners.size(); i++) {
+              for (size_t i = 0; i < addCorners.size(); i++) {
                 // If current intersection is not saved yet
                 if (!done) {
-                  int addr2 = addCorners[i].mAddr;
-
                   // Compares addresses of the two intersection
                   if (addCorners[i].mAddr < addrNew) {
                     // Skips first elements of vector
@@ -487,7 +485,7 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
         addr3 += cornerCount;
 
         // If intersection is not between last and first Site
-        if (addr3 < mCorners.size()) {
+        if (addr3 < static_cast<int>(mCorners.size())) {
           // Saves intersection corner to mCorners and element of mCorners to oldSite
           Site oldSite    = mCorners[addr3];
           mCorners[addr3] = Site(c.mX, c.mY, addr3);
@@ -495,7 +493,7 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
           addr3++;
 
           // Shifts every other corner of mCorners behind by one
-          for (addr3; addr3 < mCorners.size(); addr3++) {
+          for (; addr3 < static_cast<int>(mCorners.size()); addr3++) {
             Site newSite    = mCorners[addr3];
             mCorners[addr3] = Site(oldSite.mX, oldSite.mY, addr3);
             oldSite         = newSite;
@@ -644,9 +642,6 @@ void PolygonTool::displayMesh(Edge2 const& edge, double mdist, glm::dvec3 const&
 
 void PolygonTool::refineMesh(Edge2 const& edge, double mdist, glm::dvec3 const& e,
     glm::dvec3 const& n, glm::dvec3 const& r, int count, double h1, double h2, bool& fine) {
-  // Length of the edge in meters (on the voronoi plane!)
-  double length = std::sqrt(std::pow(mdist * edge.first.mX - mdist * edge.second.mX, 2) +
-                            std::pow(mdist * edge.first.mY - mdist * edge.second.mY, 2));
 
   // Middle point of the edge on voronoi plane
   glm::dvec2 avgPoint2 =
@@ -701,7 +696,7 @@ void PolygonTool::calculateAreaAndVolume(std::vector<Triangle> const& triangles,
     glm::dvec3 const& e, glm::dvec3 const& n, glm::dvec3 const& r, double& area, double& pvol,
     double& nvol) {
   // Counts area and volume in every triangle
-  for (int it = 0; it < triangles.size(); it++) {
+  for (size_t it = 0; it < triangles.size(); it++) {
     // ------------------------------------------ AREA ------------------------------------------
     Site si1(0, 0, 0);
     Site si2(0, 0, 0);
@@ -732,10 +727,6 @@ void PolygonTool::calculateAreaAndVolume(std::vector<Triangle> const& triangles,
     area += glm::length(glm::cross(r2 - r1, r3 - r1)) / 2;
 
     // ----------------------------------------- Volume -----------------------------------------
-    // Points on the least squares plane (from DipAndStrikeTool)
-    glm::dvec3 pl1 = glm::dot(mNormal2, mMiddlePoint2) / glm::dot(mNormal2, p1) * p1;
-    glm::dvec3 pl2 = glm::dot(mNormal2, mMiddlePoint2) / glm::dot(mNormal2, p2) * p2;
-    glm::dvec3 pl3 = glm::dot(mNormal2, mMiddlePoint2) / glm::dot(mNormal2, p3) * p3;
 
     // Heights over the least squares plane
     double hl1 = h1 - (glm::dot(mNormal2, mMiddlePoint2) / glm::dot(mNormal2, p1) - 1) *
@@ -978,7 +969,6 @@ void PolygonTool::updateLineVertices() {
   // This seems to be the first time the tool is moved, so we have to store the distance to the
   // observer so that we can scale the tool later based on the observer's position.
   if (mOriginalDistance < 0) {
-    double simulationTime(mTimeControl->pSimulationTime.get());
     mOriginalDistance = mSolarSystem->getObserver().getAnchorScale() *
                         glm::length(mSolarSystem->getObserver().getRelativePosition(
                             mTimeControl->pSimulationTime.get(), *mGuiAnchor));
@@ -1200,13 +1190,13 @@ void PolygonTool::updateCalculation() {
   // Creates Delaunay-mesh of the original polygon
   createMesh(triangles);
 
-  bool   fine          = 0;
-  int    attempt       = 0;
-  double area          = 0;
-  double negVolume     = 0;
-  double posVolume     = 0;
-  size_t triangleCount = 0;
-  size_t pointCount    = 0;
+  bool     fine          = 0;
+  uint32_t attempt       = 0;
+  double   area          = 0;
+  double   negVolume     = 0;
+  double   posVolume     = 0;
+  size_t   triangleCount = 0;
+  size_t   pointCount    = 0;
 
   // Counts points of the original Delaunay-mesh
   for (auto const& vect : mCornersFine) {
@@ -1337,11 +1327,11 @@ bool PolygonTool::Do() {
   cs::scene::CelestialAnchor centerAnchor(mGuiAnchor->getCenterName(), mGuiAnchor->getFrameName());
   auto                       mat = observer.getRelativeTransform(time, centerAnchor);
 
-  for (int i(0); i < mIndexCount; ++i) {
+  for (uint32_t i(0); i < mIndexCount; ++i) {
     vRelativePositions[i] = (mat * glm::dvec4(mSampledPositions[i], 1.0)).xyz();
   }
   // For Delaunay
-  for (int i(0); i < mIndexCount2; ++i) {
+  for (uint32_t i(0); i < mIndexCount2; ++i) {
     vRelativePositions2[i] = (mat * glm::dvec4(mTriangulation[i], 1.0)).xyz();
   }
 
