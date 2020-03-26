@@ -108,8 +108,6 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
   VistaBufferObject      mVBO2;
   VistaGLSLShader        mShader;
 
-  Plugin::Settings::Polygon mPolygonSettings;
-
   double mOriginalDistance = -1.0;
 
   std::vector<glm::dvec3> mSampledPositions;
