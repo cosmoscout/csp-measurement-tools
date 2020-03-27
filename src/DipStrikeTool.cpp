@@ -257,7 +257,6 @@ void DipStrikeTool::calculateDipAndStrike() {
   // This seems to be the first time the tool is moved, so we have to store the distance to the
   // observer so that we can scale the tool later based on the observer's position.
   if (mOriginalDistance < 0) {
-    double simulationTime(mTimeControl->pSimulationTime.get());
     mOriginalDistance = mSolarSystem->getObserver().getAnchorScale() *
                         glm::length(mSolarSystem->getObserver().getRelativePosition(
                             mTimeControl->pSimulationTime.get(), *mGuiAnchor));
