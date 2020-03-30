@@ -110,7 +110,7 @@ std::map<unsigned short, std::vector<Site>> const& VoronoiGenerator::getNeighbor
 }
 
 void VoronoiGenerator::addTriangulationEdge(Site const& site1, Site const& site2) {
-  mTriangulationEdges.push_back(std::make_pair(site1, site2));
+  mTriangulationEdges.emplace_back(site1, site2);
 
   // site, place of site in mTriangles
   std::vector<std::pair<Site, int>> tri;
@@ -143,7 +143,7 @@ void VoronoiGenerator::addTriangulationEdge(Site const& site1, Site const& site2
       // common neighbor found
       if (s1.mAddr == s2.mAddr) {
         // emplace back triangle to vectors
-        if (tri.size() == 0) {
+        if (tri.empty()) {
           mTriangles.emplace_back(std::make_tuple(site1, site2, s1));
           tri.emplace_back(s1, static_cast<uint16_t>(mTriangles.size() - 1));
         }
@@ -241,8 +241,8 @@ void VoronoiGenerator::process(Circle* event) {
 
   if (event->mIsValid) {
 
-    Arc* leftArc  = event->mArc->mLeftBreak ? event->mArc->mLeftBreak->mLeftArc : NULL;
-    Arc* rightArc = event->mArc->mRightBreak ? event->mArc->mRightBreak->mRightArc : NULL;
+    Arc* leftArc  = event->mArc->mLeftBreak ? event->mArc->mLeftBreak->mLeftArc : nullptr;
+    Arc* rightArc = event->mArc->mRightBreak ? event->mArc->mRightBreak->mRightArc : nullptr;
 
     if (leftArc)
       mVoronoiEdges.push_back(event->mArc->mLeftBreak->finishEdge(event->mCenter));
@@ -260,8 +260,8 @@ void VoronoiGenerator::process(Site const& event) {
 
   Arc* newArc = mBeachline.insertArcFor(event);
 
-  addCircleEvent(newArc->mLeftBreak ? newArc->mLeftBreak->mLeftArc : NULL);
-  addCircleEvent(newArc->mRightBreak ? newArc->mRightBreak->mRightArc : NULL);
+  addCircleEvent(newArc->mLeftBreak ? newArc->mLeftBreak->mLeftArc : nullptr);
+  addCircleEvent(newArc->mRightBreak ? newArc->mRightBreak->mRightArc : nullptr);
 }
 
 void VoronoiGenerator::addCircleEvent(Arc* arc) {

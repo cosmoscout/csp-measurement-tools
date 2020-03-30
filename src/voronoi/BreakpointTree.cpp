@@ -14,7 +14,7 @@
 namespace csp::measurementtools {
 
 BreakpointTree::BreakpointTree()
-    : mRoot(0) {
+    : mRoot(nullptr) {
 }
 
 BreakpointTree::~BreakpointTree() {
@@ -29,20 +29,20 @@ void BreakpointTree::insert(Breakpoint* point) {
 }
 
 void BreakpointTree::remove(Breakpoint* point) {
-  if (point->mParent == NULL) {
+  if (point->mParent == nullptr) {
 
     if (point->mLeftChild && point->mRightChild) {
       mRoot          = point->mRightChild;
-      mRoot->mParent = NULL;
+      mRoot->mParent = nullptr;
       attachLeftOf(point->mLeftChild, mRoot);
     } else if (point->mLeftChild) {
       mRoot          = point->mLeftChild;
-      mRoot->mParent = NULL;
+      mRoot->mParent = nullptr;
     } else if (point->mRightChild) {
       mRoot          = point->mRightChild;
-      mRoot->mParent = NULL;
+      mRoot->mParent = nullptr;
     } else {
-      mRoot = NULL;
+      mRoot = nullptr;
     }
   } else {
 
@@ -72,9 +72,9 @@ void BreakpointTree::remove(Breakpoint* point) {
       point->mRightChild->mParent = point->mParent;
     } else {
       if (isLeftChild)
-        point->mParent->mLeftChild = NULL;
+        point->mParent->mLeftChild = nullptr;
       else
-        point->mParent->mRightChild = NULL;
+        point->mParent->mRightChild = nullptr;
     }
   }
 }
@@ -116,7 +116,7 @@ void BreakpointTree::insert(Breakpoint* newNode, Breakpoint* atNode) {
 
 Breakpoint* BreakpointTree::getNearestNode(double x, Breakpoint* current) const {
   if (!current)
-    return NULL;
+    return nullptr;
 
   Breakpoint* nearestChild = (x < current->position().mX) ? getNearestNode(x, current->mLeftChild)
                                                           : getNearestNode(x, current->mRightChild);
@@ -148,13 +148,13 @@ void BreakpointTree::clear(Breakpoint* atNode) {
 
     if (atNode->mLeftArc) {
       if (atNode->mLeftArc->mLeftBreak)
-        atNode->mLeftArc->mLeftBreak->mRightArc = NULL;
+        atNode->mLeftArc->mLeftBreak->mRightArc = nullptr;
       delete atNode->mLeftArc;
     }
 
     if (atNode->mRightArc) {
       if (atNode->mRightArc->mRightBreak)
-        atNode->mRightArc->mRightBreak->mLeftArc = NULL;
+        atNode->mRightArc->mRightBreak->mLeftArc = nullptr;
       delete atNode->mRightArc;
     }
 

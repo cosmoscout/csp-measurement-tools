@@ -49,7 +49,7 @@ struct Vector2f {
   /// \name Data
   /// Members storing the information of the vector.
   ///@{
-  double mX, mY;
+  double mX{}, mY{};
   ///@}
 };
 
@@ -66,7 +66,7 @@ double operator*(Vector2f const& lhs, Vector2f const& rhs);
 Vector2f operator*(Vector2f const& lhs, double rhs);
 
 /// Multiplication of a scalar with a vector.
-Vector2f operator*(double const& lhs, Vector2f rhs);
+Vector2f operator*(double const& lhs, const Vector2f& rhs);
 
 /// Division of a vector by a scalar.
 Vector2f operator/(Vector2f const& lhs, double rhs);

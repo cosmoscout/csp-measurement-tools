@@ -15,10 +15,7 @@ Vector2f::Vector2f()
     , mY(0.0) {
 }
 
-Vector2f::Vector2f(Vector2f const& point)
-    : mX(point.mX)
-    , mY(point.mY) {
-}
+Vector2f::Vector2f(Vector2f const& point) = default;
 
 Vector2f::Vector2f(double x_in, double y_in)
     : mX(x_in)
@@ -81,7 +78,7 @@ Vector2f operator*(Vector2f const& lhs, double rhs) {
   return (Vector2f(lhs.mX * rhs, lhs.mY * rhs));
 }
 
-Vector2f operator*(double const& lhs, Vector2f rhs) {
+Vector2f operator*(double const& lhs, const Vector2f& rhs) {
   return rhs * lhs;
 }
 

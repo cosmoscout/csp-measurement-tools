@@ -13,12 +13,12 @@
 namespace csp::measurementtools {
 
 Breakpoint::Breakpoint()
-    : mLeftArc(NULL)
-    , mRightArc(NULL)
-    , mLeftChild(NULL)
-    , mRightChild(NULL)
-    , mParent(NULL)
-    , mGenerator(NULL)
+    : mLeftArc(nullptr)
+    , mRightArc(nullptr)
+    , mLeftChild(nullptr)
+    , mRightChild(nullptr)
+    , mParent(nullptr)
+    , mGenerator(nullptr)
     , mSweepline(-1.0)
     , mPosition()
     , mStart() {
@@ -27,9 +27,9 @@ Breakpoint::Breakpoint()
 Breakpoint::Breakpoint(Arc* left, Arc* right, VoronoiGenerator* generator)
     : mLeftArc(left)
     , mRightArc(right)
-    , mLeftChild(NULL)
-    , mRightChild(NULL)
-    , mParent(NULL)
+    , mLeftChild(nullptr)
+    , mRightChild(nullptr)
+    , mParent(nullptr)
     , mGenerator(generator)
     , mSweepline(-1.0)
     , mPosition()
@@ -47,7 +47,7 @@ Vector2f const& Breakpoint::position() const {
   return mPosition;
 }
 
-Edge const Breakpoint::finishEdge(Vector2f const& end) const {
+Edge Breakpoint::finishEdge(Vector2f const& end) const {
   return std::make_pair(mStart, end);
 }
 

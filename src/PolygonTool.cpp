@@ -237,7 +237,7 @@ bool PolygonTool::findIntersection(Site const& s1, Site const& s2, Site const& s
   // Avoids division with 0
   if ((s1.mX == 0) || (s2.mX == 0) || (s3.mX == 0) || (s4.mX == 0) || (s1.mY == 0) ||
       (s2.mY == 0) || (s3.mY == 0) || (s4.mY == 0))
-    return 0;
+    return false;
 
   // Based on
   // http://www.softwareandfinance.com/Visual_CPP/VCPP_Intersection_Two_lines_EndPoints.html
@@ -276,17 +276,17 @@ bool PolygonTool::findIntersection(Site const& s1, Site const& s2, Site const& s
               (std::abs((s3.mY - intersectionY) / s3.mY) > safety)) &&
           ((std::abs((s4.mX - intersectionX) / s4.mX) > safety) ||
               (std::abs((s4.mY - intersectionY) / s4.mY) > safety))) {
-        return 1;
+        return true;
       }
     }
   }
-  return 0;
+  return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
-  bool edgesOK = 0;
+  bool edgesOK = false;
   int  it      = 0;
 
   // Does the triangulaiton of the original polygon
@@ -327,7 +327,7 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
           site2 = s.first;
         }
         // Saves edges of the triangulation
-        voronoiEdges.push_back(std::make_pair(site1, site2));
+        voronoiEdges.emplace_back(site1, site2);
       }
     }
 
@@ -343,14 +343,14 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
       // Finds the missing edges: search for every original edge in voronoiEdges
       // (the original polygon edges have neighbor addresses -> searches for corners)
       for (size_t i = 0; i < mCorners.size(); i++) {
-        bool       found = 0;
+        bool       found = false;
         glm::ivec2 missingAddr;
 
         // In case of the last line of the polygon
         if (i == (mCorners.size() - 1)) {
           for (auto const& v : voronoiEdges)
             if ((v.first.mAddr == i) && (v.second.mAddr == 0))
-              found = 1;
+              found = true;
 
           if (!found)
             missingAddr = glm::ivec2(i, 0);
@@ -359,7 +359,7 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
         else {
           for (auto const& v : voronoiEdges)
             if ((v.first.mAddr == i) && (v.second.mAddr == i + 1))
-              found = 1;
+              found = true;
           if (!found)
             missingAddr = glm::ivec2(i, i + 1);
         }
@@ -393,68 +393,68 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
               int addrNew =
                   site1.mAddr + 1; // = site2.mAddr (except for the last edge, where site2.mAddr=0!
               Site oldCorner(0, 0, 0);
-              bool done = 0;
+              bool done = false;
 
               // Cycles through addCorners vector and saves current intersection into the right
               // place
-              for (size_t i = 0; i < addCorners.size(); i++) {
+              for (auto& addCorner : addCorners) {
                 // If current intersection is not saved yet
                 if (!done) {
                   // Compares addresses of the two intersection
-                  if (addCorners[i].mAddr < addrNew) {
+                  if (addCorner.mAddr < addrNew) {
                     // Skips first elements of vector
-                  } else if (addCorners[i].mAddr == addrNew) {
+                  } else if (addCorner.mAddr == addrNew) {
                     // If edges points to positive x
                     if (intersectionX > site1.mX) {
                       // Saves intersection only when it is in front of the
                       // existing intersection; otherwise it will be handled
                       // in the next cycle
-                      if (addCorners[i].mX > intersectionX) {
+                      if (addCorner.mX > intersectionX) {
                         // Saves existing intersection to oldCorner
                         // will be placed back to vector in the next cycle
-                        oldCorner     = addCorners[i];
-                        addCorners[i] = Site(intersectionX, intersectionY, addrNew);
-                        done          = 1;
+                        oldCorner = addCorner;
+                        addCorner = Site(intersectionX, intersectionY, addrNew);
+                        done      = true;
                       }
                     }
                     // If edges points to negative x
                     else if (intersectionX < site1.mX) {
-                      if (addCorners[i].mX < intersectionX) {
-                        oldCorner     = addCorners[i];
-                        addCorners[i] = Site(intersectionX, intersectionY, addrNew);
-                        done          = 1;
+                      if (addCorner.mX < intersectionX) {
+                        oldCorner = addCorner;
+                        addCorner = Site(intersectionX, intersectionY, addrNew);
+                        done      = true;
                       }
                     }
                     // Handles the very rare case of a vertical edge
                     // Does the same, as before, just now with y coordinates
                     else if (intersectionX == site1.mX) {
                       if (intersectionY > site1.mY) {
-                        if (addCorners[i].mY > intersectionY) {
-                          oldCorner     = addCorners[i];
-                          addCorners[i] = Site(intersectionX, intersectionY, addrNew);
-                          done          = 1;
+                        if (addCorner.mY > intersectionY) {
+                          oldCorner = addCorner;
+                          addCorner = Site(intersectionX, intersectionY, addrNew);
+                          done      = true;
                         }
                       } else if (intersectionY < site1.mY) {
-                        if (addCorners[i].mY < intersectionY) {
-                          oldCorner     = addCorners[i];
-                          addCorners[i] = Site(intersectionX, intersectionY, addrNew);
-                          done          = 1;
+                        if (addCorner.mY < intersectionY) {
+                          oldCorner = addCorner;
+                          addCorner = Site(intersectionX, intersectionY, addrNew);
+                          done      = true;
                         }
                       }
                     } // if (intersectionX==s.first.mX)
                   }   // if (addCorners[i].mAddr == addrNew)
                   // if (addCorners[i].mAddr > addrNew)
                   else {
-                    oldCorner     = addCorners[i];
-                    addCorners[i] = Site(intersectionX, intersectionY, addrNew);
-                    done          = 1;
+                    oldCorner = addCorner;
+                    addCorner = Site(intersectionX, intersectionY, addrNew);
+                    done      = true;
                   }
                 } // if (!done)
                 else {
                   // After the current intersecting point is added to the middle of the vector
                   // shifts back every other element by one position
-                  Site newCorner = addCorners[i];
-                  addCorners[i]  = oldCorner;
+                  Site newCorner = addCorner;
+                  addCorner      = oldCorner;
                   oldCorner      = newCorner;
                 }
               } // for (int i = 0; i < addCorners.size(); i++)
@@ -469,7 +469,7 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
               }
 
               // Corners needed to be added -> run the cycle again
-              edgesOK = 0;
+              edgesOK = false;
             } // if (findIntersection(...))
           }   // for (auto const& s : triangulation)
         }     // if (!found)
@@ -511,7 +511,7 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
     } // if (countEdges != 0)
     else {
       // All of the original edges are in voronoiEdges -> no need for an other cycle
-      edgesOK = 1;
+      edgesOK = true;
     }
     // Saves the original triangles
     triangles = voronoi.getTriangles();
@@ -557,12 +557,12 @@ bool PolygonTool::checkSleekness(int count) {
     // Edge 1 is too long compared to the others
     if ((length2 * sleekness1 < length1) || (length3 * sleekness1 < length1) ||
         (length2 + length3 < length1 * sleekness2)) {
-      bool addPoint = 1;
+      bool addPoint = true;
       // Checks previously added points if they are the same
       for (auto const& addr : addedPoints) {
         if (((addr.first == si1.mAddr) && (addr.second == si2.mAddr)) ||
             ((addr.first == si2.mAddr) && (addr.second == si1.mAddr)))
-          addPoint = 0;
+          addPoint = false;
       }
       // If not, adds this point to vector
       if (addPoint) {
@@ -575,11 +575,11 @@ bool PolygonTool::checkSleekness(int count) {
     // Edge 2 is too long compared to the others
     if ((length1 * sleekness1 < length2) || (length3 * sleekness1 < length2) ||
         (length1 + length3 < length2 * sleekness2)) {
-      bool addPoint = 1;
+      bool addPoint = true;
       for (auto const& addr : addedPoints) {
         if (((addr.first == si1.mAddr) && (addr.second == si3.mAddr)) ||
             ((addr.first == si3.mAddr) && (addr.second == si1.mAddr)))
-          addPoint = 0;
+          addPoint = false;
       }
       if (addPoint) {
         mCornersFine[count].emplace_back((si1.mX + si3.mX) / 2, (si1.mY + si3.mY) / 2,
@@ -591,11 +591,11 @@ bool PolygonTool::checkSleekness(int count) {
     // Edge 3 is too long compared to the others
     if ((length1 * sleekness1 < length3) || (length2 * sleekness1 < length3) ||
         (length1 + length2 < length3 * sleekness2)) {
-      bool addPoint = 1;
+      bool addPoint = true;
       for (auto const& addr : addedPoints) {
         if (((addr.first == si2.mAddr) && (addr.second == si3.mAddr)) ||
             ((addr.first == si3.mAddr) && (addr.second == si2.mAddr)))
-          addPoint = 0;
+          addPoint = false;
       }
       if (addPoint) {
         mCornersFine[count].emplace_back((si2.mX + si3.mX) / 2, (si2.mY + si3.mY) / 2,
@@ -606,9 +606,9 @@ bool PolygonTool::checkSleekness(int count) {
   }
 
   if (addedPoints.size() > 1.5 * (mCornersFine[count].size() - addedPoints.size()))
-    return 1;
+    return true;
 
-  return 0;
+  return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -658,7 +658,7 @@ void PolygonTool::refineMesh(Edge2 const& edge, double mdist, glm::dvec3 const& 
   if ((hAvg / ((h1 + h2) / 2) > mHeightDiff) || (((h1 + h2) / 2) / hAvg > mHeightDiff)) {
     mCornersFine[count].emplace_back(
         avgPoint2.x, avgPoint2.y, static_cast<uint16_t>(mCornersFine[count].size()));
-    fine = 0;
+    fine = false;
   }
   // Checks height of other points between the two Sites
   else {
@@ -682,7 +682,7 @@ void PolygonTool::refineMesh(Edge2 const& edge, double mdist, glm::dvec3 const& 
               (((i * h1 + (j - i) * h2) / j) / heAvg3 > mHeightDiff)) {
             mCornersFine[count].emplace_back(
                 avgPoint3.x, avgPoint3.y, static_cast<uint16_t>(mCornersFine[count].size()));
-            fine = 0;
+            fine = false;
           }
         }
       }
@@ -696,12 +696,12 @@ void PolygonTool::calculateAreaAndVolume(std::vector<Triangle> const& triangles,
     glm::dvec3 const& e, glm::dvec3 const& n, glm::dvec3 const& r, double& area, double& pvol,
     double& nvol) {
   // Counts area and volume in every triangle
-  for (size_t it = 0; it < triangles.size(); it++) {
+  for (const auto& triangle : triangles) {
     // ------------------------------------------ AREA ------------------------------------------
     Site si1(0, 0, 0);
     Site si2(0, 0, 0);
     Site si3(0, 0, 0);
-    std::tie(si1, si2, si3) = triangles[it];
+    std::tie(si1, si2, si3) = triangle;
 
     // Cartesian coordinates without height
     glm::dvec3 p1 = glm::normalize(mMiddlePoint + mdist * si1.mX * e + mdist * si1.mY * n) * r[0];
@@ -758,18 +758,18 @@ void PolygonTool::calculateAreaAndVolume(std::vector<Triangle> const& triangles,
     // If 2 intersection points are found:
     // Split the triangle into a smaller triangle and a quadrilateral
     else {
-      glm::dvec3 pM1    = glm::dvec3(0.0);
-      glm::dvec3 pM2    = glm::dvec3(0.0);
-      glm::dvec3 pM3    = glm::dvec3(0.0);
-      glm::dvec3 pM     = glm::dvec3(0.0);
-      glm::dvec3 pMOld  = glm::dvec3(0.0);
-      glm::dvec3 lM     = glm::dvec3(0.0);
-      double     hM     = 0;
-      double     hlM    = 0;
-      double     hlMOld = 0;
-      bool       b1     = 0;
-      bool       b2     = 0;
-      bool       b3     = 0;
+      auto   pM1    = glm::dvec3(0.0);
+      auto   pM2    = glm::dvec3(0.0);
+      auto   pM3    = glm::dvec3(0.0);
+      auto   pM     = glm::dvec3(0.0);
+      auto   pMOld  = glm::dvec3(0.0);
+      auto   lM     = glm::dvec3(0.0);
+      double hM     = 0;
+      double hlM    = 0;
+      double hlMOld = 0;
+      bool   b1     = false;
+      bool   b2     = false;
+      bool   b3     = false;
 
       // Resolution of edge sampling
       int    res  = 32;
@@ -798,7 +798,7 @@ void PolygonTool::calculateAreaAndVolume(std::vector<Triangle> const& triangles,
             pM1 = pMOld - (pM - pMOld) * hlMOld / (hlM - hlMOld);
             // To quit loop
             i  = res;
-            b1 = 1;
+            b1 = true;
           } else {
             // Save values for the next cycle
             pMOld  = pM;
@@ -818,7 +818,7 @@ void PolygonTool::calculateAreaAndVolume(std::vector<Triangle> const& triangles,
           if ((hl1 > 0) != (hlM > 0)) {
             pM2 = pMOld - (pM - pMOld) * hlMOld / (hlM - hlMOld);
             i   = res;
-            b2  = 1;
+            b2  = true;
           } else {
             pMOld  = pM;
             hlMOld = hlM;
@@ -837,7 +837,7 @@ void PolygonTool::calculateAreaAndVolume(std::vector<Triangle> const& triangles,
           if ((hl2 > 0) != (hlM > 0)) {
             pM3 = pMOld - (pM - pMOld) * hlMOld / (hlM - hlMOld);
             i   = res;
-            b3  = 1;
+            b3  = true;
           } else {
             pMOld  = pM;
             hlMOld = hlM;
@@ -947,7 +947,7 @@ void PolygonTool::onPointRemoved(int index) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void PolygonTool::updateLineVertices() {
-  if (mPoints.size() == 0)
+  if (mPoints.empty())
     return;
 
   // Fills the vertex buffer with sampled data
@@ -978,7 +978,7 @@ void PolygonTool::updateLineVertices() {
   auto currMark = ++mPoints.begin();
 
   // minLng,maxLng,minLat,maxLat
-  glm::dvec4 boundingBox = glm::dvec4(0.0);
+  auto boundingBox = glm::dvec4(0.0);
 
   while (currMark != mPoints.end()) {
     // Generates X points for each line segment
@@ -1087,7 +1087,7 @@ void PolygonTool::updateCalculation() {
   if (maxDist > radii[0]) {
     mGuiItem->callJavascript("setArea", 0);
     mGuiItem->callJavascript("setVolume", 0, 0);
-    mShowMesh = 0;
+    mShowMesh = false;
     return;
   }
   // Converts maxDist to Voronoi plane (approx.)
@@ -1190,7 +1190,7 @@ void PolygonTool::updateCalculation() {
   // Creates Delaunay-mesh of the original polygon
   createMesh(triangles);
 
-  bool     fine          = 0;
+  bool     fine          = false;
   uint32_t attempt       = 0;
   double   area          = 0;
   double   negVolume     = 0;
@@ -1206,7 +1206,7 @@ void PolygonTool::updateCalculation() {
   // Refines triangulation until it is necessary or mMaxAttempt or mMaxPoints
   while ((!fine) && (attempt < mMaxAttempt) && (pointCount < mMaxPoints)) {
     attempt++;
-    fine = 1;
+    fine = true;
 
     area          = 0;
     negVolume     = 0;

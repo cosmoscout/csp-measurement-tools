@@ -55,8 +55,8 @@ class PathTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointTool
 
   /// Returns the interpolated position in cartesian coordinates. The fourth component is height
   /// above the surface.
-  glm::dvec4 getInterpolatedPosBetweenTwoMarks(cs::core::tools::DeletableMark const& pMark1,
-      cs::core::tools::DeletableMark const& pMark2, double value, double const& scale);
+  glm::dvec4 getInterpolatedPosBetweenTwoMarks(cs::core::tools::DeletableMark const& l0,
+      cs::core::tools::DeletableMark const& l1, double value, double const& scale);
 
  private:
   /// These are called by the base class MultiPointTool.

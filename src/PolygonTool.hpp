@@ -59,11 +59,11 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
 
   /// Returns the interpolated position in cartesian coordinates. The fourth component is
   /// height above the surface
-  glm::dvec4 getInterpolatedPosBetweenTwoMarks(cs::core::tools::DeletableMark const& pMark1,
-      cs::core::tools::DeletableMark const& pMark2, double value);
+  glm::dvec4 getInterpolatedPosBetweenTwoMarks(cs::core::tools::DeletableMark const& l0,
+      cs::core::tools::DeletableMark const& l1, double value);
 
   /// Finds the intersection point between two sites
-  bool findIntersection(Site const& s1, Site const& s2, Site const& s3, Site const& s4,
+  static bool findIntersection(Site const& s1, Site const& s2, Site const& s3, Site const& s4,
       double& intersectionX, double& intersectionY);
 
   /// Creates a Delaunay-mesh and corrects it to match the original polygon
@@ -134,7 +134,7 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
   uint32_t mSleekness  = 15;
 
   // For volume calculation
-  double     mOffset;
+  double     mOffset{};
   glm::dvec3 mNormal2      = glm::dvec3(0.0);
   glm::dvec3 mMiddlePoint2 = glm::dvec3(0.0);
 

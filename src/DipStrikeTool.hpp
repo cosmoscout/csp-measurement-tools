@@ -79,9 +79,9 @@ class DipStrikeTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPoin
   VistaBufferObject      mVBO;
   VistaGLSLShader        mShader;
 
-  double    mOriginalDistance = -1.0, mSize;
+  double    mOriginalDistance = -1.0, mSize{};
   glm::vec3 mNormal = glm::vec3(0.0), mMip = glm::vec3(0.0);
-  float     mOffset, mSizeFactor = 1.5f, mOpacity = 0.5;
+  float     mOffset{}, mSizeFactor = 1.5f, mOpacity = 0.5;
 
   int mScaleConnection = -1;
 

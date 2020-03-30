@@ -54,7 +54,7 @@ class Plugin : public cs::core::PluginBase {
   void update() override;
 
  private:
-  Settings    mPluginSettings;
+  Settings    mPluginSettings{};
   std::string mNextTool = "none";
 
   std::list<std::shared_ptr<cs::core::tools::Tool>> mTools;

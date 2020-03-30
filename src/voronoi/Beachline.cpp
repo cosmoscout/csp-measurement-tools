@@ -14,12 +14,12 @@ namespace csp::measurementtools {
 Beachline::Beachline(VoronoiGenerator* parent)
     : mBreakPoints()
     , mParent(parent)
-    , mRoot(NULL) {
+    , mRoot(nullptr) {
 }
 
 Arc* Beachline::insertArcFor(Site const& site) {
   // if site creates the very first Arc of the Beachline
-  if (mRoot == NULL) {
+  if (mRoot == nullptr) {
     mRoot = new Arc(site);
     return mRoot;
   }
@@ -67,8 +67,8 @@ Arc* Beachline::insertArcFor(Site const& site) {
 }
 
 void Beachline::removeArc(Arc* arc) {
-  Arc* leftArc  = arc->mLeftBreak ? arc->mLeftBreak->mLeftArc : NULL;
-  Arc* rightArc = arc->mRightBreak ? arc->mRightBreak->mRightArc : NULL;
+  Arc* leftArc  = arc->mLeftBreak ? arc->mLeftBreak->mLeftArc : nullptr;
+  Arc* rightArc = arc->mRightBreak ? arc->mRightBreak->mRightArc : nullptr;
 
   arc->invalidateEvent();
   if (leftArc)
@@ -77,7 +77,7 @@ void Beachline::removeArc(Arc* arc) {
     rightArc->invalidateEvent();
 
   if (leftArc && rightArc) {
-    Breakpoint* merged = new Breakpoint(leftArc, rightArc, mParent);
+    auto* merged = new Breakpoint(leftArc, rightArc, mParent);
 
     mParent->addTriangulationEdge(leftArc->mSite, rightArc->mSite);
 
@@ -93,11 +93,11 @@ void Beachline::removeArc(Arc* arc) {
     delete arc->mRightBreak;
   } else if (leftArc) {
     mBreakPoints.remove(arc->mLeftBreak);
-    leftArc->mRightBreak = NULL;
+    leftArc->mRightBreak = nullptr;
     delete arc->mLeftBreak;
   } else if (rightArc) {
     mBreakPoints.remove(arc->mRightBreak);
-    rightArc->mLeftBreak = NULL;
+    rightArc->mLeftBreak = nullptr;
     delete arc->mRightBreak;
   }
 
