@@ -121,8 +121,8 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
   }
 
   // whenever the height scale changes our vertex positions need to be updated
-  mScaleConnection = mGraphicsEngine->pHeightScale.connectAndTouch(
-      [this](float /*h*/) { calculateVertices(); });
+  mScaleConnection =
+      mGraphicsEngine->pHeightScale.connectAndTouch([this](float /*h*/) { calculateVertices(); });
 
   pShouldDelete.connectFrom(mCenterHandle.pShouldDelete);
 }
