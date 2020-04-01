@@ -85,9 +85,7 @@ class DipStrikeTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPoin
 
   int mScaleConnection = -1;
 
-  static const int         RESOLUTION;
-  static const std::string SHADER_VERT;
-  static const std::string SHADER_FRAG;
+  static const int RESOLUTION;
 };
 
 } // namespace csp::measurementtools

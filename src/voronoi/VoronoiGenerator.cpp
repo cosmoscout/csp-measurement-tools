@@ -18,13 +18,7 @@ VoronoiGenerator::VoronoiGenerator()
     : mBeachline(this)
     , mSweepline(0.0)
     , mMaxY(0.0)
-    , mMinY(0.0)
-    , mSiteEvents()
-    , mCircleEvents()
-    , mVoronoiEdges()
-    , mTriangulationEdges()
-    , mTriangles()
-    , mNeighbors() {
+    , mMinY(0.0) {
 }
 
 void VoronoiGenerator::parse(std::vector<Site> const& sites) {
@@ -40,10 +34,12 @@ void VoronoiGenerator::parse(std::vector<Site> const& sites) {
 
   if (sites.size() > 1) {
     for (auto site : sites) {
-      if (site.mY > mMaxY)
+      if (site.mY > mMaxY) {
         mMaxY = site.mY;
-      if (site.mY < mMinY)
+      }
+      if (site.mY < mMinY) {
         mMinY = site.mY;
+      }
       mSiteEvents.push(site);
     }
 
@@ -58,15 +54,16 @@ void VoronoiGenerator::parse(std::vector<Site> const& sites) {
         mCircleEvents.pop();
         mSweepline = next->mPriority.mY;
         process(next);
-        delete next;
+        delete next; // NOLINT(cppcoreguidelines-owning-memory): TODO
       } else {
         Site next = mSiteEvents.top();
         mSiteEvents.pop();
 
         // hackhack...
         if (!mSiteEvents.empty() && mSiteEvents.top().mY == next.mY &&
-            mSiteEvents.top().mX == next.mX)
+            mSiteEvents.top().mX == next.mX) {
           continue;
+        }
 
         mSweepline = next.mY;
         process(next);
@@ -105,7 +102,7 @@ std::vector<Triangle> const& VoronoiGenerator::getTriangles() const {
   return mTriangles;
 }
 
-std::map<unsigned short, std::vector<Site>> const& VoronoiGenerator::getNeighbors() const {
+std::map<uint16_t, std::vector<Site>> const& VoronoiGenerator::getNeighbors() const {
   return mNeighbors;
 }
 
@@ -201,8 +198,10 @@ void VoronoiGenerator::removeTriangulationEdge(Site const& site1, Site const& si
   // removes edge
   int i = 0;
   for (auto const& s : mTriangulationEdges) {
-    if (((s.first == site1) && (s.second == site2)) || ((s.first == site2) && (s.second == site1)))
+    if (((s.first == site1) && (s.second == site2)) ||
+        ((s.first == site2) && (s.second == site1))) {
       mTriangulationEdges.erase(mTriangulationEdges.begin() + i);
+    }
 
     i++;
   }
@@ -225,14 +224,16 @@ void VoronoiGenerator::removeTriangulationEdge(Site const& site1, Site const& si
   // removes neigbours
   i = 0;
   for (auto const& s : mNeighbors[site1.mAddr]) {
-    if (s == site2)
+    if (s == site2) {
       mNeighbors[site1.mAddr].erase(mNeighbors[site1.mAddr].begin() + i);
+    }
     i++;
   }
   i = 0;
   for (auto const& s : mNeighbors[site2.mAddr]) {
-    if (s == site1)
+    if (s == site1) {
       mNeighbors[site2.mAddr].erase(mNeighbors[site2.mAddr].begin() + i);
+    }
     i++;
   }
 }
@@ -244,10 +245,12 @@ void VoronoiGenerator::process(Circle* event) {
     Arc* leftArc  = event->mArc->mLeftBreak ? event->mArc->mLeftBreak->mLeftArc : nullptr;
     Arc* rightArc = event->mArc->mRightBreak ? event->mArc->mRightBreak->mRightArc : nullptr;
 
-    if (leftArc)
+    if (leftArc) {
       mVoronoiEdges.push_back(event->mArc->mLeftBreak->finishEdge(event->mCenter));
-    if (rightArc)
+    }
+    if (rightArc) {
       mVoronoiEdges.push_back(event->mArc->mRightBreak->finishEdge(event->mCenter));
+    }
 
     mBeachline.removeArc(event->mArc);
 
@@ -266,11 +269,13 @@ void VoronoiGenerator::process(Site const& event) {
 
 void VoronoiGenerator::addCircleEvent(Arc* arc) {
   if (arc) {
-    auto circle = new Circle(arc, sweepLine());
-    if (circle->mIsValid)
+    // NOLINTNEXTLINE(cppcoreguidelines-owning-memory): TODO
+    auto* circle = new Circle(arc, sweepLine());
+    if (circle->mIsValid) {
       mCircleEvents.push(circle);
-    else
-      delete circle;
+    } else {
+      delete circle; // NOLINT(cppcoreguidelines-owning-memory): TODO
+    }
   }
 }
 

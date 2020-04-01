@@ -11,6 +11,8 @@
 #include "BreakpointTree.hpp"
 #include "Site.hpp"
 
+#include <memory>
+
 namespace csp::measurementtools {
 
 class VoronoiGenerator;

@@ -10,10 +10,7 @@
 
 namespace csp::measurementtools {
 
-Vector2f::Vector2f()
-    : mX(0.0)
-    , mY(0.0) {
-}
+Vector2f::Vector2f() = default;
 
 Vector2f::Vector2f(Vector2f const& point) = default;
 
@@ -24,10 +21,11 @@ Vector2f::Vector2f(double x_in, double y_in)
 
 Vector2f Vector2f::normalize() const {
   double len = length();
-  if (len != 0)
+  if (len != 0) {
     return Vector2f(mX / len, mY / len);
-  else
-    return Vector2f(0, 0);
+  }
+
+  return Vector2f(0, 0);
 }
 
 double Vector2f::length() const {

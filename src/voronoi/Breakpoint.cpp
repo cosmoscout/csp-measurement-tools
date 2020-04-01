@@ -19,9 +19,7 @@ Breakpoint::Breakpoint()
     , mRightChild(nullptr)
     , mParent(nullptr)
     , mGenerator(nullptr)
-    , mSweepline(-1.0)
-    , mPosition()
-    , mStart() {
+    , mSweepline(-1.0) {
 }
 
 Breakpoint::Breakpoint(Arc* left, Arc* right, VoronoiGenerator* generator)
@@ -32,15 +30,15 @@ Breakpoint::Breakpoint(Arc* left, Arc* right, VoronoiGenerator* generator)
     , mParent(nullptr)
     , mGenerator(generator)
     , mSweepline(-1.0)
-    , mPosition()
     , mStart(position()) {
 }
 
 Vector2f const& Breakpoint::position() const {
   double currentSweepLine = mGenerator->sweepLine();
 
-  if (mSweepline == currentSweepLine)
+  if (mSweepline == currentSweepLine) {
     return mPosition;
+  }
 
   mSweepline = currentSweepLine;
   updatePosition();
@@ -58,11 +56,11 @@ void Breakpoint::updatePosition() const {
   double rX = mRightArc->mSite.mX;
   double rY = mRightArc->mSite.mY;
 
-  if (pY == rY)
+  if (pY == rY) {
     mPosition.mX = (pX + rX) * 0.5;
-  else if (rY == mSweepline)
+  } else if (rY == mSweepline) {
     mPosition.mX = rX;
-  else if (pY == mSweepline) {
+  } else if (pY == mSweepline) {
     mPosition.mX = pX;
     pX           = rX;
     pY           = rY;
@@ -79,10 +77,11 @@ void Breakpoint::updatePosition() const {
   }
 
   // Plug back into one of the parabola equations.
-  if (pY != mSweepline)
+  if (pY != mSweepline) {
     mPosition.mY = (pY * pY + (pX - mPosition.mX) * (pX - mPosition.mX) - mSweepline * mSweepline) /
                    (2.0 * pY - 2.0 * mSweepline);
-  else
+  } else {
     mPosition.mY = mGenerator->minY();
+  }
 }
 } // namespace csp::measurementtools

@@ -22,10 +22,11 @@ BreakpointTree::~BreakpointTree() {
 }
 
 void BreakpointTree::insert(Breakpoint* point) {
-  if (empty())
+  if (empty()) {
     mRoot = point;
-  else
+  } else {
     insert(point, mRoot);
+  }
 }
 
 void BreakpointTree::remove(Breakpoint* point) {
@@ -59,22 +60,25 @@ void BreakpointTree::remove(Breakpoint* point) {
         attachLeftOf(point->mLeftChild, point->mParent->mRightChild);
       }
     } else if (point->mLeftChild) {
-      if (isLeftChild)
+      if (isLeftChild) {
         point->mParent->mLeftChild = point->mLeftChild;
-      else
+      } else {
         point->mParent->mRightChild = point->mLeftChild;
+      }
       point->mLeftChild->mParent = point->mParent;
     } else if (point->mRightChild) {
-      if (isLeftChild)
+      if (isLeftChild) {
         point->mParent->mLeftChild = point->mRightChild;
-      else
+      } else {
         point->mParent->mRightChild = point->mRightChild;
+      }
       point->mRightChild->mParent = point->mParent;
     } else {
-      if (isLeftChild)
+      if (isLeftChild) {
         point->mParent->mLeftChild = nullptr;
-      else
+      } else {
         point->mParent->mRightChild = nullptr;
+      }
     }
   }
 }
@@ -85,9 +89,9 @@ Arc* BreakpointTree::getArcAt(double x) const {
 
   if (x < nearest->position().mX) {
     return nearest->mLeftArc;
-  } else {
-    return nearest->mRightArc;
   }
+
+  return nearest->mRightArc;
 }
 
 bool BreakpointTree::empty() const {
@@ -98,16 +102,16 @@ void BreakpointTree::insert(Breakpoint* newNode, Breakpoint* atNode) {
   double newX = newNode->position().mX;
   double atX  = atNode->position().mX;
   if (newX < atX || (newX == atX && newNode->mRightArc == atNode->mLeftArc)) {
-    if (atNode->mLeftChild)
+    if (atNode->mLeftChild) {
       insert(newNode, atNode->mLeftChild);
-    else {
+    } else {
       atNode->mLeftChild = newNode;
       newNode->mParent   = atNode;
     }
   } else {
-    if (atNode->mRightChild)
+    if (atNode->mRightChild) {
       insert(newNode, atNode->mRightChild);
-    else {
+    } else {
       atNode->mRightChild = newNode;
       newNode->mParent    = atNode;
     }
@@ -115,16 +119,20 @@ void BreakpointTree::insert(Breakpoint* newNode, Breakpoint* atNode) {
 }
 
 Breakpoint* BreakpointTree::getNearestNode(double x, Breakpoint* current) const {
-  if (!current)
+  if (!current) {
     return nullptr;
+  }
 
   Breakpoint* nearestChild = (x < current->position().mX) ? getNearestNode(x, current->mLeftChild)
                                                           : getNearestNode(x, current->mRightChild);
   Breakpoint* nearest = current;
 
   if (nearestChild &&
-      (std::fabs(x - nearestChild->position().mX) < std::fabs(x - nearest->position().mX)))
-    nearest = nearestChild;
+      (std::fabs(x - nearestChild->position().mX) < std::fabs(x - nearest->position().mX))) {
+    {
+      nearest = nearestChild;
+    }
+  }
 
   return nearest;
 }
@@ -147,34 +155,36 @@ void BreakpointTree::clear(Breakpoint* atNode) {
     clear(atNode->mRightChild);
 
     if (atNode->mLeftArc) {
-      if (atNode->mLeftArc->mLeftBreak)
+      if (atNode->mLeftArc->mLeftBreak) {
         atNode->mLeftArc->mLeftBreak->mRightArc = nullptr;
-      delete atNode->mLeftArc;
+      }
+      delete atNode->mLeftArc; // NOLINT(cppcoreguidelines-owning-memory): TODO
     }
 
     if (atNode->mRightArc) {
-      if (atNode->mRightArc->mRightBreak)
+      if (atNode->mRightArc->mRightBreak) {
         atNode->mRightArc->mRightBreak->mLeftArc = nullptr;
-      delete atNode->mRightArc;
+      }
+      delete atNode->mRightArc; // NOLINT(cppcoreguidelines-owning-memory): TODO
     }
 
-    delete atNode;
+    delete atNode; // NOLINT(cppcoreguidelines-owning-memory): TODO
   }
 }
 
 void BreakpointTree::attachRightOf(Breakpoint* newNode, Breakpoint* atNode) {
-  if (atNode->mRightChild)
+  if (atNode->mRightChild) {
     attachRightOf(newNode, atNode->mRightChild);
-  else {
+  } else {
     atNode->mRightChild = newNode;
     newNode->mParent    = atNode;
   }
 }
 
 void BreakpointTree::attachLeftOf(Breakpoint* newNode, Breakpoint* atNode) {
-  if (atNode->mLeftChild)
+  if (atNode->mLeftChild) {
     attachLeftOf(newNode, atNode->mLeftChild);
-  else {
+  } else {
     atNode->mLeftChild = newNode;
     newNode->mParent   = atNode;
   }

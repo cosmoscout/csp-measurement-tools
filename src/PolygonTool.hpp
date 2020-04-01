@@ -139,8 +139,8 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
   glm::dvec3 mMiddlePoint2 = glm::dvec3(0.0);
 
   static const int         NUM_SAMPLES;
-  static const std::string SHADER_VERT;
-  static const std::string SHADER_FRAG;
+  static const char* SHADER_VERT;
+  static const char* SHADER_FRAG;
 };
 
 } // namespace csp::measurementtools

@@ -33,11 +33,11 @@ class VoronoiGenerator {
   double maxY() const;
   double minY() const;
 
-  std::vector<Site> const&                           getSites() const;
-  std::vector<Edge> const&                           getEdges() const;
-  std::vector<Edge2> const&                          getTriangulation() const;
-  std::vector<Triangle> const&                       getTriangles() const;
-  std::map<unsigned short, std::vector<Site>> const& getNeighbors() const;
+  std::vector<Site> const&                     getSites() const;
+  std::vector<Edge> const&                     getEdges() const;
+  std::vector<Edge2> const&                    getTriangulation() const;
+  std::vector<Triangle> const&                 getTriangles() const;
+  std::map<uint16_t, std::vector<Site>> const& getNeighbors() const;
 
   void addTriangulationEdge(Site const& site1, Site const& site2);
   void removeTriangulationEdge(Site const& site1, Site const& site2);
@@ -55,11 +55,11 @@ class VoronoiGenerator {
   std::priority_queue<Site, std::vector<Site>, SitePosComp>        mSiteEvents;
   std::priority_queue<Circle*, std::vector<Circle*>, CirclePtrCmp> mCircleEvents;
 
-  std::vector<Site>                           mSites;
-  std::vector<Edge>                           mVoronoiEdges;
-  std::vector<Edge2>                          mTriangulationEdges;
-  std::vector<Triangle>                       mTriangles;
-  std::map<unsigned short, std::vector<Site>> mNeighbors;
+  std::vector<Site>                     mSites;
+  std::vector<Edge>                     mVoronoiEdges;
+  std::vector<Edge2>                    mTriangulationEdges;
+  std::vector<Triangle>                 mTriangles;
+  std::map<uint16_t, std::vector<Site>> mNeighbors;
 };
 } // namespace csp::measurementtools
 #endif // CSP_MEASUREMENT_TOOLS_VORONOI_GENERATOR_HPP

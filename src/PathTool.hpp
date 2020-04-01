@@ -85,8 +85,8 @@ class PathTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointTool
 
   int mNumSamples = 256;
 
-  static const std::string SHADER_VERT;
-  static const std::string SHADER_FRAG;
+  static const char* SHADER_VERT;
+  static const char* SHADER_FRAG;
 };
 
 } // namespace csp::measurementtools

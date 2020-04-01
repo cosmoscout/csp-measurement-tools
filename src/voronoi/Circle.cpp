@@ -15,10 +15,8 @@ namespace csp::measurementtools {
 
 Circle::Circle(Arc* a, double sweepLine)
     : mSite(a->mSite)
-    , mCenter()
     , mArc(a)
-    , mIsValid(true)
-    , mPriority() {
+    , mIsValid(true) {
 
   if (!mArc->mLeftBreak || !mArc->mRightBreak) {
     mIsValid = false;

@@ -25,7 +25,7 @@ namespace csp::measurementtools {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const std::string PathTool::SHADER_VERT = R"(
+const char* PathTool::SHADER_VERT = R"(
 #version 330
 
 layout(location=0) in vec3 iPosition;
@@ -44,7 +44,7 @@ void main()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const std::string PathTool::SHADER_FRAG = R"(
+const char* PathTool::SHADER_FRAG = R"(
 #version 330
 
 in vec4 vPosition;
@@ -79,7 +79,7 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
   // attach this as OpenGLNode to scenegraph's root (all line vertices
   // will be draw relative to the observer, therfore we do not want
   // any transformation)
-  auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  auto* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
   mPathOpenGLNode.reset(pSG->NewOpenGLNode(pSG->GetRoot(), this));
 
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
@@ -95,9 +95,10 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
 
   // create the user interface
   mGuiTransform.reset(pSG->NewTransformNode(mGuiAnchor.get()));
-  mGuiTransform->Translate(0.f, 0.9f, 0.f);
-  mGuiTransform->Scale(0.001f * mGuiArea->getWidth(), 0.001f * mGuiArea->getHeight(), 1.f);
-  mGuiTransform->Rotate(VistaAxisAndAngle(VistaVector3D(0.0, 1.0, 0.0), -glm::pi<float>() / 2.f));
+  mGuiTransform->Translate(0.F, 0.9F, 0.F);
+  mGuiTransform->Scale(0.001F * static_cast<float>(mGuiArea->getWidth()),
+      0.001F * static_cast<float>(mGuiArea->getHeight()), 1.F);
+  mGuiTransform->Rotate(VistaAxisAndAngle(VistaVector3D(0.0, 1.0, 0.0), -glm::pi<float>() / 2.F));
   mGuiArea->addItem(mGuiItem.get());
   mGuiArea->setUseLinearDepthBuffer(true);
   mGuiOpenGLNode.reset(pSG->NewOpenGLNode(mGuiTransform.get(), mGuiArea.get()));
@@ -122,8 +123,8 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
       mGuiAnchor.get(), static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
   // whenever the height scale changes our vertex positions need to be updated
-  mScaleConnection = mGraphicsEngine->pHeightScale.connectAndTouch(
-      [this](float const& h) { updateLineVertices(); });
+  mScaleConnection =
+      mGraphicsEngine->pHeightScale.connectAndTouch([this](float /*h*/) { updateLineVertices(); });
 
   // add one point initially
   addPoint();
@@ -190,7 +191,7 @@ void PathTool::onPointAdded() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void PathTool::onPointRemoved(int index) {
+void PathTool::onPointRemoved(int /*index*/) {
   updateLineVertices();
 }
 
@@ -207,8 +208,9 @@ void PathTool::updateLineVertices() {
   auto body = mSolarSystem->getBody(getCenterName());
 
   glm::dvec3 averagePosition(0.0);
-  for (auto const& mark : mPoints)
-    averagePosition += mark->getAnchor()->getAnchorPosition() / (double)mPoints.size();
+  for (auto const& mark : mPoints) {
+    averagePosition += mark->getAnchor()->getAnchorPosition() / static_cast<double>(mPoints.size());
+  }
 
   double h_scale      = mGraphicsEngine->pHeightScale.get();
   auto   radii        = cs::core::SolarSystem::getRadii(getCenterName());
@@ -238,14 +240,15 @@ void PathTool::updateLineVertices() {
     // generate X points for each line segment
     for (int vertex_id = 0; vertex_id < mNumSamples; vertex_id++) {
       glm::dvec4 pos = getInterpolatedPosBetweenTwoMarks(
-          **lastMark, **currMark, (vertex_id / (double)mNumSamples), h_scale);
+          **lastMark, **currMark, (vertex_id / static_cast<double>(mNumSamples)), h_scale);
       mSampledPositions.push_back(pos.xyz());
 
       // coordinate normalized by height scale; to count distance correctly
       glm::dvec4 posNorm = pos;
-      if (h_scale != 1)
+      if (h_scale != 1) {
         posNorm = getInterpolatedPosBetweenTwoMarks(
-            **lastMark, **currMark, (vertex_id / (double)mNumSamples), 1);
+            **lastMark, **currMark, (vertex_id / static_cast<double>(mNumSamples)), 1);
+      }
 
       if (distance < 0) {
         distance = 0;
@@ -322,20 +325,21 @@ bool PathTool::Do() {
   glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
   glLineWidth(5);
 
-  GLfloat glMatMV[16], glMatP[16];
-  glGetFloatv(GL_MODELVIEW_MATRIX, &glMatMV[0]);
-  glGetFloatv(GL_PROJECTION_MATRIX, &glMatP[0]);
+  std::array<GLfloat, 16> glMatMV{};
+  std::array<GLfloat, 16> glMatP{};
+  glGetFloatv(GL_MODELVIEW_MATRIX, glMatMV.data());
+  glGetFloatv(GL_PROJECTION_MATRIX, glMatP.data());
 
   mShader.Bind();
   mVAO.Bind();
-  glUniformMatrix4fv(mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glMatMV);
-  glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
+  glUniformMatrix4fv(mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glMatMV.data());
+  glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP.data());
 
   mShader.SetUniform(
       mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
 
   // draw the linestrip
-  glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)mIndexCount);
+  glDrawArrays(GL_LINE_STRIP, 0, static_cast<GLsizei>(mIndexCount));
   mVAO.Release();
   mShader.Release();
 
@@ -346,10 +350,10 @@ bool PathTool::Do() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool PathTool::GetBoundingBox(VistaBoundingBox& bb) {
-  float fMin[3] = {-0.1f, -0.1f, -0.1f};
-  float fMax[3] = {0.1f, 0.1f, 0.1f};
+  std::array fMin{-0.1F, -0.1F, -0.1F};
+  std::array fMax{0.1F, 0.1F, 0.1F};
 
-  bb.SetBounds(fMin, fMax);
+  bb.SetBounds(fMin.data(), fMax.data());
   return true;
 }
 
