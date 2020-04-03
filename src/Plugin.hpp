@@ -18,8 +18,6 @@ class Tool;
 
 namespace csp::measurementtools {
 
-class Tools;
-
 /// This plugin enables the user to measure different things on the surface of planets and moons.
 /// See README.md for details.
 class Plugin : public cs::core::PluginBase {

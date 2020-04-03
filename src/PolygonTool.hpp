@@ -39,14 +39,21 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
       std::shared_ptr<cs::core::GraphicsEngine> const&       graphicsEngine,
       std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
       std::string const& sFrame);
-  virtual ~PolygonTool();
+
+  PolygonTool(PolygonTool const& other) = delete;
+  PolygonTool(PolygonTool&& other)      = delete;
+
+  PolygonTool& operator=(PolygonTool const& other) = delete;
+  PolygonTool& operator=(PolygonTool&& other) = delete;
+
+  ~PolygonTool() override;
 
   /// Called from Tools class
-  virtual void update() override;
+  void update() override;
 
   /// Inherited from IVistaOpenGLDraw
-  virtual bool Do() override;
-  virtual bool GetBoundingBox(VistaBoundingBox& bb) override;
+  bool Do() override;
+  bool GetBoundingBox(VistaBoundingBox& bb) override;
 
   void setHeightDiff(float const& hDiff);
   void setMaxAttempt(int const& att);
@@ -86,11 +93,10 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
   // Checks if point is inside of the polygon or not
   bool checkPoint(glm::dvec2 const& point);
 
- private:
   // These are called by the base class MultiPointTool
-  virtual void onPointMoved() override;
-  virtual void onPointAdded() override;
-  virtual void onPointRemoved(int index) override;
+  void onPointMoved() override;
+  void onPointAdded() override;
+  void onPointRemoved(int index) override;
 
   std::shared_ptr<cs::scene::CelestialAnchorNode> mGuiAnchor;
   std::unique_ptr<cs::gui::WorldSpaceGuiArea>     mGuiArea;
@@ -124,11 +130,11 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
   std::vector<glm::dvec3>        mTriangulation;
   glm::dvec3                     mNormal      = glm::dvec3(0.0);
   glm::dvec3                     mMiddlePoint = glm::dvec3(0.0);
-  bool                           mShowMesh    = 0;
+  bool                           mShowMesh    = false;
   size_t                         mIndexCount2 = 0;
 
   // For triangle fineness
-  float    mHeightDiff = 1.002f;
+  float    mHeightDiff = 1.002F;
   uint32_t mMaxAttempt = 10;
   uint32_t mMaxPoints  = 1000;
   uint32_t mSleekness  = 15;

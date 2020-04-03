@@ -21,6 +21,13 @@ struct Arc;
 class BreakpointTree {
  public:
   BreakpointTree();
+
+  BreakpointTree(BreakpointTree const& other) = default;
+  BreakpointTree(BreakpointTree&& other)      = default;
+
+  BreakpointTree& operator=(BreakpointTree const& other) = default;
+  BreakpointTree& operator=(BreakpointTree&& other) = default;
+
   ~BreakpointTree();
 
   void insert(Breakpoint* point);

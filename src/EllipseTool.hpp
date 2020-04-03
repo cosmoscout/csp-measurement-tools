@@ -22,6 +22,13 @@ class EllipseTool : public IVistaOpenGLDraw, public cs::core::tools::Tool {
       std::shared_ptr<cs::core::GraphicsEngine> const&       graphicsEngine,
       std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
       std::string const& sFrame);
+
+  EllipseTool(EllipseTool const& other) = delete;
+  EllipseTool(EllipseTool&& other)      = delete;
+
+  EllipseTool& operator=(EllipseTool const& other) = delete;
+  EllipseTool& operator=(EllipseTool&& other) = delete;
+
   ~EllipseTool() override;
 
   FlagTool const&              getCenterHandle() const;

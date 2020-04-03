@@ -18,9 +18,9 @@
 
 namespace csp::measurementtools {
 
-typedef std::pair<Vector2f, Vector2f> Edge;
-typedef std::pair<Site, Site>         Edge2;
-typedef std::tuple<Site, Site, Site>  Triangle;
+using Edge     = std::pair<Vector2f, Vector2f>;
+using Edge2    = std::pair<Site, Site>;
+using Triangle = std::tuple<Site, Site, Site>;
 
 class VoronoiGenerator {
  public:

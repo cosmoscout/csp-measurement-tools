@@ -39,6 +39,13 @@ class PathTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointTool
       std::shared_ptr<cs::core::GraphicsEngine> const&    graphicsEngine,
       std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
       std::string const& sFrame);
+
+  PathTool(PathTool const& other) = delete;
+  PathTool(PathTool&& other)      = delete;
+
+  PathTool& operator=(PathTool const& other) = delete;
+  PathTool& operator=(PathTool&& other) = delete;
+
   ~PathTool() override;
 
   /// Called from Tools class.
@@ -58,7 +65,6 @@ class PathTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointTool
   glm::dvec4 getInterpolatedPosBetweenTwoMarks(cs::core::tools::DeletableMark const& l0,
       cs::core::tools::DeletableMark const& l1, double value, double const& scale);
 
- private:
   /// These are called by the base class MultiPointTool.
   void onPointMoved() override;
   void onPointAdded() override;
