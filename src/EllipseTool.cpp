@@ -65,9 +65,9 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
     , mCenterHandle(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
     , mAxes({glm::dvec3(pSolarSystem->getObserver().getAnchorScale(), 0.0, 0.0),
           glm::dvec3(0.0, pSolarSystem->getObserver().getAnchorScale(), 0.0)})
-    , mHandles({cs::core::tools::Mark(
+    , mHandles({std::make_unique<cs::core::tools::Mark>(
                     pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame),
-          cs::core::tools::Mark(
+                std::make_unique<cs::core::tools::Mark>(
               pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)}) {
 
   mShader.InitVertexShaderFromString(SHADER_VERT);
@@ -101,21 +101,21 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
         glm::dvec2 lngLat2 =
             cs::utils::convert::toLngLatHeight(center + mAxes.at(i), radii[0], radii[0]).xy();
 
-        mHandles.at(i).pLngLat.setWithEmitForAllButOne(lngLat2, mHandleConnections.at(i));
+        mHandles.at(i)->pLngLat.setWithEmitForAllButOne(lngLat2, mHandleConnections.at(i));
       }
       mFirstUpdate = false;
     }
 
-    mAxes.at(0) = mHandles.at(0).getAnchor()->getAnchorPosition() - center;
-    mAxes.at(1) = mHandles.at(1).getAnchor()->getAnchorPosition() - center;
+    mAxes.at(0) = mHandles.at(0)->getAnchor()->getAnchorPosition() - center;
+    mAxes.at(1) = mHandles.at(1)->getAnchor()->getAnchorPosition() - center;
 
     calculateVertices();
   });
 
   for (int i(0); i < 2; ++i) {
-    mHandleConnections.at(i) = mHandles.at(i).pLngLat.connect([this, i](glm::dvec2 const& /*p*/) {
+    mHandleConnections.at(i) = mHandles.at(i)->pLngLat.connect([this, i](glm::dvec2 const& /*p*/) {
       auto center = getCenterHandle().getAnchor()->getAnchorPosition();
-      mAxes.at(i) = mHandles.at(i).getAnchor()->getAnchorPosition() - center;
+      mAxes.at(i) = mHandles.at(i)->getAnchor()->getAnchorPosition() - center;
       calculateVertices();
     });
   }
@@ -142,11 +142,11 @@ FlagTool const& EllipseTool::getCenterHandle() const {
 }
 
 cs::core::tools::Mark const& EllipseTool::getFirstHandle() const {
-  return mHandles.at(0);
+  return *mHandles.at(0);
 }
 
 cs::core::tools::Mark const& EllipseTool::getSecondHandle() const {
-  return mHandles.at(1);
+  return *mHandles.at(1);
 }
 
 FlagTool& EllipseTool::getCenterHandle() {
@@ -154,11 +154,11 @@ FlagTool& EllipseTool::getCenterHandle() {
 }
 
 cs::core::tools::Mark& EllipseTool::getFirstHandle() {
-  return mHandles.at(0);
+  return *mHandles.at(0);
 }
 
 cs::core::tools::Mark& EllipseTool::getSecondHandle() {
-  return mHandles.at(1);
+  return *mHandles.at(1);
 }
 
 void EllipseTool::setNumSamples(int const& numSamples) {
@@ -201,8 +201,8 @@ void EllipseTool::calculateVertices() {
 
 void EllipseTool::update() {
   mCenterHandle.update();
-  mHandles[0].update();
-  mHandles[1].update();
+  mHandles.at(0)->update();
+  mHandles.at(1)->update();
 }
 
 bool EllipseTool::Do() {
