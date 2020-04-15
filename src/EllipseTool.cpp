@@ -20,7 +20,7 @@
 
 namespace csp::measurementtools {
 
-static const char* SHADER_VERT = R"(
+const char* EllipseTool::SHADER_VERT = R"(
 #version 330
 
 layout(location=0) in vec3 iPosition;
@@ -37,7 +37,7 @@ void main()
 }
 )";
 
-static const char* SHADER_FRAG = R"(
+const char* EllipseTool::SHADER_FRAG = R"(
 #version 330
 
 in vec4 vPosition;

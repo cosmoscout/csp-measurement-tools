@@ -71,6 +71,9 @@ class EllipseTool : public IVistaOpenGLDraw, public cs::core::tools::Tool {
 
   int mScaleConnection = -1;
   int mNumSamples      = 360;
+
+  static const char* SHADER_VERT;
+  static const char* SHADER_FRAG;
 };
 } // namespace csp::measurementtools
 #endif // CSP_MEASUREMENT_TOOLS_ELLIPSE_HPP
