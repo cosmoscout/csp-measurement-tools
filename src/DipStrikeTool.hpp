@@ -91,7 +91,7 @@ class DipStrikeTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPoin
 
   int mScaleConnection = -1;
 
-  static const int RESOLUTION;
+  static const int   RESOLUTION;
   static const char* SHADER_VERT;
   static const char* SHADER_FRAG;
 };
