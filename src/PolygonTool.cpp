@@ -210,11 +210,10 @@ glm::dvec4 PolygonTool::getInterpolatedPosBetweenTwoMarks(cs::core::tools::Delet
 // Based on
 // https://stackoverflow.com/questions/8721406/how-to-determine-if-a-point-is-inside-a-2d-convex-polygon
 bool PolygonTool::checkPoint(glm::dvec2 const& point) {
-  int  i, j;
-  bool result = 0;
+  bool result = false;
 
   // Positive x (other directions could be compared, but it works reliable with only one direction)
-  for (i = 0, j = mCorners.size() - 1; i < mCorners.size(); j = i++) {
+  for (size_t i = 0, j = mCorners.size() - 1; i < mCorners.size(); j = i++) {
     if ((mCorners[i].mY > point.y) != (mCorners[j].mY > point.y) &&
         (point.x < (mCorners[j].mX - mCorners[i].mX) * (point.y - mCorners[i].mY) /
                            (mCorners[j].mY - mCorners[i].mY) +
@@ -248,7 +247,6 @@ bool PolygonTool::findIntersection(Site const& s1, Site const& s2, Site const& s
 
   double m1, m2;
   double c1, c2;
-  double minX, maxX, minY, maxY;
 
   // Line 1 (y = m1 * x + c1)
   m1 = (s2.mY - s1.mY) / (s2.mX - s1.mX);
@@ -302,7 +300,7 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
     voronoi.parse(mCorners);
 
     // Number of the original edges of the polygon
-    int countEdges = mCorners.size();
+    size_t countEdges = mCorners.size();
 
     // Vector of the original edges of the polygon from Delaunay triangulation
     std::vector<Edge2> voronoiEdges;
@@ -344,7 +342,7 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
 
       // Finds the missing edges: search for every original edge in voronoiEdges
       // (the original polygon edges have neighbor addresses -> searches for corners)
-      for (int i = 0; i < mCorners.size(); i++) {
+      for (size_t i = 0; i < mCorners.size(); i++) {
         bool       found = 0;
         glm::ivec2 missingAddr;
 
@@ -399,11 +397,9 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
 
               // Cycles through addCorners vector and saves current intersection into the right
               // place
-              for (int i = 0; i < addCorners.size(); i++) {
+              for (size_t i = 0; i < addCorners.size(); i++) {
                 // If current intersection is not saved yet
                 if (!done) {
-                  int addr2 = addCorners[i].mAddr;
-
                   // Compares addresses of the two intersection
                   if (addCorners[i].mAddr < addrNew) {
                     // Skips first elements of vector
@@ -489,7 +485,7 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
         addr3 += cornerCount;
 
         // If intersection is not between last and first Site
-        if (addr3 < mCorners.size()) {
+        if (addr3 < static_cast<int>(mCorners.size())) {
           // Saves intersection corner to mCorners and element of mCorners to oldSite
           Site oldSite    = mCorners[addr3];
           mCorners[addr3] = Site(c.mX, c.mY, addr3);
@@ -497,7 +493,7 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
           addr3++;
 
           // Shifts every other corner of mCorners behind by one
-          for (addr3; addr3 < mCorners.size(); addr3++) {
+          for (; addr3 < static_cast<int>(mCorners.size()); addr3++) {
             Site newSite    = mCorners[addr3];
             mCorners[addr3] = Site(oldSite.mX, oldSite.mY, addr3);
             oldSite         = newSite;
@@ -570,8 +566,8 @@ bool PolygonTool::checkSleekness(int count) {
       }
       // If not, adds this point to vector
       if (addPoint) {
-        mCornersFine[count].emplace_back(
-            (si1.mX + si2.mX) / 2, (si1.mY + si2.mY) / 2, mCornersFine[count].size());
+        mCornersFine[count].emplace_back((si1.mX + si2.mX) / 2, (si1.mY + si2.mY) / 2,
+            static_cast<uint16_t>(mCornersFine[count].size()));
         addedPoints.emplace_back(si1.mAddr, si2.mAddr);
       }
     }
@@ -586,8 +582,8 @@ bool PolygonTool::checkSleekness(int count) {
           addPoint = 0;
       }
       if (addPoint) {
-        mCornersFine[count].emplace_back(
-            (si1.mX + si3.mX) / 2, (si1.mY + si3.mY) / 2, mCornersFine[count].size());
+        mCornersFine[count].emplace_back((si1.mX + si3.mX) / 2, (si1.mY + si3.mY) / 2,
+            static_cast<uint16_t>(mCornersFine[count].size()));
         addedPoints.emplace_back(si1.mAddr, si3.mAddr);
       }
     }
@@ -602,8 +598,8 @@ bool PolygonTool::checkSleekness(int count) {
           addPoint = 0;
       }
       if (addPoint) {
-        mCornersFine[count].emplace_back(
-            (si2.mX + si3.mX) / 2, (si2.mY + si3.mY) / 2, mCornersFine[count].size());
+        mCornersFine[count].emplace_back((si2.mX + si3.mX) / 2, (si2.mY + si3.mY) / 2,
+            static_cast<uint16_t>(mCornersFine[count].size()));
         addedPoints.emplace_back(si2.mAddr, si3.mAddr);
       }
     }
@@ -646,9 +642,6 @@ void PolygonTool::displayMesh(Edge2 const& edge, double mdist, glm::dvec3 const&
 
 void PolygonTool::refineMesh(Edge2 const& edge, double mdist, glm::dvec3 const& e,
     glm::dvec3 const& n, glm::dvec3 const& r, int count, double h1, double h2, bool& fine) {
-  // Length of the edge in meters (on the voronoi plane!)
-  double length = std::sqrt(std::pow(mdist * edge.first.mX - mdist * edge.second.mX, 2) +
-                            std::pow(mdist * edge.first.mY - mdist * edge.second.mY, 2));
 
   // Middle point of the edge on voronoi plane
   glm::dvec2 avgPoint2 =
@@ -663,7 +656,8 @@ void PolygonTool::refineMesh(Edge2 const& edge, double mdist, glm::dvec3 const& 
 
   // Checks height of the middle point
   if ((hAvg / ((h1 + h2) / 2) > mHeightDiff) || (((h1 + h2) / 2) / hAvg > mHeightDiff)) {
-    mCornersFine[count].emplace_back(avgPoint2.x, avgPoint2.y, mCornersFine[count].size());
+    mCornersFine[count].emplace_back(
+        avgPoint2.x, avgPoint2.y, static_cast<uint16_t>(mCornersFine[count].size()));
     fine = 0;
   }
   // Checks height of other points between the two Sites
@@ -686,7 +680,8 @@ void PolygonTool::refineMesh(Edge2 const& edge, double mdist, glm::dvec3 const& 
 
           if ((heAvg3 / ((i * h1 + (j - i) * h2) / j) > mHeightDiff) ||
               (((i * h1 + (j - i) * h2) / j) / heAvg3 > mHeightDiff)) {
-            mCornersFine[count].emplace_back(avgPoint3.x, avgPoint3.y, mCornersFine[count].size());
+            mCornersFine[count].emplace_back(
+                avgPoint3.x, avgPoint3.y, static_cast<uint16_t>(mCornersFine[count].size()));
             fine = 0;
           }
         }
@@ -701,7 +696,7 @@ void PolygonTool::calculateAreaAndVolume(std::vector<Triangle> const& triangles,
     glm::dvec3 const& e, glm::dvec3 const& n, glm::dvec3 const& r, double& area, double& pvol,
     double& nvol) {
   // Counts area and volume in every triangle
-  for (int it = 0; it < triangles.size(); it++) {
+  for (size_t it = 0; it < triangles.size(); it++) {
     // ------------------------------------------ AREA ------------------------------------------
     Site si1(0, 0, 0);
     Site si2(0, 0, 0);
@@ -732,10 +727,6 @@ void PolygonTool::calculateAreaAndVolume(std::vector<Triangle> const& triangles,
     area += glm::length(glm::cross(r2 - r1, r3 - r1)) / 2;
 
     // ----------------------------------------- Volume -----------------------------------------
-    // Points on the least squares plane (from DipAndStrikeTool)
-    glm::dvec3 pl1 = glm::dot(mNormal2, mMiddlePoint2) / glm::dot(mNormal2, p1) * p1;
-    glm::dvec3 pl2 = glm::dot(mNormal2, mMiddlePoint2) / glm::dot(mNormal2, p2) * p2;
-    glm::dvec3 pl3 = glm::dot(mNormal2, mMiddlePoint2) / glm::dot(mNormal2, p3) * p3;
 
     // Heights over the least squares plane
     double hl1 = h1 - (glm::dot(mNormal2, mMiddlePoint2) / glm::dot(mNormal2, p1) - 1) *
@@ -978,7 +969,6 @@ void PolygonTool::updateLineVertices() {
   // This seems to be the first time the tool is moved, so we have to store the distance to the
   // observer so that we can scale the tool later based on the observer's position.
   if (mOriginalDistance < 0) {
-    double simulationTime(mTimeControl->pSimulationTime.get());
     mOriginalDistance = mSolarSystem->getObserver().getAnchorScale() *
                         glm::length(mSolarSystem->getObserver().getRelativePosition(
                             mTimeControl->pSimulationTime.get(), *mGuiAnchor));
@@ -1200,13 +1190,13 @@ void PolygonTool::updateCalculation() {
   // Creates Delaunay-mesh of the original polygon
   createMesh(triangles);
 
-  bool   fine          = 0;
-  int    attempt       = 0;
-  double area          = 0;
-  double negVolume     = 0;
-  double posVolume     = 0;
-  int    triangleCount = 0;
-  int    pointCount    = 0;
+  bool     fine          = 0;
+  uint32_t attempt       = 0;
+  double   area          = 0;
+  double   negVolume     = 0;
+  double   posVolume     = 0;
+  size_t   triangleCount = 0;
+  size_t   pointCount    = 0;
 
   // Counts points of the original Delaunay-mesh
   for (auto const& vect : mCornersFine) {
@@ -1250,7 +1240,7 @@ void PolygonTool::updateCalculation() {
         }
 
         // Checks sleekness of triangles in Delaunay-mesh and refines them, if necessary
-        bool refine = checkSleekness(triangleCount);
+        bool refine = checkSleekness(static_cast<int32_t>(triangleCount));
 
         // Voronoi inside the original triangles - to refine triangle angles
         VoronoiGenerator voronoiRefine;
@@ -1266,7 +1256,8 @@ void PolygonTool::updateCalculation() {
           // If not too many points are addded in checkSleekness and it is not the the last attempt
           // than refines the mesh based on edge length and height differences
           if ((!refine) && (pointCount < mMaxPoints) && (attempt < mMaxAttempt))
-            refineMesh(s, maxDist, east, north, radii, triangleCount, h1, h2, fine);
+            refineMesh(
+                s, maxDist, east, north, radii, static_cast<int32_t>(triangleCount), h1, h2, fine);
         }
 
         std::vector<Triangle> trianglesRefined = voronoiRefine.getTriangles();
@@ -1336,11 +1327,11 @@ bool PolygonTool::Do() {
   cs::scene::CelestialAnchor centerAnchor(mGuiAnchor->getCenterName(), mGuiAnchor->getFrameName());
   auto                       mat = observer.getRelativeTransform(time, centerAnchor);
 
-  for (int i(0); i < mIndexCount; ++i) {
+  for (uint32_t i(0); i < mIndexCount; ++i) {
     vRelativePositions[i] = (mat * glm::dvec4(mSampledPositions[i], 1.0)).xyz();
   }
   // For Delaunay
-  for (int i(0); i < mIndexCount2; ++i) {
+  for (uint32_t i(0); i < mIndexCount2; ++i) {
     vRelativePositions2[i] = (mat * glm::dvec4(mTriangulation[i], 1.0)).xyz();
   }
 
@@ -1375,7 +1366,7 @@ bool PolygonTool::Do() {
   mShader.SetUniform(mShader.GetUniformLocation("uColor"), 1.f, 1.f, 1.f, 1.f);
 
   // Draws the linestrip
-  glDrawArrays(GL_LINE_STRIP, 0, mIndexCount);
+  glDrawArrays(GL_LINE_STRIP, 0, static_cast<int32_t>(mIndexCount));
   mVAO.Release();
 
   // For Delaunay
@@ -1394,7 +1385,7 @@ bool PolygonTool::Do() {
     glDisable(GL_DEPTH_TEST);
 
     // Draws the linestrip (Delaunay)
-    glDrawArrays(GL_LINES, 0, mIndexCount2);
+    glDrawArrays(GL_LINES, 0, static_cast<int32_t>(mIndexCount2));
     mVAO2.Release();
 
     glEnable(GL_DEPTH_TEST);

@@ -108,8 +108,6 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
   VistaBufferObject      mVBO2;
   VistaGLSLShader        mShader;
 
-  Plugin::Settings::Polygon mPolygonSettings;
-
   double mOriginalDistance = -1.0;
 
   std::vector<glm::dvec3> mSampledPositions;
@@ -130,10 +128,10 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
   size_t                         mIndexCount2 = 0;
 
   // For triangle fineness
-  float mHeightDiff = 1.002;
-  int   mMaxAttempt = 10;
-  int   mMaxPoints  = 1000;
-  int   mSleekness  = 15;
+  float    mHeightDiff = 1.002f;
+  uint32_t mMaxAttempt = 10;
+  uint32_t mMaxPoints  = 1000;
+  uint32_t mSleekness  = 15;
 
   // For volume calculation
   double     mOffset;
