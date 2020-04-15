@@ -58,10 +58,10 @@ class EllipseTool : public IVistaOpenGLDraw, public cs::core::tools::Tool {
 
   bool mFirstUpdate = true;
 
-  FlagTool                             mCenterHandle;
-  std::array<glm::dvec3, 2>            mAxes;
+  FlagTool                                              mCenterHandle;
+  std::array<glm::dvec3, 2>                             mAxes;
   std::array<std::unique_ptr<cs::core::tools::Mark>, 2> mHandles;
-  std::array<int, 2>                   mHandleConnections{};
+  std::array<int, 2>                                    mHandleConnections{};
 
   std::unique_ptr<VistaOpenGLNode> mOpenGLNode;
 

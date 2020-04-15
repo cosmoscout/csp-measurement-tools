@@ -67,7 +67,7 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
           glm::dvec3(0.0, pSolarSystem->getObserver().getAnchorScale(), 0.0)})
     , mHandles({std::make_unique<cs::core::tools::Mark>(
                     pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame),
-                std::make_unique<cs::core::tools::Mark>(
+          std::make_unique<cs::core::tools::Mark>(
               pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)}) {
 
   mShader.InitVertexShaderFromString(SHADER_VERT);
