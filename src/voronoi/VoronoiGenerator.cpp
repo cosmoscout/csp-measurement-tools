@@ -5,12 +5,12 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "VoronoiGenerator.hpp"
+#include "../logger.hpp"
 #include "Arc.hpp"
 
 #include <glm/glm.hpp>
 #include <iomanip>
 #include <limits>
-#include <spdlog/spdlog.h>
 
 namespace csp::measurementtools {
 
@@ -173,7 +173,7 @@ void VoronoiGenerator::addTriangulationEdge(Site const& site1, Site const& site2
                   tri.emplace_back(s1, p.second);
                   remove.emplace_back(elementTri);
                 } catch (std::exception const& e) {
-                  spdlog::error("Triangle elimination in VoronoiGenerator: {}", e.what());
+                  logger()->error("Triangle elimination in VoronoiGenerator: {}", e.what());
                 }
               }
               // else: does not add unnecessary triangle
