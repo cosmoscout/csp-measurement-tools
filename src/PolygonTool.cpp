@@ -15,12 +15,12 @@
 #include "../../../src/cs-scene/CelestialAnchorNode.hpp"
 #include "../../../src/cs-utils/convert.hpp"
 #include "../../../src/cs-utils/utils.hpp"
+#include "logger.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
 #include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
 #include <VistaKernel/VistaSystem.h>
 #include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
-#include <spdlog/spdlog.h>
 
 namespace csp::measurementtools {
 
@@ -30,7 +30,7 @@ const int PolygonTool::NUM_SAMPLES = 256;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const std::string PolygonTool::SHADER_VERT = R"(
+const char* PolygonTool::SHADER_VERT = R"(
 #version 330
 
 layout(location=0) in vec3 iPosition;
@@ -49,7 +49,7 @@ void main()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const std::string PolygonTool::SHADER_FRAG = R"(
+const char* PolygonTool::SHADER_FRAG = R"(
 #version 330
 
 in vec4 vPosition;
@@ -88,7 +88,7 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
   // Attach this as OpenGLNode to scenegraph's root (all line vertices
   // will be draw relative to the observer, therfore we do not want
   // any transformation)
-  auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  auto* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
   mParent.reset(pSG->NewOpenGLNode(pSG->GetRoot(), this));
 
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
@@ -104,9 +104,10 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
 
   // Create the user interface
   mGuiTransform.reset(pSG->NewTransformNode(mGuiAnchor.get()));
-  mGuiTransform->Translate(0.0f, 0.9f, 0.0f);
-  mGuiTransform->Scale(0.001f * mGuiArea->getWidth(), 0.001f * mGuiArea->getHeight(), 1.f);
-  mGuiTransform->Rotate(VistaAxisAndAngle(VistaVector3D(0.0, 1.0, 0.0), -glm::pi<float>() / 2.f));
+  mGuiTransform->Translate(0.0F, 0.9F, 0.0F);
+  mGuiTransform->Scale(0.001F * static_cast<float>(mGuiArea->getWidth()),
+      0.001F * static_cast<float>(mGuiArea->getHeight()), 1.F);
+  mGuiTransform->Rotate(VistaAxisAndAngle(VistaVector3D(0.0, 1.0, 0.0), -glm::pi<float>() / 2.F));
   mGuiArea->addItem(mGuiItem.get());
   mGuiArea->setUseLinearDepthBuffer(true);
   mGuiNode.reset(pSG->NewOpenGLNode(mGuiTransform.get(), mGuiArea.get()));
@@ -134,7 +135,7 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
       mGuiNode.get(), static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
   // Whenever the height scale changes our vertex positions need to be updated
-  mScaleConnection = mSettings->mGraphics.pHeightScale.connectAndTouch([this](float const& h) {
+  mScaleConnection = mSettings->mGraphics.pHeightScale.connectAndTouch([this](float /*h*/) {
     updateLineVertices();
     updateCalculation();
   });
@@ -154,7 +155,7 @@ PolygonTool::~PolygonTool() {
   mInputManager->unregisterSelectable(mGuiNode.get());
   mSolarSystem->unregisterAnchor(mGuiAnchor);
 
-  auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  auto* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
   pSG->GetRoot()->DisconnectChild(mGuiAnchor.get());
 }
 
@@ -214,16 +215,15 @@ bool PolygonTool::checkPoint(glm::dvec2 const& point) {
 
   // Positive x (other directions could be compared, but it works reliable with only one direction)
   for (size_t i = 0, j = mCorners.size() - 1; i < mCorners.size(); j = i++) {
-    if ((mCorners[i].mY > point.y) != (mCorners[j].mY > point.y) &&
-        (point.x < (mCorners[j].mX - mCorners[i].mX) * (point.y - mCorners[i].mY) /
-                           (mCorners[j].mY - mCorners[i].mY) +
-                       mCorners[i].mX)) {
-      result = !result;
-      // Checks surroundings to avoid numerical errors
-    } else if ((mCorners[i].mY > point.y) != (mCorners[j].mY > point.y) &&
-               std::abs(point.x - ((mCorners[j].mX - mCorners[i].mX) * (point.y - mCorners[i].mY) /
-                                          (mCorners[j].mY - mCorners[i].mY) +
-                                      mCorners[i].mX)) < 0.001) {
+    if (((mCorners[i].mY > point.y) != (mCorners[j].mY > point.y) &&
+            (point.x < (mCorners[j].mX - mCorners[i].mX) * (point.y - mCorners[i].mY) /
+                               (mCorners[j].mY - mCorners[i].mY) +
+                           mCorners[i].mX)) ||
+        // Checks surroundings to avoid numerical errors
+        ((mCorners[i].mY > point.y) != (mCorners[j].mY > point.y) &&
+            std::abs(point.x - ((mCorners[j].mX - mCorners[i].mX) * (point.y - mCorners[i].mY) /
+                                       (mCorners[j].mY - mCorners[i].mY) +
+                                   mCorners[i].mX)) < 0.001)) {
       result = !result;
     }
   }
@@ -236,8 +236,9 @@ bool PolygonTool::findIntersection(Site const& s1, Site const& s2, Site const& s
     double& intersectionX, double& intersectionY) {
   // Avoids division with 0
   if ((s1.mX == 0) || (s2.mX == 0) || (s3.mX == 0) || (s4.mX == 0) || (s1.mY == 0) ||
-      (s2.mY == 0) || (s3.mY == 0) || (s4.mY == 0))
-    return 0;
+      (s2.mY == 0) || (s3.mY == 0) || (s4.mY == 0)) {
+    return false;
+  }
 
   // Based on
   // http://www.softwareandfinance.com/Visual_CPP/VCPP_Intersection_Two_lines_EndPoints.html
@@ -245,8 +246,10 @@ bool PolygonTool::findIntersection(Site const& s1, Site const& s2, Site const& s
   // Safety band - to avoid point duplications - set to 1%
   double safety = 0.01;
 
-  double m1, m2;
-  double c1, c2;
+  double m1{};
+  double m2{};
+  double c1{};
+  double c2{};
 
   // Line 1 (y = m1 * x + c1)
   m1 = (s2.mY - s1.mY) / (s2.mX - s1.mX);
@@ -276,17 +279,17 @@ bool PolygonTool::findIntersection(Site const& s1, Site const& s2, Site const& s
               (std::abs((s3.mY - intersectionY) / s3.mY) > safety)) &&
           ((std::abs((s4.mX - intersectionX) / s4.mX) > safety) ||
               (std::abs((s4.mY - intersectionY) / s4.mY) > safety))) {
-        return 1;
+        return true;
       }
     }
   }
-  return 0;
+  return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
-  bool edgesOK = 0;
+  bool edgesOK = false;
   int  it      = 0;
 
   // Does the triangulaiton of the original polygon
@@ -327,7 +330,7 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
           site2 = s.first;
         }
         // Saves edges of the triangulation
-        voronoiEdges.push_back(std::make_pair(site1, site2));
+        voronoiEdges.emplace_back(site1, site2);
       }
     }
 
@@ -343,25 +346,31 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
       // Finds the missing edges: search for every original edge in voronoiEdges
       // (the original polygon edges have neighbor addresses -> searches for corners)
       for (size_t i = 0; i < mCorners.size(); i++) {
-        bool       found = 0;
+        bool       found = false;
         glm::ivec2 missingAddr;
 
         // In case of the last line of the polygon
         if (i == (mCorners.size() - 1)) {
-          for (auto const& v : voronoiEdges)
-            if ((v.first.mAddr == i) && (v.second.mAddr == 0))
-              found = 1;
+          for (auto const& v : voronoiEdges) {
+            if ((v.first.mAddr == i) && (v.second.mAddr == 0)) {
+              found = true;
+            }
+          }
 
-          if (!found)
+          if (!found) {
             missingAddr = glm::ivec2(i, 0);
+          }
         }
         // Every other line
         else {
-          for (auto const& v : voronoiEdges)
-            if ((v.first.mAddr == i) && (v.second.mAddr == i + 1))
-              found = 1;
-          if (!found)
+          for (auto const& v : voronoiEdges) {
+            if ((v.first.mAddr == i) && (v.second.mAddr == i + 1)) {
+              found = true;
+            }
+          }
+          if (!found) {
             missingAddr = glm::ivec2(i, i + 1);
+          }
         }
 
         // If this edge is missing
@@ -373,88 +382,93 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
 
           // Pairs the known addresses of the missing edge with sites
           for (auto const& s : voronoi.getTriangulation()) {
-            if (s.first.mAddr == missingAddr.x)
+            if (s.first.mAddr == missingAddr.x) {
               site1 = s.first;
-            if (s.second.mAddr == missingAddr.x)
+            }
+            if (s.second.mAddr == missingAddr.x) {
               site1 = s.second;
+            }
 
-            if (s.first.mAddr == missingAddr.y)
+            if (s.first.mAddr == missingAddr.y) {
               site2 = s.first;
-            if (s.second.mAddr == missingAddr.y)
+            }
+            if (s.second.mAddr == missingAddr.y) {
               site2 = s.second;
+            }
           }
 
           // Finds intersecting edges (if a triangulation edge intersects the original polygon edge,
           // it is wrong)
           for (auto const& s : voronoi.getTriangulation()) {
-            double intersectionX, intersectionY;
+            double intersectionX{};
+            double intersectionY{};
 
             if (findIntersection(site1, site2, s.first, s.second, intersectionX, intersectionY)) {
               int addrNew =
                   site1.mAddr + 1; // = site2.mAddr (except for the last edge, where site2.mAddr=0!
               Site oldCorner(0, 0, 0);
-              bool done = 0;
+              bool done = false;
 
               // Cycles through addCorners vector and saves current intersection into the right
               // place
-              for (size_t i = 0; i < addCorners.size(); i++) {
+              for (auto& addCorner : addCorners) {
                 // If current intersection is not saved yet
                 if (!done) {
                   // Compares addresses of the two intersection
-                  if (addCorners[i].mAddr < addrNew) {
+                  if (addCorner.mAddr < addrNew) {
                     // Skips first elements of vector
-                  } else if (addCorners[i].mAddr == addrNew) {
+                  } else if (addCorner.mAddr == addrNew) {
                     // If edges points to positive x
                     if (intersectionX > site1.mX) {
                       // Saves intersection only when it is in front of the
                       // existing intersection; otherwise it will be handled
                       // in the next cycle
-                      if (addCorners[i].mX > intersectionX) {
+                      if (addCorner.mX > intersectionX) {
                         // Saves existing intersection to oldCorner
                         // will be placed back to vector in the next cycle
-                        oldCorner     = addCorners[i];
-                        addCorners[i] = Site(intersectionX, intersectionY, addrNew);
-                        done          = 1;
+                        oldCorner = addCorner;
+                        addCorner = Site(intersectionX, intersectionY, addrNew);
+                        done      = true;
                       }
                     }
                     // If edges points to negative x
                     else if (intersectionX < site1.mX) {
-                      if (addCorners[i].mX < intersectionX) {
-                        oldCorner     = addCorners[i];
-                        addCorners[i] = Site(intersectionX, intersectionY, addrNew);
-                        done          = 1;
+                      if (addCorner.mX < intersectionX) {
+                        oldCorner = addCorner;
+                        addCorner = Site(intersectionX, intersectionY, addrNew);
+                        done      = true;
                       }
                     }
                     // Handles the very rare case of a vertical edge
                     // Does the same, as before, just now with y coordinates
                     else if (intersectionX == site1.mX) {
                       if (intersectionY > site1.mY) {
-                        if (addCorners[i].mY > intersectionY) {
-                          oldCorner     = addCorners[i];
-                          addCorners[i] = Site(intersectionX, intersectionY, addrNew);
-                          done          = 1;
+                        if (addCorner.mY > intersectionY) {
+                          oldCorner = addCorner;
+                          addCorner = Site(intersectionX, intersectionY, addrNew);
+                          done      = true;
                         }
                       } else if (intersectionY < site1.mY) {
-                        if (addCorners[i].mY < intersectionY) {
-                          oldCorner     = addCorners[i];
-                          addCorners[i] = Site(intersectionX, intersectionY, addrNew);
-                          done          = 1;
+                        if (addCorner.mY < intersectionY) {
+                          oldCorner = addCorner;
+                          addCorner = Site(intersectionX, intersectionY, addrNew);
+                          done      = true;
                         }
                       }
                     } // if (intersectionX==s.first.mX)
                   }   // if (addCorners[i].mAddr == addrNew)
                   // if (addCorners[i].mAddr > addrNew)
                   else {
-                    oldCorner     = addCorners[i];
-                    addCorners[i] = Site(intersectionX, intersectionY, addrNew);
-                    done          = 1;
+                    oldCorner = addCorner;
+                    addCorner = Site(intersectionX, intersectionY, addrNew);
+                    done      = true;
                   }
                 } // if (!done)
                 else {
                   // After the current intersecting point is added to the middle of the vector
                   // shifts back every other element by one position
-                  Site newCorner = addCorners[i];
-                  addCorners[i]  = oldCorner;
+                  Site newCorner = addCorner;
+                  addCorner      = oldCorner;
                   oldCorner      = newCorner;
                 }
               } // for (int i = 0; i < addCorners.size(); i++)
@@ -469,7 +483,7 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
               }
 
               // Corners needed to be added -> run the cycle again
-              edgesOK = 0;
+              edgesOK = false;
             } // if (findIntersection(...))
           }   // for (auto const& s : triangulation)
         }     // if (!found)
@@ -511,7 +525,7 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
     } // if (countEdges != 0)
     else {
       // All of the original edges are in voronoiEdges -> no need for an other cycle
-      edgesOK = 1;
+      edgesOK = true;
     }
     // Saves the original triangles
     triangles = voronoi.getTriangles();
@@ -519,8 +533,8 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
 
   // If the voronoi edges are still wrong after 5 cycles of refinement, display the problem
   if (!edgesOK) {
-    spdlog::warn("Area calculation can be false: Concave or self-intersecting polygon! Check "
-                 "triangulation mesh.");
+    logger().warn("Area calculation can be false: Concave or self-intersecting polygon! Check "
+                  "triangulation mesh.");
   }
 }
 
@@ -557,12 +571,13 @@ bool PolygonTool::checkSleekness(int count) {
     // Edge 1 is too long compared to the others
     if ((length2 * sleekness1 < length1) || (length3 * sleekness1 < length1) ||
         (length2 + length3 < length1 * sleekness2)) {
-      bool addPoint = 1;
+      bool addPoint = true;
       // Checks previously added points if they are the same
       for (auto const& addr : addedPoints) {
         if (((addr.first == si1.mAddr) && (addr.second == si2.mAddr)) ||
-            ((addr.first == si2.mAddr) && (addr.second == si1.mAddr)))
-          addPoint = 0;
+            ((addr.first == si2.mAddr) && (addr.second == si1.mAddr))) {
+          addPoint = false;
+        }
       }
       // If not, adds this point to vector
       if (addPoint) {
@@ -575,11 +590,12 @@ bool PolygonTool::checkSleekness(int count) {
     // Edge 2 is too long compared to the others
     if ((length1 * sleekness1 < length2) || (length3 * sleekness1 < length2) ||
         (length1 + length3 < length2 * sleekness2)) {
-      bool addPoint = 1;
+      bool addPoint = true;
       for (auto const& addr : addedPoints) {
         if (((addr.first == si1.mAddr) && (addr.second == si3.mAddr)) ||
-            ((addr.first == si3.mAddr) && (addr.second == si1.mAddr)))
-          addPoint = 0;
+            ((addr.first == si3.mAddr) && (addr.second == si1.mAddr))) {
+          addPoint = false;
+        }
       }
       if (addPoint) {
         mCornersFine[count].emplace_back((si1.mX + si3.mX) / 2, (si1.mY + si3.mY) / 2,
@@ -591,11 +607,12 @@ bool PolygonTool::checkSleekness(int count) {
     // Edge 3 is too long compared to the others
     if ((length1 * sleekness1 < length3) || (length2 * sleekness1 < length3) ||
         (length1 + length2 < length3 * sleekness2)) {
-      bool addPoint = 1;
+      bool addPoint = true;
       for (auto const& addr : addedPoints) {
         if (((addr.first == si2.mAddr) && (addr.second == si3.mAddr)) ||
-            ((addr.first == si3.mAddr) && (addr.second == si2.mAddr)))
-          addPoint = 0;
+            ((addr.first == si3.mAddr) && (addr.second == si2.mAddr))) {
+          addPoint = false;
+        }
       }
       if (addPoint) {
         mCornersFine[count].emplace_back((si2.mX + si3.mX) / 2, (si2.mY + si3.mY) / 2,
@@ -605,10 +622,8 @@ bool PolygonTool::checkSleekness(int count) {
     }
   }
 
-  if (addedPoints.size() > 1.5 * (mCornersFine[count].size() - addedPoints.size()))
-    return 1;
-
-  return 0;
+  return addedPoints.size() >
+         1.5 * static_cast<double>(mCornersFine[count].size() - addedPoints.size());
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -658,7 +673,7 @@ void PolygonTool::refineMesh(Edge2 const& edge, double mdist, glm::dvec3 const& 
   if ((hAvg / ((h1 + h2) / 2) > mHeightDiff) || (((h1 + h2) / 2) / hAvg > mHeightDiff)) {
     mCornersFine[count].emplace_back(
         avgPoint2.x, avgPoint2.y, static_cast<uint16_t>(mCornersFine[count].size()));
-    fine = 0;
+    fine = false;
   }
   // Checks height of other points between the two Sites
   else {
@@ -682,7 +697,7 @@ void PolygonTool::refineMesh(Edge2 const& edge, double mdist, glm::dvec3 const& 
               (((i * h1 + (j - i) * h2) / j) / heAvg3 > mHeightDiff)) {
             mCornersFine[count].emplace_back(
                 avgPoint3.x, avgPoint3.y, static_cast<uint16_t>(mCornersFine[count].size()));
-            fine = 0;
+            fine = false;
           }
         }
       }
@@ -696,12 +711,12 @@ void PolygonTool::calculateAreaAndVolume(std::vector<Triangle> const& triangles,
     glm::dvec3 const& e, glm::dvec3 const& n, glm::dvec3 const& r, double& area, double& pvol,
     double& nvol) {
   // Counts area and volume in every triangle
-  for (size_t it = 0; it < triangles.size(); it++) {
+  for (const auto& triangle : triangles) {
     // ------------------------------------------ AREA ------------------------------------------
     Site si1(0, 0, 0);
     Site si2(0, 0, 0);
     Site si3(0, 0, 0);
-    std::tie(si1, si2, si3) = triangles[it];
+    std::tie(si1, si2, si3) = triangle;
 
     // Cartesian coordinates without height
     glm::dvec3 p1 = glm::normalize(mMiddlePoint + mdist * si1.mX * e + mdist * si1.mY * n) * r[0];
@@ -758,18 +773,18 @@ void PolygonTool::calculateAreaAndVolume(std::vector<Triangle> const& triangles,
     // If 2 intersection points are found:
     // Split the triangle into a smaller triangle and a quadrilateral
     else {
-      glm::dvec3 pM1    = glm::dvec3(0.0);
-      glm::dvec3 pM2    = glm::dvec3(0.0);
-      glm::dvec3 pM3    = glm::dvec3(0.0);
-      glm::dvec3 pM     = glm::dvec3(0.0);
-      glm::dvec3 pMOld  = glm::dvec3(0.0);
-      glm::dvec3 lM     = glm::dvec3(0.0);
-      double     hM     = 0;
-      double     hlM    = 0;
-      double     hlMOld = 0;
-      bool       b1     = 0;
-      bool       b2     = 0;
-      bool       b3     = 0;
+      auto   pM1    = glm::dvec3(0.0);
+      auto   pM2    = glm::dvec3(0.0);
+      auto   pM3    = glm::dvec3(0.0);
+      auto   pM     = glm::dvec3(0.0);
+      auto   pMOld  = glm::dvec3(0.0);
+      auto   lM     = glm::dvec3(0.0);
+      double hM     = 0;
+      double hlM    = 0;
+      double hlMOld = 0;
+      bool   b1     = false;
+      bool   b2     = false;
+      bool   b3     = false;
 
       // Resolution of edge sampling
       int    res  = 32;
@@ -781,7 +796,7 @@ void PolygonTool::calculateAreaAndVolume(std::vector<Triangle> const& triangles,
         // (Does not consider multiple intersection points (f.eg.: mountains in triangle)
         // They have been mostly eliminated with triangulation
         for (int i = 0; i < res; i++) {
-          frac = (double)i / res;
+          frac = static_cast<double>(i) / res;
           // Point coordinate without height
           pM = glm::normalize((1 - frac) * p1 + frac * p2) * r[0];
 
@@ -798,7 +813,7 @@ void PolygonTool::calculateAreaAndVolume(std::vector<Triangle> const& triangles,
             pM1 = pMOld - (pM - pMOld) * hlMOld / (hlM - hlMOld);
             // To quit loop
             i  = res;
-            b1 = 1;
+            b1 = true;
           } else {
             // Save values for the next cycle
             pMOld  = pM;
@@ -809,7 +824,7 @@ void PolygonTool::calculateAreaAndVolume(std::vector<Triangle> const& triangles,
 
       if ((hl1 > 0) != (hl3 > 0)) {
         for (int i = 0; i < res; i++) {
-          frac = (double)i / res;
+          frac = static_cast<double>(i) / res;
           pM   = glm::normalize((1 - frac) * p1 + frac * p3) * r[0];
           lM   = cs::utils::convert::toLngLatHeight(pM, r[0], r[0]);
           hM   = mSolarSystem->pActiveBody.get()->getHeight(lM.xy());
@@ -818,7 +833,7 @@ void PolygonTool::calculateAreaAndVolume(std::vector<Triangle> const& triangles,
           if ((hl1 > 0) != (hlM > 0)) {
             pM2 = pMOld - (pM - pMOld) * hlMOld / (hlM - hlMOld);
             i   = res;
-            b2  = 1;
+            b2  = true;
           } else {
             pMOld  = pM;
             hlMOld = hlM;
@@ -828,7 +843,7 @@ void PolygonTool::calculateAreaAndVolume(std::vector<Triangle> const& triangles,
 
       if ((hl2 > 0) != (hl3 > 0)) {
         for (int i = 0; i < res; i++) {
-          frac = (double)i / res;
+          frac = static_cast<double>(i) / res;
           pM   = glm::normalize((1 - frac) * p2 + frac * p3) * r[0];
           lM   = cs::utils::convert::toLngLatHeight(pM, r[0], r[0]);
           hM   = mSolarSystem->pActiveBody.get()->getHeight(lM.xy());
@@ -837,7 +852,7 @@ void PolygonTool::calculateAreaAndVolume(std::vector<Triangle> const& triangles,
           if ((hl2 > 0) != (hlM > 0)) {
             pM3 = pMOld - (pM - pMOld) * hlMOld / (hlM - hlMOld);
             i   = res;
-            b3  = 1;
+            b3  = true;
           } else {
             pMOld  = pM;
             hlMOld = hlM;
@@ -911,8 +926,9 @@ void PolygonTool::onPointMoved() {
   // Return if point is not on planet
   for (auto const& mark : mPoints) {
     glm::dvec3 vec = mark->getAnchor()->getAnchorPosition();
-    if ((glm::length(vec) == 0) || std::isnan(vec.x) || std::isnan(vec.y) || std::isnan(vec.z))
+    if ((glm::length(vec) == 0) || std::isnan(vec.x) || std::isnan(vec.y) || std::isnan(vec.z)) {
       return;
+    }
   }
 
   updateLineVertices();
@@ -925,8 +941,9 @@ void PolygonTool::onPointAdded() {
   // Return if point is not on planet
   for (auto const& mark : mPoints) {
     glm::dvec3 vec = mark->getAnchor()->getAnchorPosition();
-    if ((glm::length(vec) == 0) || std::isnan(vec.x) || std::isnan(vec.y) || std::isnan(vec.z))
+    if ((glm::length(vec) == 0) || std::isnan(vec.x) || std::isnan(vec.y) || std::isnan(vec.z)) {
       return;
+    }
   }
 
   updateLineVertices();
@@ -935,10 +952,11 @@ void PolygonTool::onPointAdded() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void PolygonTool::onPointRemoved(int index) {
+void PolygonTool::onPointRemoved(int /*index*/) {
   // Don't allow to become only one line
-  if (mPoints.size() == 2)
+  if (mPoints.size() == 2) {
     pAddPointMode = true;
+  }
 
   updateLineVertices();
   updateCalculation();
@@ -947,16 +965,18 @@ void PolygonTool::onPointRemoved(int index) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void PolygonTool::updateLineVertices() {
-  if (mPoints.size() == 0)
+  if (mPoints.empty()) {
     return;
+  }
 
   // Fills the vertex buffer with sampled data
   mSampledPositions.clear();
 
   // Middle point of cs::core::tools::DeletableMarks
   glm::dvec3 averagePosition(0.0);
-  for (auto const& mark : mPoints)
-    averagePosition += mark->getAnchor()->getAnchorPosition() / (double)mPoints.size();
+  for (auto const& mark : mPoints) {
+    averagePosition += mark->getAnchor()->getAnchorPosition() / static_cast<double>(mPoints.size());
+  }
 
   auto radii = mSolarSystem->getRadii(mGuiAnchor->getCenterName());
 
@@ -978,13 +998,13 @@ void PolygonTool::updateLineVertices() {
   auto currMark = ++mPoints.begin();
 
   // minLng,maxLng,minLat,maxLat
-  glm::dvec4 boundingBox = glm::dvec4(0.0);
+  auto boundingBox = glm::dvec4(0.0);
 
   while (currMark != mPoints.end()) {
     // Generates X points for each line segment
     for (int vertex_id = 0; vertex_id < NUM_SAMPLES; vertex_id++) {
       glm::dvec4 pos = getInterpolatedPosBetweenTwoMarks(
-          **lastMark, **currMark, (vertex_id / (double)NUM_SAMPLES));
+          **lastMark, **currMark, (vertex_id / static_cast<double>(NUM_SAMPLES)));
       mSampledPositions.push_back(pos.xyz());
     }
 
@@ -1015,7 +1035,7 @@ void PolygonTool::updateLineVertices() {
   currMark = mPoints.begin();
   for (int vertex_id = 0; vertex_id < NUM_SAMPLES; vertex_id++) {
     glm::dvec4 pos = getInterpolatedPosBetweenTwoMarks(
-        **lastMark, **currMark, (vertex_id / (double)NUM_SAMPLES));
+        **lastMark, **currMark, (vertex_id / static_cast<double>(NUM_SAMPLES)));
     mSampledPositions.push_back(pos.xyz());
   }
 
@@ -1045,8 +1065,9 @@ void PolygonTool::updateLineVertices() {
 // of the original polygon using this mesh
 void PolygonTool::updateCalculation() {
   // Returns if no triangle can be created
-  if (mPoints.size() < 3)
+  if (mPoints.size() < 3) {
     return;
+  }
 
   mCorners.clear();
   mCornersFine.clear();
@@ -1057,8 +1078,9 @@ void PolygonTool::updateCalculation() {
 
   // Middle point of cs::core::tools::DeletableMarks
   glm::dvec3 averagePosition(0.0);
-  for (auto const& mark : mPoints)
-    averagePosition += mark->getAnchor()->getAnchorPosition() / (double)mPoints.size();
+  for (auto const& mark : mPoints) {
+    averagePosition += mark->getAnchor()->getAnchorPosition() / static_cast<double>(mPoints.size());
+  }
 
   // Corrected average position (works for every height scale)
   glm::dvec3 averagePositionNorm(0.0);
@@ -1071,15 +1093,16 @@ void PolygonTool::updateCalculation() {
     // Cartesian coordinate with height
     glm::dvec3 posNorm = cs::utils::convert::toCartesian(l, radii[0], radii[0], h);
 
-    averagePositionNorm += posNorm / (double)mPoints.size();
+    averagePositionNorm += posNorm / static_cast<double>(mPoints.size());
   }
 
   // Longest distance to average position
   double maxDist = 0;
   for (auto const& mark : mPoints) {
     double dist = glm::length(averagePosition - mark->getAnchor()->getAnchorPosition());
-    if (dist > maxDist)
+    if (dist > maxDist) {
       maxDist = dist;
+    }
   }
 
   // If polygon is to big (disable area calculation and mesh generation)
@@ -1087,7 +1110,7 @@ void PolygonTool::updateCalculation() {
   if (maxDist > radii[0]) {
     mGuiItem->callJavascript("setArea", 0);
     mGuiItem->callJavascript("setVolume", 0, 0);
-    mShowMesh = 0;
+    mShowMesh = false;
     return;
   }
   // Converts maxDist to Voronoi plane (approx.)
@@ -1098,15 +1121,17 @@ void PolygonTool::updateCalculation() {
   mNormal      = glm::normalize(averagePosition);
   mMiddlePoint = mNormal * radii[0];
   // Coordinate system of the plane
-  glm::dvec3 east, north = glm::dvec3(0.0);
+  glm::dvec3 east(0.0);
+  glm::dvec3 north(0.0);
 
   if (mNormal.y != 0) {
     // Normal and north is perpendicular -> dot product is 0
     double yNorth = (std::pow(mNormal.x, 2) + std::pow(mNormal.z, 2)) / mNormal.y;
     north         = glm::normalize(glm::dvec3(-mNormal.x, yNorth, -mNormal.z));
     // Changes south to north on the southern hemisphere
-    if (yNorth < 0)
+    if (yNorth < 0) {
       north = glm::normalize(glm::dvec3(mNormal.x, -yNorth, mNormal.z));
+    }
   } else {
     // If plane normal is perpendicular to y axes, north is y
     north = glm::dvec3(0, 1, 0);
@@ -1121,7 +1146,7 @@ void PolygonTool::updateCalculation() {
   glm::dvec3 vec(0);
 
   mNormal2 = glm::normalize(averagePositionNorm);
-  mOffset  = 0.f;
+  mOffset  = 0.F;
 
   for (auto const& p : mPoints) {
     glm::dvec3 pos     = glm::normalize(p->getAnchor()->getAnchorPosition()) * radii[0];
@@ -1147,17 +1172,18 @@ void PolygonTool::updateCalculation() {
   }
 
   glm::dvec3 solution = glm::inverse(mat) * vec;
-  mNormal2            = glm::normalize(glm::dvec3(-solution.x, -solution.y, 1.f));
+  mNormal2            = glm::normalize(glm::dvec3(-solution.x, -solution.y, 1.F));
 
-  if (glm::dot(mNormal, mNormal2) < 0)
+  if (glm::dot(mNormal, mNormal2) < 0) {
     mNormal2 = -mNormal2;
+  }
 
   mOffset       = solution.z;
   mMiddlePoint2 = averagePositionNorm + mNormal2 * radii[0] * mOffset;
 
   // Projects points to Voronoi plane and calculates their position in the new coordinate system
   int        addr = 0;
-  glm::dvec3 lastPosition;
+  glm::dvec3 lastPosition{0};
 
   for (auto const& mark : mPoints) {
     glm::dvec3 currentPosition = mark->getAnchor()->getAnchorPosition();
@@ -1173,8 +1199,9 @@ void PolygonTool::updateCalculation() {
       double y = glm::dot(north, pos - mMiddlePoint);
 
       // Avoids crashing when moving to the other side of the planet
-      if ((std::isnan(x / maxDist)) || (std::isnan(y / maxDist)))
+      if ((std::isnan(x / maxDist)) || (std::isnan(y / maxDist))) {
         return;
+      }
 
       // Saves coordinates normalized with maxDist
       mCorners.emplace_back(x / maxDist, y / maxDist, addr);
@@ -1190,7 +1217,7 @@ void PolygonTool::updateCalculation() {
   // Creates Delaunay-mesh of the original polygon
   createMesh(triangles);
 
-  bool     fine          = 0;
+  bool     fine          = false;
   uint32_t attempt       = 0;
   double   area          = 0;
   double   negVolume     = 0;
@@ -1206,7 +1233,7 @@ void PolygonTool::updateCalculation() {
   // Refines triangulation until it is necessary or mMaxAttempt or mMaxPoints
   while ((!fine) && (attempt < mMaxAttempt) && (pointCount < mMaxPoints)) {
     attempt++;
-    fine = 1;
+    fine = true;
 
     area          = 0;
     negVolume     = 0;
@@ -1248,16 +1275,18 @@ void PolygonTool::updateCalculation() {
 
         // No need for checkPoint, all of the edges are inside the triangle and the polygon
         for (auto const& s : voronoiRefine.getTriangulation()) {
-          double h1, h2;
+          double h1{};
+          double h2{};
 
           // Calculates mesh coordinates on planet's surface and saves these coordinates for display
           displayMesh(s, maxDist, east, north, radii, h_scale, h1, h2);
 
           // If not too many points are addded in checkSleekness and it is not the the last attempt
           // than refines the mesh based on edge length and height differences
-          if ((!refine) && (pointCount < mMaxPoints) && (attempt < mMaxAttempt))
+          if ((!refine) && (pointCount < mMaxPoints) && (attempt < mMaxAttempt)) {
             refineMesh(
                 s, maxDist, east, north, radii, static_cast<int32_t>(triangleCount), h1, h2, fine);
+          }
         }
 
         std::vector<Triangle> trianglesRefined = voronoiRefine.getTriangles();
@@ -1351,19 +1380,20 @@ bool PolygonTool::Do() {
   glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
   glLineWidth(5);
 
-  GLfloat glMatMV[16], glMatP[16];
-  glGetFloatv(GL_MODELVIEW_MATRIX, &glMatMV[0]);
-  glGetFloatv(GL_PROJECTION_MATRIX, &glMatP[0]);
+  std::array<GLfloat, 16> glMatMV{};
+  std::array<GLfloat, 16> glMatP{};
+  glGetFloatv(GL_MODELVIEW_MATRIX, glMatMV.data());
+  glGetFloatv(GL_PROJECTION_MATRIX, glMatP.data());
 
   mShader.Bind();
   mVAO.Bind();
-  glUniformMatrix4fv(mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glMatMV);
-  glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
+  glUniformMatrix4fv(mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glMatMV.data());
+  glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP.data());
 
   mShader.SetUniform(
       mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
 
-  mShader.SetUniform(mShader.GetUniformLocation("uColor"), 1.f, 1.f, 1.f, 1.f);
+  mShader.SetUniform(mShader.GetUniformLocation("uColor"), 1.F, 1.F, 1.F, 1.F);
 
   // Draws the linestrip
   glDrawArrays(GL_LINE_STRIP, 0, static_cast<int32_t>(mIndexCount));
@@ -1380,7 +1410,7 @@ bool PolygonTool::Do() {
 
     mVAO2.Bind();
 
-    mShader.SetUniform(mShader.GetUniformLocation("uColor"), 0.5f, 0.5f, 1.f, 0.8f);
+    mShader.SetUniform(mShader.GetUniformLocation("uColor"), 0.5F, 0.5F, 1.F, 0.8F);
 
     glDisable(GL_DEPTH_TEST);
 
@@ -1400,10 +1430,10 @@ bool PolygonTool::Do() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool PolygonTool::GetBoundingBox(VistaBoundingBox& bb) {
-  float fMin[3] = {-0.1f, -0.1f, -0.1f};
-  float fMax[3] = {0.1f, 0.1f, 0.1f};
+  std::array fMin{-0.1F, -0.1F, -0.1F};
+  std::array fMax{0.1F, 0.1F, 0.1F};
 
-  bb.SetBounds(fMin, fMax);
+  bb.SetBounds(fMin.data(), fMax.data());
   return true;
 }
 

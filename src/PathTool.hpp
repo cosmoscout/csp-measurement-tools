@@ -39,6 +39,13 @@ class PathTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointTool
       std::shared_ptr<cs::core::Settings> const&          settings,
       std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
       std::string const& sFrame);
+
+  PathTool(PathTool const& other) = delete;
+  PathTool(PathTool&& other)      = delete;
+
+  PathTool& operator=(PathTool const& other) = delete;
+  PathTool& operator=(PathTool&& other) = delete;
+
   ~PathTool() override;
 
   /// Called from Tools class.
@@ -55,10 +62,9 @@ class PathTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointTool
 
   /// Returns the interpolated position in cartesian coordinates. The fourth component is height
   /// above the surface.
-  glm::dvec4 getInterpolatedPosBetweenTwoMarks(cs::core::tools::DeletableMark const& pMark1,
-      cs::core::tools::DeletableMark const& pMark2, double value, double const& scale);
+  glm::dvec4 getInterpolatedPosBetweenTwoMarks(cs::core::tools::DeletableMark const& l0,
+      cs::core::tools::DeletableMark const& l1, double value, double const& scale);
 
- private:
   /// These are called by the base class MultiPointTool.
   void onPointMoved() override;
   void onPointAdded() override;
@@ -85,8 +91,8 @@ class PathTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointTool
 
   int mNumSamples = 256;
 
-  static const std::string SHADER_VERT;
-  static const std::string SHADER_FRAG;
+  static const char* SHADER_VERT;
+  static const char* SHADER_FRAG;
 };
 
 } // namespace csp::measurementtools

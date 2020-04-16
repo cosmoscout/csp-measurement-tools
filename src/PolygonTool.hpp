@@ -39,14 +39,21 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
       std::shared_ptr<cs::core::Settings> const&             settings,
       std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
       std::string const& sFrame);
-  virtual ~PolygonTool();
+
+  PolygonTool(PolygonTool const& other) = delete;
+  PolygonTool(PolygonTool&& other)      = delete;
+
+  PolygonTool& operator=(PolygonTool const& other) = delete;
+  PolygonTool& operator=(PolygonTool&& other) = delete;
+
+  ~PolygonTool() override;
 
   /// Called from Tools class
-  virtual void update() override;
+  void update() override;
 
   /// Inherited from IVistaOpenGLDraw
-  virtual bool Do() override;
-  virtual bool GetBoundingBox(VistaBoundingBox& bb) override;
+  bool Do() override;
+  bool GetBoundingBox(VistaBoundingBox& bb) override;
 
   void setHeightDiff(float const& hDiff);
   void setMaxAttempt(int const& att);
@@ -59,11 +66,11 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
 
   /// Returns the interpolated position in cartesian coordinates. The fourth component is
   /// height above the surface
-  glm::dvec4 getInterpolatedPosBetweenTwoMarks(cs::core::tools::DeletableMark const& pMark1,
-      cs::core::tools::DeletableMark const& pMark2, double value);
+  glm::dvec4 getInterpolatedPosBetweenTwoMarks(cs::core::tools::DeletableMark const& l0,
+      cs::core::tools::DeletableMark const& l1, double value);
 
   /// Finds the intersection point between two sites
-  bool findIntersection(Site const& s1, Site const& s2, Site const& s3, Site const& s4,
+  static bool findIntersection(Site const& s1, Site const& s2, Site const& s3, Site const& s4,
       double& intersectionX, double& intersectionY);
 
   /// Creates a Delaunay-mesh and corrects it to match the original polygon
@@ -86,11 +93,10 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
   // Checks if point is inside of the polygon or not
   bool checkPoint(glm::dvec2 const& point);
 
- private:
   // These are called by the base class MultiPointTool
-  virtual void onPointMoved() override;
-  virtual void onPointAdded() override;
-  virtual void onPointRemoved(int index) override;
+  void onPointMoved() override;
+  void onPointAdded() override;
+  void onPointRemoved(int index) override;
 
   std::shared_ptr<cs::scene::CelestialAnchorNode> mGuiAnchor;
   std::unique_ptr<cs::gui::WorldSpaceGuiArea>     mGuiArea;
@@ -124,23 +130,23 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
   std::vector<glm::dvec3>        mTriangulation;
   glm::dvec3                     mNormal      = glm::dvec3(0.0);
   glm::dvec3                     mMiddlePoint = glm::dvec3(0.0);
-  bool                           mShowMesh    = 0;
+  bool                           mShowMesh    = false;
   size_t                         mIndexCount2 = 0;
 
   // For triangle fineness
-  float    mHeightDiff = 1.002f;
+  float    mHeightDiff = 1.002F;
   uint32_t mMaxAttempt = 10;
   uint32_t mMaxPoints  = 1000;
   uint32_t mSleekness  = 15;
 
   // For volume calculation
-  double     mOffset;
+  double     mOffset{};
   glm::dvec3 mNormal2      = glm::dvec3(0.0);
   glm::dvec3 mMiddlePoint2 = glm::dvec3(0.0);
 
-  static const int         NUM_SAMPLES;
-  static const std::string SHADER_VERT;
-  static const std::string SHADER_FRAG;
+  static const int   NUM_SAMPLES;
+  static const char* SHADER_VERT;
+  static const char* SHADER_FRAG;
 };
 
 } // namespace csp::measurementtools

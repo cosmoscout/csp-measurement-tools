@@ -22,7 +22,7 @@ class Breakpoint {
   Breakpoint(Arc* left, Arc* right, VoronoiGenerator* generator);
 
   Vector2f const& position() const;
-  Edge const      finishEdge(Vector2f const& end) const;
+  Edge            finishEdge(Vector2f const& end) const;
 
   Arc *       mLeftArc, *mRightArc;
   Breakpoint *mLeftChild, *mRightChild, *mParent;

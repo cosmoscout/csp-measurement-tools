@@ -43,6 +43,13 @@ class DipStrikeTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPoin
       std::shared_ptr<cs::core::Settings> const&               settings,
       std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
       std::string const& sFrame);
+
+  DipStrikeTool(DipStrikeTool const& other) = delete;
+  DipStrikeTool(DipStrikeTool&& other)      = delete;
+
+  DipStrikeTool& operator=(DipStrikeTool const& other) = delete;
+  DipStrikeTool& operator=(DipStrikeTool&& other) = delete;
+
   ~DipStrikeTool() override;
 
   /// Called from Tools class.
@@ -60,7 +67,6 @@ class DipStrikeTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPoin
   glm::dvec4 getInterpolatedPosBetweenTwoMarks(cs::core::tools::DeletableMark const& pMark1,
       cs::core::tools::DeletableMark const& pMark2, double value);
 
- private:
   /// These are called by the base class MultiPointTool.
   void onPointMoved() override;
   void onPointAdded() override;
@@ -79,15 +85,15 @@ class DipStrikeTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPoin
   VistaBufferObject      mVBO;
   VistaGLSLShader        mShader;
 
-  double    mOriginalDistance = -1.0, mSize;
+  double    mOriginalDistance = -1.0, mSize{};
   glm::vec3 mNormal = glm::vec3(0.0), mMip = glm::vec3(0.0);
-  float     mOffset, mSizeFactor = 1.5f, mOpacity = 0.5;
+  float     mOffset{}, mSizeFactor = 1.5F, mOpacity = 0.5;
 
   int mScaleConnection = -1;
 
-  static const int         RESOLUTION;
-  static const std::string SHADER_VERT;
-  static const std::string SHADER_FRAG;
+  static const int   RESOLUTION;
+  static const char* SHADER_VERT;
+  static const char* SHADER_FRAG;
 };
 
 } // namespace csp::measurementtools

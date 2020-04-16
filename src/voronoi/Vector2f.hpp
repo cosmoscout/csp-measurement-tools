@@ -18,10 +18,16 @@ namespace csp::measurementtools {
 struct Vector2f {
   /// Default ctor (0, 0).
   Vector2f();
-  /// Copy ctor.
-  Vector2f(Vector2f const& point);
   /// Ctor from a \a x and a \a y value.
   Vector2f(double x, double y);
+
+  Vector2f(Vector2f const& point);
+  Vector2f(Vector2f&& other) = default;
+
+  Vector2f& operator=(Vector2f const& other) = default;
+  Vector2f& operator=(Vector2f&& other) = default;
+
+  ~Vector2f() = default;
 
   /// Sets the length of the vector to 1.
   Vector2f normalize() const;
@@ -49,7 +55,7 @@ struct Vector2f {
   /// \name Data
   /// Members storing the information of the vector.
   ///@{
-  double mX, mY;
+  double mX{}, mY{};
   ///@}
 };
 
@@ -66,7 +72,7 @@ double operator*(Vector2f const& lhs, Vector2f const& rhs);
 Vector2f operator*(Vector2f const& lhs, double rhs);
 
 /// Multiplication of a scalar with a vector.
-Vector2f operator*(double const& lhs, Vector2f rhs);
+Vector2f operator*(double const& lhs, const Vector2f& rhs);
 
 /// Division of a vector by a scalar.
 Vector2f operator/(Vector2f const& lhs, double rhs);

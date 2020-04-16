@@ -15,7 +15,7 @@ namespace csp::measurementtools {
 class Breakpoint;
 
 struct Arc {
-  Arc(Site const& site);
+  explicit Arc(Site const& site);
 
   void invalidateEvent();
 

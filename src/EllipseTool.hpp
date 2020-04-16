@@ -22,6 +22,13 @@ class EllipseTool : public IVistaOpenGLDraw, public cs::core::tools::Tool {
       std::shared_ptr<cs::core::Settings> const&             settings,
       std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
       std::string const& sFrame);
+
+  EllipseTool(EllipseTool const& other) = delete;
+  EllipseTool(EllipseTool&& other)      = delete;
+
+  EllipseTool& operator=(EllipseTool const& other) = delete;
+  EllipseTool& operator=(EllipseTool&& other) = delete;
+
   ~EllipseTool() override;
 
   FlagTool const&              getCenterHandle() const;
@@ -51,10 +58,10 @@ class EllipseTool : public IVistaOpenGLDraw, public cs::core::tools::Tool {
 
   bool mFirstUpdate = true;
 
-  FlagTool                             mCenterHandle;
-  std::array<glm::dvec3, 2>            mAxes;
-  std::array<cs::core::tools::Mark, 2> mHandles;
-  std::array<int, 2>                   mHandleConnections;
+  FlagTool                                              mCenterHandle;
+  std::array<glm::dvec3, 2>                             mAxes;
+  std::array<std::unique_ptr<cs::core::tools::Mark>, 2> mHandles;
+  std::array<int, 2>                                    mHandleConnections{};
 
   std::unique_ptr<VistaOpenGLNode> mOpenGLNode;
 
@@ -65,8 +72,8 @@ class EllipseTool : public IVistaOpenGLDraw, public cs::core::tools::Tool {
   int mScaleConnection = -1;
   int mNumSamples      = 360;
 
-  static const std::string SHADER_VERT;
-  static const std::string SHADER_FRAG;
+  static const char* SHADER_VERT;
+  static const char* SHADER_FRAG;
 };
 } // namespace csp::measurementtools
 #endif // CSP_MEASUREMENT_TOOLS_ELLIPSE_HPP

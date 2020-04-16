@@ -11,9 +11,9 @@ namespace csp::measurementtools {
 
 Arc::Arc(Site const& s)
     : mSite(s)
-    , mLeftBreak(NULL)
-    , mRightBreak(NULL)
-    , mEvent(NULL) {
+    , mLeftBreak(nullptr)
+    , mRightBreak(nullptr)
+    , mEvent(nullptr) {
 }
 
 void Arc::invalidateEvent() {
@@ -23,7 +23,7 @@ void Arc::invalidateEvent() {
       mEvent->mIsValid = false;
     }
 
-    mEvent = NULL;
+    mEvent = nullptr;
   }
 }
 } // namespace csp::measurementtools

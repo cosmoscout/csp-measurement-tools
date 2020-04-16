@@ -20,7 +20,7 @@
 
 namespace csp::measurementtools {
 
-const std::string EllipseTool::SHADER_VERT = R"(
+const char* EllipseTool::SHADER_VERT = R"(
 #version 330
 
 layout(location=0) in vec3 iPosition;
@@ -37,7 +37,7 @@ void main()
 }
 )";
 
-const std::string EllipseTool::SHADER_FRAG = R"(
+const char* EllipseTool::SHADER_FRAG = R"(
 #version 330
 
 in vec4 vPosition;
@@ -65,9 +65,9 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
     , mCenterHandle(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
     , mAxes({glm::dvec3(pSolarSystem->getObserver().getAnchorScale(), 0.0, 0.0),
           glm::dvec3(0.0, pSolarSystem->getObserver().getAnchorScale(), 0.0)})
-    , mHandles({cs::core::tools::Mark(
+    , mHandles({std::make_unique<cs::core::tools::Mark>(
                     pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame),
-          cs::core::tools::Mark(
+          std::make_unique<cs::core::tools::Mark>(
               pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)}) {
 
   mShader.InitVertexShaderFromString(SHADER_VERT);
@@ -81,7 +81,7 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
   mVAO.EnableAttributeArray(0);
   mVAO.SpecifyAttributeArrayFloat(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), 0, &mVBO);
 
-  auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  auto* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
 
   mAnchor = std::make_shared<cs::scene::CelestialAnchorNode>(
       pSG->GetRoot(), pSG->GetNodeBridge(), "", sCenter, sFrame);
@@ -92,37 +92,37 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
       mOpenGLNode.get(), static_cast<int>(cs::utils::DrawOrder::eOpaqueItems));
 
-  getCenterHandle().pLngLat.connect([this](glm::dvec2 const& lngLat) {
+  getCenterHandle().pLngLat.connect([this](glm::dvec2 const& /*lngLat*/) {
     auto center = getCenterHandle().getAnchor()->getAnchorPosition();
     auto radii  = cs::core::SolarSystem::getRadii(mAnchor->getCenterName());
 
     if (mFirstUpdate) {
       for (int i(0); i < 2; ++i) {
-        glm::dvec2 lngLat =
-            cs::utils::convert::toLngLatHeight(center + mAxes[i], radii[0], radii[0]).xy();
+        glm::dvec2 lngLat2 =
+            cs::utils::convert::toLngLatHeight(center + mAxes.at(i), radii[0], radii[0]).xy();
 
-        mHandles[i].pLngLat.setWithEmitForAllButOne(lngLat, mHandleConnections[i]);
+        mHandles.at(i)->pLngLat.setWithEmitForAllButOne(lngLat2, mHandleConnections.at(i));
       }
       mFirstUpdate = false;
     }
 
-    mAxes[0] = mHandles[0].getAnchor()->getAnchorPosition() - center;
-    mAxes[1] = mHandles[1].getAnchor()->getAnchorPosition() - center;
+    mAxes.at(0) = mHandles.at(0)->getAnchor()->getAnchorPosition() - center;
+    mAxes.at(1) = mHandles.at(1)->getAnchor()->getAnchorPosition() - center;
 
     calculateVertices();
   });
 
   for (int i(0); i < 2; ++i) {
-    mHandleConnections[i] = mHandles[i].pLngLat.connect([this, i](glm::dvec2 const& p) {
+    mHandleConnections.at(i) = mHandles.at(i)->pLngLat.connect([this, i](glm::dvec2 const& /*p*/) {
       auto center = getCenterHandle().getAnchor()->getAnchorPosition();
-      mAxes[i]    = mHandles[i].getAnchor()->getAnchorPosition() - center;
+      mAxes.at(i) = mHandles.at(i)->getAnchor()->getAnchorPosition() - center;
       calculateVertices();
     });
   }
 
   // whenever the height scale changes our vertex positions need to be updated
   mScaleConnection = mSettings->mGraphics.pHeightScale.connectAndTouch(
-      [this](float const& h) { calculateVertices(); });
+      [this](float /*h*/) { calculateVertices(); });
 
   pShouldDelete.connectFrom(mCenterHandle.pShouldDelete);
 }
@@ -133,7 +133,7 @@ EllipseTool::~EllipseTool() {
 
   mSolarSystem->unregisterAnchor(mAnchor);
 
-  auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  auto* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
   pSG->GetRoot()->DisconnectChild(mOpenGLNode.get());
 }
 
@@ -142,11 +142,11 @@ FlagTool const& EllipseTool::getCenterHandle() const {
 }
 
 cs::core::tools::Mark const& EllipseTool::getFirstHandle() const {
-  return mHandles[0];
+  return *mHandles.at(0);
 }
 
 cs::core::tools::Mark const& EllipseTool::getSecondHandle() const {
-  return mHandles[1];
+  return *mHandles.at(1);
 }
 
 FlagTool& EllipseTool::getCenterHandle() {
@@ -154,11 +154,11 @@ FlagTool& EllipseTool::getCenterHandle() {
 }
 
 cs::core::tools::Mark& EllipseTool::getFirstHandle() {
-  return mHandles[0];
+  return *mHandles.at(0);
 }
 
 cs::core::tools::Mark& EllipseTool::getSecondHandle() {
-  return mHandles[1];
+  return *mHandles.at(1);
 }
 
 void EllipseTool::setNumSamples(int const& numSamples) {
@@ -201,8 +201,8 @@ void EllipseTool::calculateVertices() {
 
 void EllipseTool::update() {
   mCenterHandle.update();
-  mHandles[0].update();
-  mHandles[1].update();
+  mHandles.at(0)->update();
+  mHandles.at(1)->update();
 }
 
 bool EllipseTool::Do() {
@@ -217,14 +217,15 @@ bool EllipseTool::Do() {
   glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
   glLineWidth(5);
 
-  GLfloat glMatMV[16], glMatP[16];
-  glGetFloatv(GL_MODELVIEW_MATRIX, &glMatMV[0]);
-  glGetFloatv(GL_PROJECTION_MATRIX, &glMatP[0]);
+  std::array<GLfloat, 16> glMatMV{};
+  std::array<GLfloat, 16> glMatP{};
+  glGetFloatv(GL_MODELVIEW_MATRIX, glMatMV.data());
+  glGetFloatv(GL_PROJECTION_MATRIX, glMatP.data());
 
   mShader.Bind();
   mVAO.Bind();
-  glUniformMatrix4fv(mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glMatMV);
-  glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
+  glUniformMatrix4fv(mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glMatMV.data());
+  glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP.data());
 
   mShader.SetUniform(
       mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
@@ -239,10 +240,10 @@ bool EllipseTool::Do() {
 }
 
 bool EllipseTool::GetBoundingBox(VistaBoundingBox& bb) {
-  float fMin[3] = {-0.1f, -0.1f, -0.1f};
-  float fMax[3] = {0.1f, 0.1f, 0.1f};
+  std::array fMin{-0.1F, -0.1F, -0.1F};
+  std::array fMax{0.1F, 0.1F, 0.1F};
 
-  bb.SetBounds(fMin, fMax);
+  bb.SetBounds(fMin.data(), fMax.data());
   return true;
 }
 } // namespace csp::measurementtools

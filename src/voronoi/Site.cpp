@@ -5,10 +5,11 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "Site.hpp"
+#include <cstdint>
 
 namespace csp::measurementtools {
 
-Site::Site(double x_in, double y_in, unsigned short a)
+Site::Site(double x_in, double y_in, uint16_t a)
     : mX(x_in)
     , mY(y_in)
     , mAddr(a) {
