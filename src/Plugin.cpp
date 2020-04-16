@@ -11,6 +11,7 @@
 #include "../../../src/cs-scene/CelestialBody.hpp"
 #include "../../../src/cs-utils/convert.hpp"
 #include "../../../src/cs-utils/logger.hpp"
+#include "logger.hpp"
 
 #include "DipStrikeTool.hpp"
 #include "EllipseTool.hpp"
@@ -66,16 +67,9 @@ void from_json(const nlohmann::json& j, Plugin::Settings& o) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Plugin::Plugin() {
-  // Create default logger for this plugin.
-  spdlog::set_default_logger(cs::utils::logger::createLogger("csp-measurement-tools"));
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 void Plugin::init() {
 
-  spdlog::info("Loading plugin...");
+  logger().info("Loading plugin...");
 
   mPluginSettings = mAllSettings->mPlugins.at("csp-measurement-tools");
 
@@ -152,7 +146,7 @@ void Plugin::init() {
           tool->setSleekness(mPluginSettings.mPolygon.mSleekness);
           mTools.push_back(tool);
         } else if (mNextTool != "none") {
-          spdlog::warn("Failed to create tool '{}': This is an unknown tool type!", mNextTool);
+          logger().warn("Failed to create tool '{}': This is an unknown tool type!", mNextTool);
         }
         mNextTool = "none";
         mGuiManager->getGui()->callJavascript("CosmoScout.measurementTools.deselect");
@@ -165,13 +159,13 @@ void Plugin::init() {
     mGuiManager->getGui()->callJavascript("CosmoScout.measurementTools.deselect");
   });
 
-  spdlog::info("Loading done.");
+  logger().info("Loading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Plugin::deInit() {
-  spdlog::info("Unloading plugin...");
+  logger().info("Unloading plugin...");
 
   mGuiManager->removePluginTab("Measurement Tools");
 
@@ -183,7 +177,7 @@ void Plugin::deInit() {
   mInputManager->pButtons[0].disconnect(mOnClickConnection);
   mInputManager->sOnDoubleClick.disconnect(mOnDoubleClickConnection);
 
-  spdlog::info("Unloading done.");
+  logger().info("Unloading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

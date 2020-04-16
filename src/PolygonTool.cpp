@@ -15,12 +15,12 @@
 #include "../../../src/cs-scene/CelestialAnchorNode.hpp"
 #include "../../../src/cs-utils/convert.hpp"
 #include "../../../src/cs-utils/utils.hpp"
+#include "logger.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
 #include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
 #include <VistaKernel/VistaSystem.h>
 #include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
-#include <spdlog/spdlog.h>
 
 namespace csp::measurementtools {
 
@@ -533,8 +533,8 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
 
   // If the voronoi edges are still wrong after 5 cycles of refinement, display the problem
   if (!edgesOK) {
-    spdlog::warn("Area calculation can be false: Concave or self-intersecting polygon! Check "
-                 "triangulation mesh.");
+    logger().warn("Area calculation can be false: Concave or self-intersecting polygon! Check "
+                  "triangulation mesh.");
   }
 }
 
