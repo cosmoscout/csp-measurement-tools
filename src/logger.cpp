@@ -14,7 +14,7 @@ namespace csp::measurementtools {
 
 spdlog::logger& logger() {
   static auto logger = cs::utils::createLogger("csp-measurementtools");
-  return *logger.get();
+  return *logger;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
