@@ -11,13 +11,15 @@
 #include "BreakpointTree.hpp"
 #include "Site.hpp"
 
+#include <memory>
+
 namespace csp::measurementtools {
 
 class VoronoiGenerator;
 
 class Beachline {
  public:
-  Beachline(VoronoiGenerator* parent);
+  explicit Beachline(VoronoiGenerator* parent);
 
   Arc* insertArcFor(Site const& site);
   void removeArc(Arc* arc);

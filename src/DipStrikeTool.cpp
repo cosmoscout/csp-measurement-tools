@@ -32,7 +32,7 @@ const int DipStrikeTool::RESOLUTION = 100;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const std::string DipStrikeTool::SHADER_VERT = R"(
+const char* DipStrikeTool::SHADER_VERT = R"(
 #version 330
 
 layout(location=0) in vec2 iPosition;
@@ -53,7 +53,7 @@ void main()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const std::string DipStrikeTool::SHADER_FRAG = R"(
+const char* DipStrikeTool::SHADER_FRAG = R"(
 #version 330
 
 in vec4 vPosition;
@@ -107,7 +107,7 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
   mShader.InitFragmentShaderFromString(SHADER_FRAG);
   mShader.Link();
 
-  auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  auto* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
 
   // create a a CelestialAnchorNode for the larger circular plane
   // it will be moved to the centroid of all points when a point is moved
@@ -131,9 +131,10 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
 
   // create the user interface
   mGuiTransform.reset(pSG->NewTransformNode(mGuiAnchor.get()));
-  mGuiTransform->Translate(0.f, 0.9f, 0.f);
-  mGuiTransform->Scale(0.001f * mGuiArea->getWidth(), 0.001f * mGuiArea->getHeight(), 1.f);
-  mGuiTransform->Rotate(VistaAxisAndAngle(VistaVector3D(0.f, 1.f, 0.f), -glm::pi<float>() / 2.f));
+  mGuiTransform->Translate(0.F, 0.9F, 0.F);
+  mGuiTransform->Scale(0.001F * static_cast<float>(mGuiArea->getWidth()),
+      0.001F * static_cast<float>(mGuiArea->getHeight()), 1.F);
+  mGuiTransform->Rotate(VistaAxisAndAngle(VistaVector3D(0.F, 1.F, 0.F), -glm::pi<float>() / 2.F));
   mGuiArea->addItem(mGuiItem.get());
   mGuiArea->setUseLinearDepthBuffer(true);
   mGuiOpenGLNode.reset(pSG->NewOpenGLNode(mGuiTransform.get(), mGuiArea.get()));
@@ -153,10 +154,10 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
       }));
 
   mGuiItem->registerCallback("setSize", "Sets the size of the dip and strike plane.",
-      std::function([this](double val) { mSizeFactor = (float)val; }));
+      std::function([this](double val) { mSizeFactor = static_cast<float>(val); }));
 
   mGuiItem->registerCallback("setOpacity", "Sets the opacity of the dip and strike plane.",
-      std::function([this](double val) { mOpacity = (float)val; }));
+      std::function([this](double val) { mOpacity = static_cast<float>(val); }));
 
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 
@@ -165,14 +166,14 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
 
   // update on height scale change
   mScaleConnection = mGraphicsEngine->pHeightScale.connectAndTouch(
-      [this](float const& h) { calculateDipAndStrike(); });
+      [this](float /*h*/) { calculateDipAndStrike(); });
 
   // create circle geometry
   std::vector<glm::vec2> vPositions;
   vPositions.reserve(RESOLUTION + 1);
   vPositions.emplace_back(glm::vec2(0, 0));
   for (int i(0); i < RESOLUTION; ++i) {
-    float fFac(2.f * glm::pi<float>() * i / (RESOLUTION - 1.f));
+    float fFac(2.F * glm::pi<float>() * static_cast<float>(i) / (RESOLUTION - 1.F));
     vPositions.emplace_back(glm::vec2(std::cos(fFac), std::sin(fFac)));
   }
 
@@ -216,7 +217,7 @@ void DipStrikeTool::onPointAdded() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void DipStrikeTool::onPointRemoved(int index) {
+void DipStrikeTool::onPointRemoved(int /*index*/) {
   calculateDipAndStrike();
 }
 
@@ -230,9 +231,9 @@ void DipStrikeTool::calculateDipAndStrike() {
   auto radii = mSolarSystem->getRadii(mGuiAnchor->getCenterName());
   auto body  = mSolarSystem->getBody(getCenterName());
 
-  glm::dvec3 averagePosition;
+  glm::dvec3 averagePosition{0};
   for (auto const& mark : mPoints) {
-    averagePosition += mark->getAnchor()->getAnchorPosition() / (double)mPoints.size();
+    averagePosition += mark->getAnchor()->getAnchorPosition() / static_cast<double>(mPoints.size());
   }
 
   // corrected average position (works for every height scale)
@@ -248,7 +249,7 @@ void DipStrikeTool::calculateDipAndStrike() {
     // Cartesian coordinate with height
     glm::dvec3 posNorm = cs::utils::convert::toCartesian(l, radii[0], radii[0], h);
 
-    averagePositionNorm += posNorm / (double)mPoints.size();
+    averagePositionNorm += posNorm / static_cast<double>(mPoints.size());
   }
 
   mGuiAnchor->setAnchorPosition(averagePositionNorm);
@@ -271,7 +272,7 @@ void DipStrikeTool::calculateDipAndStrike() {
   glm::vec3 idealNormal = glm::normalize(center);
   mNormal               = idealNormal;
   mSize                 = 0;
-  mOffset               = 0.f;
+  mOffset               = 0.F;
 
   for (auto const& p : mPoints) {
     glm::dvec3 pos     = glm::normalize(p->getAnchor()->getAnchorPosition()) * radii[0];
@@ -300,11 +301,12 @@ void DipStrikeTool::calculateDipAndStrike() {
 
   if (mPoints.size() > 2) {
     glm::vec3 solution = glm::inverse(mat) * vec;
-    mNormal            = glm::normalize(glm::vec3(-solution.x, -solution.y, 1.f));
+    mNormal            = glm::normalize(glm::vec3(-solution.x, -solution.y, 1.F));
     mOffset            = solution.z;
 
-    if (glm::dot(idealNormal, mNormal) < 0)
+    if (glm::dot(idealNormal, mNormal) < 0) {
       mNormal = -mNormal;
+    }
 
     // calculate dip and strike directions
     glm::vec3 strike       = glm::normalize(glm::cross(mNormal, idealNormal));
@@ -349,15 +351,16 @@ bool DipStrikeTool::Do() {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  GLfloat glMatMV[16], glMatP[16];
-  glGetFloatv(GL_MODELVIEW_MATRIX, &glMatMV[0]);
-  glGetFloatv(GL_PROJECTION_MATRIX, &glMatP[0]);
+  std::array<GLfloat, 16> glMatMV{};
+  std::array<GLfloat, 16> glMatP{};
+  glGetFloatv(GL_MODELVIEW_MATRIX, glMatMV.data());
+  glGetFloatv(GL_PROJECTION_MATRIX, glMatP.data());
 
   glm::vec3 x(mMip);
   glm::vec3 y(mNormal);
   glm::vec3 z = glm::normalize(glm::cross(x, y));
 
-  auto matMV = glm::make_mat4x4(glMatMV) *
+  auto matMV = glm::make_mat4x4(glMatMV.data()) *
                glm::mat4(x.x, x.y, x.z, 0, y.x, y.y, y.z, 0, z.x, z.y, z.z, 0, 0, 0, mOffset, 1);
 
   matMV = glm::scale(matMV, glm::vec3(static_cast<float>(mSize) * mSizeFactor));
@@ -366,7 +369,7 @@ bool DipStrikeTool::Do() {
   mVAO.Bind();
   glUniformMatrix4fv(
       mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glm::value_ptr(matMV));
-  glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
+  glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP.data());
   mShader.SetUniform(mShader.GetUniformLocation("uOpacity"), mOpacity);
   mShader.SetUniform(
       mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
@@ -383,10 +386,10 @@ bool DipStrikeTool::Do() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool DipStrikeTool::GetBoundingBox(VistaBoundingBox& bb) {
-  float fMin[3] = {-0.1f, -0.1f, -0.1f};
-  float fMax[3] = {0.1f, 0.1f, 0.1f};
+  std::array fMin{-0.1F, -0.1F, -0.1F};
+  std::array fMax{0.1F, 0.1F, 0.1F};
 
-  bb.SetBounds(fMin, fMax);
+  bb.SetBounds(fMin.data(), fMax.data());
   return true;
 }
 

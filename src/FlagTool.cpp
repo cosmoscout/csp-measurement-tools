@@ -31,12 +31,13 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     : Mark(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
     , mGuiArea(std::make_unique<cs::gui::WorldSpaceGuiArea>(420, 400))
     , mGuiItem(std::make_unique<cs::gui::GuiItem>("file://../share/resources/gui/flag.html")) {
-  auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  auto* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
 
   mGuiTransform.reset(pSG->NewTransformNode(mAnchor.get()));
-  mGuiTransform->Translate(0.5f - 7.5f / 500.f, 0.5f, 0.f);
-  mGuiTransform->Scale(0.001f * mGuiArea->getWidth(), 0.001f * mGuiArea->getHeight(), 1.f);
-  mGuiTransform->Rotate(VistaAxisAndAngle(VistaVector3D(0.0, 1.0, 0.0), -glm::pi<float>() / 2.f));
+  mGuiTransform->Translate(0.5F - 7.5F / 500.F, 0.5F, 0.F);
+  mGuiTransform->Scale(0.001F * static_cast<float>(mGuiArea->getWidth()),
+      0.001F * static_cast<float>(mGuiArea->getHeight()), 1.F);
+  mGuiTransform->Rotate(VistaAxisAndAngle(VistaVector3D(0.0, 1.0, 0.0), -glm::pi<float>() / 2.F));
   mGuiArea->addItem(mGuiItem.get());
   mGuiArea->setUseLinearDepthBuffer(true);
 
@@ -88,7 +89,7 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 FlagTool::~FlagTool() {
-  auto pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  auto* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
   pSG->GetRoot()->DisconnectChild(mGuiTransform.get());
 
   mInputManager->sOnDoubleClick.disconnect(mDoubleClickConnection);
