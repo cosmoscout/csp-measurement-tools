@@ -533,8 +533,8 @@ void PolygonTool::createMesh(std::vector<Triangle>& triangles) {
 
   // If the voronoi edges are still wrong after 5 cycles of refinement, display the problem
   if (!edgesOK) {
-    logger()->warn("Area calculation can be false: Concave or self-intersecting polygon! Check "
-                   "triangulation mesh.");
+    logger().warn("Area calculation can be false: Concave or self-intersecting polygon! Check "
+                  "triangulation mesh.");
   }
 }
 

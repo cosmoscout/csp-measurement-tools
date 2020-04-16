@@ -69,7 +69,7 @@ void from_json(const nlohmann::json& j, Plugin::Settings& o) {
 
 void Plugin::init() {
 
-  logger()->info("Loading plugin...");
+  logger().info("Loading plugin...");
 
   mPluginSettings = mAllSettings->mPlugins.at("csp-measurement-tools");
 
@@ -146,7 +146,7 @@ void Plugin::init() {
           tool->setSleekness(mPluginSettings.mPolygon.mSleekness);
           mTools.push_back(tool);
         } else if (mNextTool != "none") {
-          logger()->warn("Failed to create tool '{}': This is an unknown tool type!", mNextTool);
+          logger().warn("Failed to create tool '{}': This is an unknown tool type!", mNextTool);
         }
         mNextTool = "none";
         mGuiManager->getGui()->callJavascript("CosmoScout.measurementTools.deselect");
@@ -159,13 +159,13 @@ void Plugin::init() {
     mGuiManager->getGui()->callJavascript("CosmoScout.measurementTools.deselect");
   });
 
-  logger()->info("Loading done.");
+  logger().info("Loading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Plugin::deInit() {
-  logger()->info("Unloading plugin...");
+  logger().info("Unloading plugin...");
 
   mGuiManager->removePluginTab("Measurement Tools");
 
@@ -177,7 +177,7 @@ void Plugin::deInit() {
   mInputManager->pButtons[0].disconnect(mOnClickConnection);
   mInputManager->sOnDoubleClick.disconnect(mOnDoubleClickConnection);
 
-  logger()->info("Unloading done.");
+  logger().info("Unloading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

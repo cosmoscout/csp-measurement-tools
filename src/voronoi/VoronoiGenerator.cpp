@@ -173,7 +173,7 @@ void VoronoiGenerator::addTriangulationEdge(Site const& site1, Site const& site2
                   tri.emplace_back(s1, p.second);
                   remove.emplace_back(elementTri);
                 } catch (std::exception const& e) {
-                  logger()->error("Triangle elimination in VoronoiGenerator: {}", e.what());
+                  logger().error("Triangle elimination in VoronoiGenerator: {}", e.what());
                 }
               }
               // else: does not add unnecessary triangle
