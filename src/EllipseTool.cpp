@@ -57,18 +57,18 @@ void main()
 
 EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     std::shared_ptr<cs::core::SolarSystem> const&                       pSolarSystem,
-    std::shared_ptr<cs::core::Settings> const&                          graphicsEngine,
+    std::shared_ptr<cs::core::Settings> const&                          settings,
     std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
     std::string const& sFrame)
     : mSolarSystem(pSolarSystem)
-    , mSettings(graphicsEngine)
-    , mCenterHandle(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
+    , mSettings(settings)
+    , mCenterHandle(pInputManager, pSolarSystem, settings, pTimeControl, sCenter, sFrame)
     , mAxes({glm::dvec3(pSolarSystem->getObserver().getAnchorScale(), 0.0, 0.0),
           glm::dvec3(0.0, pSolarSystem->getObserver().getAnchorScale(), 0.0)})
     , mHandles({std::make_unique<cs::core::tools::Mark>(
-                    pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame),
+                    pInputManager, pSolarSystem, settings, pTimeControl, sCenter, sFrame),
           std::make_unique<cs::core::tools::Mark>(
-              pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)}) {
+              pInputManager, pSolarSystem, settings, pTimeControl, sCenter, sFrame)}) {
 
   mShader.InitVertexShaderFromString(SHADER_VERT);
   mShader.InitFragmentShaderFromString(SHADER_FRAG);
