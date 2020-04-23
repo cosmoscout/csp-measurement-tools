@@ -31,6 +31,12 @@ class EllipseTool : public IVistaOpenGLDraw, public cs::core::tools::Tool {
 
   ~EllipseTool() override;
 
+  void               setCenterName(std::string const& name);
+  std::string const& getCenterName() const;
+
+  void               setFrameName(std::string const& name);
+  std::string const& getFrameName() const;
+
   FlagTool const&              getCenterHandle() const;
   cs::core::tools::Mark const& getFirstHandle() const;
   cs::core::tools::Mark const& getSecondHandle() const;

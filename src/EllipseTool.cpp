@@ -92,9 +92,9 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
       mOpenGLNode.get(), static_cast<int>(cs::utils::DrawOrder::eOpaqueItems));
 
-  getCenterHandle().pLngLat.connect([this](glm::dvec2 const& /*lngLat*/) {
-    auto center = getCenterHandle().getAnchor()->getAnchorPosition();
-    auto radii  = cs::core::SolarSystem::getRadii(mAnchor->getCenterName());
+  mCenterHandle.pLngLat.connect([this](glm::dvec2 const& /*lngLat*/) {
+    auto center = mCenterHandle.getAnchor()->getAnchorPosition();
+    auto radii  = cs::core::SolarSystem::getRadii(mCenterHandle.getAnchor()->getCenterName());
 
     if (mFirstUpdate) {
       for (int i(0); i < 2; ++i) {
@@ -114,15 +114,15 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
 
   for (int i(0); i < 2; ++i) {
     mHandleConnections.at(i) = mHandles.at(i)->pLngLat.connect([this, i](glm::dvec2 const& /*p*/) {
-      auto center = getCenterHandle().getAnchor()->getAnchorPosition();
+      auto center = mCenterHandle.getAnchor()->getAnchorPosition();
       mAxes.at(i) = mHandles.at(i)->getAnchor()->getAnchorPosition() - center;
       calculateVertices();
     });
   }
 
   // whenever the height scale changes our vertex positions need to be updated
-  mScaleConnection = mSettings->mGraphics.pHeightScale.connectAndTouch(
-      [this](float /*h*/) { calculateVertices(); });
+  mScaleConnection =
+      mSettings->mGraphics.pHeightScale.connect([this](float /*h*/) { calculateVertices(); });
 
   pShouldDelete.connectFrom(mCenterHandle.pShouldDelete);
 }
@@ -132,9 +132,32 @@ EllipseTool::~EllipseTool() {
   mSettings->mGraphics.pHeightScale.disconnect(mScaleConnection);
 
   mSolarSystem->unregisterAnchor(mAnchor);
+  pShouldDelete.disconnect();
 
   auto* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
   pSG->GetRoot()->DisconnectChild(mOpenGLNode.get());
+}
+
+void EllipseTool::setCenterName(std::string const& name) {
+  mCenterHandle.getAnchor()->setCenterName(name);
+  mHandles[0]->getAnchor()->setCenterName(name);
+  mHandles[1]->getAnchor()->setCenterName(name);
+  mAnchor->setCenterName(name);
+}
+
+std::string const& EllipseTool::getCenterName() const {
+  return mAnchor->getCenterName();
+}
+
+void EllipseTool::setFrameName(std::string const& name) {
+  mCenterHandle.getAnchor()->setFrameName(name);
+  mHandles[0]->getAnchor()->setFrameName(name);
+  mHandles[1]->getAnchor()->setFrameName(name);
+  mAnchor->setFrameName(name);
+}
+
+std::string const& EllipseTool::getFrameName() const {
+  return mAnchor->getFrameName();
 }
 
 FlagTool const& EllipseTool::getCenterHandle() const {
@@ -166,10 +189,9 @@ void EllipseTool::setNumSamples(int const& numSamples) {
 }
 
 void EllipseTool::calculateVertices() {
-  auto radii  = cs::core::SolarSystem::getRadii(mAnchor->getCenterName());
-  auto center = getCenterHandle().getAnchor()->getAnchorPosition();
-  auto normal =
-      cs::utils::convert::lngLatToNormal(getCenterHandle().pLngLat.get(), radii[0], radii[0]);
+  auto radii  = cs::core::SolarSystem::getRadii(mCenterHandle.getAnchor()->getCenterName());
+  auto center = mCenterHandle.getAnchor()->getAnchorPosition();
+  auto normal = cs::utils::convert::lngLatToNormal(mCenterHandle.pLngLat.get(), radii[0], radii[0]);
 
   mAnchor->setAnchorPosition(center);
 

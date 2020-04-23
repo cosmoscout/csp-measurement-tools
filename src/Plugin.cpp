@@ -43,29 +43,10 @@ std::shared_ptr<cs::core::InputManager> sInputManager;
 std::shared_ptr<cs::core::SolarSystem>  sSolarSystem;
 std::shared_ptr<cs::core::Settings>     sSettings;
 std::shared_ptr<cs::core::TimeControl>  sTimeControl;
-} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void deserializeMark(nlohmann::json const& j, std::shared_ptr<cs::core::tools::Mark> o) {
-  std::string center, frame;
-  cs::core::Settings::deserialize(j, "center", center);
-  cs::core::Settings::deserialize(j, "frame", frame);
-  o->getAnchor()->setCenterName(center);
-  o->getAnchor()->setFrameName(frame);
-
-  cs::core::Settings::deserialize(j, "lngLat", o->pLngLat);
-  cs::core::Settings::deserialize(j, "color", o->pColor);
-  cs::core::Settings::deserialize(j, "scaleDistance", o->pScaleDistance);
-}
-
-void serializeMark(nlohmann::json& j, std::shared_ptr<cs::core::tools::Mark> const& o) {
-  cs::core::Settings::serialize(j, "center", o->getAnchor()->getCenterName());
-  cs::core::Settings::serialize(j, "frame", o->getAnchor()->getFrameName());
-  cs::core::Settings::serialize(j, "lngLat", o->pLngLat);
-  cs::core::Settings::serialize(j, "color", o->pColor);
-  cs::core::Settings::serialize(j, "scaleDistance", o->pScaleDistance);
-}
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -77,11 +58,42 @@ void serializeMark(nlohmann::json& j, std::shared_ptr<cs::core::tools::Mark> con
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// void from_json(nlohmann::json const& j, Plugin::Settings::Ellipse& o) {
-// }
+void from_json(nlohmann::json const& j, std::shared_ptr<EllipseTool>& o) {
+  if (!o) {
+    o = std::make_shared<EllipseTool>(sInputManager, sSolarSystem, sSettings, sTimeControl, "", "");
+  }
 
-// void to_json(nlohmann::json& j, Plugin::Settings::Ellipse const& o) {
-// }
+  std::string center, frame;
+  cs::core::Settings::deserialize(j, "center", center);
+  cs::core::Settings::deserialize(j, "frame", frame);
+  o->setCenterName(center);
+  o->setFrameName(frame);
+
+  cs::core::Settings::deserialize(j, "handle0", o->getCenterHandle().pLngLat);
+  cs::core::Settings::deserialize(j, "handle1", o->getFirstHandle().pLngLat);
+  cs::core::Settings::deserialize(j, "handle2", o->getSecondHandle().pLngLat);
+  cs::core::Settings::deserialize(j, "color", o->getCenterHandle().pColor);
+  cs::core::Settings::deserialize(j, "scaleDistance", o->getCenterHandle().pScaleDistance);
+  cs::core::Settings::deserialize(j, "text", o->getCenterHandle().pText);
+  cs::core::Settings::deserialize(j, "minimized", o->getCenterHandle().pMinimized);
+
+  o->getFirstHandle().pColor          = o->getCenterHandle().pColor;
+  o->getSecondHandle().pColor         = o->getCenterHandle().pColor;
+  o->getFirstHandle().pScaleDistance  = o->getCenterHandle().pScaleDistance;
+  o->getSecondHandle().pScaleDistance = o->getCenterHandle().pScaleDistance;
+}
+
+void to_json(nlohmann::json& j, std::shared_ptr<EllipseTool> const& o) {
+  cs::core::Settings::serialize(j, "center", o->getCenterName());
+  cs::core::Settings::serialize(j, "frame", o->getFrameName());
+  cs::core::Settings::serialize(j, "handle0", o->getCenterHandle().pLngLat);
+  cs::core::Settings::serialize(j, "handle1", o->getFirstHandle().pLngLat);
+  cs::core::Settings::serialize(j, "handle2", o->getSecondHandle().pLngLat);
+  cs::core::Settings::serialize(j, "color", o->getCenterHandle().pColor);
+  cs::core::Settings::serialize(j, "scaleDistance", o->getCenterHandle().pScaleDistance);
+  cs::core::Settings::serialize(j, "text", o->getCenterHandle().pText);
+  cs::core::Settings::serialize(j, "minimized", o->getCenterHandle().pMinimized);
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -89,13 +101,26 @@ void from_json(nlohmann::json const& j, std::shared_ptr<FlagTool>& o) {
   if (!o) {
     o = std::make_shared<FlagTool>(sInputManager, sSolarSystem, sSettings, sTimeControl, "", "");
   }
-  deserializeMark(j, o);
+
+  std::string center, frame;
+  cs::core::Settings::deserialize(j, "center", center);
+  cs::core::Settings::deserialize(j, "frame", frame);
+  o->getAnchor()->setCenterName(center);
+  o->getAnchor()->setFrameName(frame);
+
+  cs::core::Settings::deserialize(j, "lngLat", o->pLngLat);
+  cs::core::Settings::deserialize(j, "color", o->pColor);
+  cs::core::Settings::deserialize(j, "scaleDistance", o->pScaleDistance);
   cs::core::Settings::deserialize(j, "text", o->pText);
   cs::core::Settings::deserialize(j, "minimized", o->pMinimized);
 }
 
 void to_json(nlohmann::json& j, std::shared_ptr<FlagTool> const& o) {
-  serializeMark(j, o);
+  cs::core::Settings::serialize(j, "center", o->getAnchor()->getCenterName());
+  cs::core::Settings::serialize(j, "frame", o->getAnchor()->getFrameName());
+  cs::core::Settings::serialize(j, "lngLat", o->pLngLat);
+  cs::core::Settings::serialize(j, "color", o->pColor);
+  cs::core::Settings::serialize(j, "scaleDistance", o->pScaleDistance);
   cs::core::Settings::serialize(j, "text", o->pText);
   cs::core::Settings::serialize(j, "minimized", o->pMinimized);
 }
@@ -138,14 +163,28 @@ void from_json(nlohmann::json const& j, Plugin::Settings& o) {
   //   o.mEllipses.clear();
   // }
 
-  auto array = j.find("flags");
-  if (array != j.end()) {
-    o.mFlags.resize(array->size());
-    for (size_t i(0); i < o.mFlags.size(); ++i) {
-      array->at(i).get_to(o.mFlags[i]);
+  {
+    auto array = j.find("ellipses");
+    if (array != j.end()) {
+      o.mEllipses.resize(array->size());
+      for (size_t i(0); i < o.mEllipses.size(); ++i) {
+        array->at(i).get_to(o.mEllipses[i]);
+      }
+    } else {
+      o.mEllipses.clear();
     }
-  } else {
-    o.mFlags.clear();
+  }
+
+  {
+    auto array = j.find("flags");
+    if (array != j.end()) {
+      o.mFlags.resize(array->size());
+      for (size_t i(0); i < o.mFlags.size(); ++i) {
+        array->at(i).get_to(o.mFlags[i]);
+      }
+    } else {
+      o.mFlags.clear();
+    }
   }
 
   // if (j.find("paths") != j.end()) {
@@ -169,7 +208,7 @@ void to_json(nlohmann::json& j, Plugin::Settings const& o) {
   cs::core::Settings::serialize(j, "ellipseSamples", o.mEllipseSamples);
   cs::core::Settings::serialize(j, "pathSamples", o.mPathSamples);
   // cs::core::Settings::serialize(j, "dipStrikes", o.mDipStrikes);
-  // cs::core::Settings::serialize(j, "ellipses", o.mEllipses);
+  cs::core::Settings::serialize(j, "ellipses", o.mEllipses);
   cs::core::Settings::serialize(j, "flags", o.mFlags);
   // cs::core::Settings::serialize(j, "paths", o.mPaths);
   // cs::core::Settings::serialize(j, "polygons", o.mPolygons);
@@ -226,13 +265,11 @@ void Plugin::init() {
       auto radii = body->getRadii();
       if (body) {
         if (mNextTool == "Location Flag") {
-          auto tool = std::make_shared<FlagTool>(mInputManager, mSolarSystem, mAllSettings,
+          auto tool     = std::make_shared<FlagTool>(mInputManager, mSolarSystem, mAllSettings,
               mTimeControl, body->getCenterName(), body->getFrameName());
-
           tool->pLngLat = cs::utils::convert::toLngLatHeight(
               mInputManager->pHoveredObject.get().mPosition, radii[0], radii[0])
                               .xy();
-
           mPluginSettings.mFlags.push_back(tool);
         } else if (mNextTool == "Landing Ellipse") {
           auto tool = std::make_shared<EllipseTool>(mInputManager, mSolarSystem, mAllSettings,
@@ -241,7 +278,7 @@ void Plugin::init() {
               mInputManager->pHoveredObject.get().mPosition, radii[0], radii[0])
                                                 .xy();
           tool->setNumSamples(mPluginSettings.mEllipseSamples.get());
-          mTools.push_back(tool);
+          mPluginSettings.mEllipses.push_back(tool);
         } else if (mNextTool == "Path") {
           auto tool = std::make_shared<PathTool>(mInputManager, mSolarSystem, mAllSettings,
               mTimeControl, body->getCenterName(), body->getFrameName());
@@ -308,6 +345,15 @@ void Plugin::update() {
   for (auto it = mTools.begin(); it != mTools.end();) {
     if ((*it)->pShouldDelete.get()) {
       it = mTools.erase(it);
+    } else {
+      (*it)->update();
+      ++it;
+    }
+  }
+
+  for (auto it = mPluginSettings.mEllipses.begin(); it != mPluginSettings.mEllipses.end();) {
+    if ((*it)->pShouldDelete.get()) {
+      it = mPluginSettings.mEllipses.erase(it);
     } else {
       (*it)->update();
       ++it;
