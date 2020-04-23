@@ -105,7 +105,7 @@ void FlagTool::update() {
   double simulationTime(mTimeControl->pSimulationTime.get());
 
   cs::core::SolarSystem::scaleRelativeToObserver(*mAnchor, mSolarSystem->getObserver(),
-      simulationTime, mOriginalDistance, mSettings->mGraphics.pWidgetScale.get());
+      simulationTime, pScaleDistance.get(), mSettings->mGraphics.pWidgetScale.get());
   cs::core::SolarSystem::turnToObserver(
       *mAnchor, mSolarSystem->getObserver(), simulationTime, true);
 }

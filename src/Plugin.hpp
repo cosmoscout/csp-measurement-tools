@@ -8,41 +8,37 @@
 #define CSP_MEASUREMENTTOOLS_PLUGIN_HPP
 
 #include "../../../src/cs-core/PluginBase.hpp"
+#include "../../../src/cs-utils/DefaultProperty.hpp"
 
 #include <list>
 #include <string>
 
 namespace cs::core::tools {
 class Tool;
-}
+} // namespace cs::core::tools
 
 namespace csp::measurementtools {
+
+class FlagTool;
 
 /// This plugin enables the user to measure different things on the surface of planets and moons.
 /// See README.md for details.
 class Plugin : public cs::core::PluginBase {
  public:
   struct Settings {
-    struct Polygon {
-      float mHeightDiff;
-      int   mMaxAttempt;
-      int   mMaxPoints;
-      int   mSleekness;
-    };
 
-    Polygon mPolygon;
+    // std::vector<DipStrike> mDipStrikes;
+    // std::vector<Ellipse>   mEllipses;
+    std::vector<std::shared_ptr<FlagTool>> mFlags;
+    // std::vector<Path>      mPaths;
+    // std::vector<Polygon>   mPolygons;
 
-    struct Ellipse {
-      int mNumSamples;
-    };
-
-    Ellipse mEllipse;
-
-    struct Path {
-      int mNumSamples;
-    };
-
-    Path mPath;
+    cs::utils::DefaultProperty<float>   mPolygonHeightDiff{1.002F};
+    cs::utils::DefaultProperty<int32_t> mPolygonMaxAttempt{5};
+    cs::utils::DefaultProperty<int32_t> mPolygonMaxPoints{1000};
+    cs::utils::DefaultProperty<int32_t> mPolygonSleekness{15};
+    cs::utils::DefaultProperty<int32_t> mEllipseSamples{100};
+    cs::utils::DefaultProperty<int32_t> mPathSamples{256};
   };
 
   void init() override;
@@ -50,6 +46,8 @@ class Plugin : public cs::core::PluginBase {
   void update() override;
 
  private:
+  void onLoad();
+
   Settings    mPluginSettings{};
   std::string mNextTool = "none";
 
@@ -57,6 +55,8 @@ class Plugin : public cs::core::PluginBase {
 
   int mOnClickConnection       = -1;
   int mOnDoubleClickConnection = -1;
+  int mOnLoadConnection        = -1;
+  int mOnSaveConnection        = -1;
 };
 
 } // namespace csp::measurementtools

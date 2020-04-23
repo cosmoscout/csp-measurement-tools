@@ -8,6 +8,8 @@
 
 #include "../../../src/cs-core/GuiManager.hpp"
 #include "../../../src/cs-core/InputManager.hpp"
+#include "../../../src/cs-core/tools/Mark.hpp"
+#include "../../../src/cs-scene/CelestialAnchorNode.hpp"
 #include "../../../src/cs-scene/CelestialBody.hpp"
 #include "../../../src/cs-utils/convert.hpp"
 #include "../../../src/cs-utils/logger.hpp"
@@ -34,54 +36,143 @@ EXPORT_FN void destroy(cs::core::PluginBase* pluginBase) {
 
 namespace csp::measurementtools {
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void from_json(nlohmann::json const& j, Plugin::Settings::Polygon& o) {
-  cs::core::Settings::deserialize(j, "heightDiff", o.mHeightDiff);
-  cs::core::Settings::deserialize(j, "maxAttempt", o.mMaxAttempt);
-  cs::core::Settings::deserialize(j, "maxPoints", o.mMaxPoints);
-  cs::core::Settings::deserialize(j, "sleekness", o.mSleekness);
-}
-
-void to_json(nlohmann::json& j, Plugin::Settings::Polygon const& o) {
-  cs::core::Settings::serialize(j, "heightDiff", o.mHeightDiff);
-  cs::core::Settings::serialize(j, "maxAttempt", o.mMaxAttempt);
-  cs::core::Settings::serialize(j, "maxPoints", o.mMaxPoints);
-  cs::core::Settings::serialize(j, "sleekness", o.mSleekness);
-}
+namespace {
+// These are only used during settings loading, as they are required in the free from_json methods.
+// Loading never happens on multiple threads, so this is a save thing to do.
+std::shared_ptr<cs::core::InputManager> sInputManager;
+std::shared_ptr<cs::core::SolarSystem>  sSolarSystem;
+std::shared_ptr<cs::core::Settings>     sSettings;
+std::shared_ptr<cs::core::TimeControl>  sTimeControl;
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void from_json(nlohmann::json const& j, Plugin::Settings::Ellipse& o) {
-  cs::core::Settings::deserialize(j, "numSamples", o.mNumSamples);
+void deserializeMark(nlohmann::json const& j, std::shared_ptr<cs::core::tools::Mark> o) {
+  std::string center, frame;
+  cs::core::Settings::deserialize(j, "center", center);
+  cs::core::Settings::deserialize(j, "frame", frame);
+  o->getAnchor()->setCenterName(center);
+  o->getAnchor()->setFrameName(frame);
+
+  cs::core::Settings::deserialize(j, "lngLat", o->pLngLat);
+  cs::core::Settings::deserialize(j, "color", o->pColor);
+  cs::core::Settings::deserialize(j, "scaleDistance", o->pScaleDistance);
 }
 
-void to_json(nlohmann::json& j, Plugin::Settings::Ellipse const& o) {
-  cs::core::Settings::serialize(j, "numSamples", o.mNumSamples);
+void serializeMark(nlohmann::json& j, std::shared_ptr<cs::core::tools::Mark> const& o) {
+  cs::core::Settings::serialize(j, "center", o->getAnchor()->getCenterName());
+  cs::core::Settings::serialize(j, "frame", o->getAnchor()->getFrameName());
+  cs::core::Settings::serialize(j, "lngLat", o->pLngLat);
+  cs::core::Settings::serialize(j, "color", o->pColor);
+  cs::core::Settings::serialize(j, "scaleDistance", o->pScaleDistance);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void from_json(nlohmann::json const& j, Plugin::Settings::Path& o) {
-  cs::core::Settings::deserialize(j, "numSamples", o.mNumSamples);
+// void from_json(nlohmann::json const& j, Plugin::Settings::DipStrike& o) {
+// }
+
+// void to_json(nlohmann::json& j, Plugin::Settings::DipStrike const& o) {
+// }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// void from_json(nlohmann::json const& j, Plugin::Settings::Ellipse& o) {
+// }
+
+// void to_json(nlohmann::json& j, Plugin::Settings::Ellipse const& o) {
+// }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void from_json(nlohmann::json const& j, std::shared_ptr<FlagTool>& o) {
+  if (!o) {
+    o = std::make_shared<FlagTool>(sInputManager, sSolarSystem, sSettings, sTimeControl, "", "");
+  }
+  deserializeMark(j, o);
+  cs::core::Settings::deserialize(j, "text", o->pText);
+  cs::core::Settings::deserialize(j, "minimized", o->pMinimized);
 }
 
-void to_json(nlohmann::json& j, Plugin::Settings::Path const& o) {
-  cs::core::Settings::serialize(j, "numSamples", o.mNumSamples);
+void to_json(nlohmann::json& j, std::shared_ptr<FlagTool> const& o) {
+  serializeMark(j, o);
+  cs::core::Settings::serialize(j, "text", o->pText);
+  cs::core::Settings::serialize(j, "minimized", o->pMinimized);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// void from_json(nlohmann::json const& j, Plugin::Settings::Path& o) {
+// }
+
+// void to_json(nlohmann::json& j, Plugin::Settings::Path const& o) {
+// }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// void from_json(nlohmann::json const& j, Plugin::Settings::Polygon& o) {
+// }
+
+// void to_json(nlohmann::json& j, Plugin::Settings::Polygon const& o) {
+// }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void from_json(nlohmann::json const& j, Plugin::Settings& o) {
-  cs::core::Settings::deserialize(j, "polygon", o.mPolygon);
-  cs::core::Settings::deserialize(j, "ellipse", o.mEllipse);
-  cs::core::Settings::deserialize(j, "path", o.mPath);
+  cs::core::Settings::deserialize(j, "polygonHeightDiff", o.mPolygonHeightDiff);
+  cs::core::Settings::deserialize(j, "polygonMaxAttempt", o.mPolygonMaxAttempt);
+  cs::core::Settings::deserialize(j, "polygonMaxPoints", o.mPolygonMaxPoints);
+  cs::core::Settings::deserialize(j, "polygonSleekness", o.mPolygonSleekness);
+  cs::core::Settings::deserialize(j, "ellipseSamples", o.mEllipseSamples);
+  cs::core::Settings::deserialize(j, "pathSamples", o.mPathSamples);
+
+  // if (j.find("dipStrikes") != j.end()) {
+  //   cs::core::Settings::deserialize(j, "dipStrikes", o.mDipStrikes);
+  // } else {
+  //   o.mDipStrikes.clear();
+  // }
+
+  // if (j.find("ellipses") != j.end()) {
+  //   cs::core::Settings::deserialize(j, "ellipses", o.mEllipses);
+  // } else {
+  //   o.mEllipses.clear();
+  // }
+
+  auto array = j.find("flags");
+  if (array != j.end()) {
+    o.mFlags.resize(array->size());
+    for (size_t i(0); i < o.mFlags.size(); ++i) {
+      array->at(i).get_to(o.mFlags[i]);
+    }
+  } else {
+    o.mFlags.clear();
+  }
+
+  // if (j.find("paths") != j.end()) {
+  //   cs::core::Settings::deserialize(j, "paths", o.mPaths);
+  // } else {
+  //   o.mPaths.clear();
+  // }
+
+  // if (j.find("polygons") != j.end()) {
+  //   cs::core::Settings::deserialize(j, "polygons", o.mPolygons);
+  // } else {
+  //   o.mPolygons.clear();
+  // }
 }
 
 void to_json(nlohmann::json& j, Plugin::Settings const& o) {
-  cs::core::Settings::serialize(j, "polygon", o.mPolygon);
-  cs::core::Settings::serialize(j, "ellipse", o.mEllipse);
-  cs::core::Settings::serialize(j, "path", o.mPath);
+  cs::core::Settings::serialize(j, "polygonHeightDiff", o.mPolygonHeightDiff);
+  cs::core::Settings::serialize(j, "polygonMaxAttempt", o.mPolygonMaxAttempt);
+  cs::core::Settings::serialize(j, "polygonMaxPoints", o.mPolygonMaxPoints);
+  cs::core::Settings::serialize(j, "polygonSleekness", o.mPolygonSleekness);
+  cs::core::Settings::serialize(j, "ellipseSamples", o.mEllipseSamples);
+  cs::core::Settings::serialize(j, "pathSamples", o.mPathSamples);
+  // cs::core::Settings::serialize(j, "dipStrikes", o.mDipStrikes);
+  // cs::core::Settings::serialize(j, "ellipses", o.mEllipses);
+  cs::core::Settings::serialize(j, "flags", o.mFlags);
+  // cs::core::Settings::serialize(j, "paths", o.mPaths);
+  // cs::core::Settings::serialize(j, "polygons", o.mPolygons);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -90,7 +181,9 @@ void Plugin::init() {
 
   logger().info("Loading plugin...");
 
-  mPluginSettings = mAllSettings->mPlugins.at("csp-measurement-tools");
+  mOnLoadConnection = mAllSettings->onLoad().connect([this]() { onLoad(); });
+  mOnSaveConnection = mAllSettings->onSave().connect(
+      [this]() { mAllSettings->mPlugins["csp-measurement-tools"] = mPluginSettings; });
 
   mGuiManager->addHtmlToGui(
       "measurement-tools", "../share/resources/gui/measurement-tool-template.html");
@@ -133,24 +226,26 @@ void Plugin::init() {
       auto radii = body->getRadii();
       if (body) {
         if (mNextTool == "Location Flag") {
-          auto tool     = std::make_shared<FlagTool>(mInputManager, mSolarSystem, mAllSettings,
+          auto tool = std::make_shared<FlagTool>(mInputManager, mSolarSystem, mAllSettings,
               mTimeControl, body->getCenterName(), body->getFrameName());
+
           tool->pLngLat = cs::utils::convert::toLngLatHeight(
               mInputManager->pHoveredObject.get().mPosition, radii[0], radii[0])
                               .xy();
-          mTools.push_back(tool);
+
+          mPluginSettings.mFlags.push_back(tool);
         } else if (mNextTool == "Landing Ellipse") {
           auto tool = std::make_shared<EllipseTool>(mInputManager, mSolarSystem, mAllSettings,
               mTimeControl, body->getCenterName(), body->getFrameName());
           tool->getCenterHandle().pLngLat = cs::utils::convert::toLngLatHeight(
               mInputManager->pHoveredObject.get().mPosition, radii[0], radii[0])
                                                 .xy();
-          tool->setNumSamples(mPluginSettings.mEllipse.mNumSamples);
+          tool->setNumSamples(mPluginSettings.mEllipseSamples.get());
           mTools.push_back(tool);
         } else if (mNextTool == "Path") {
           auto tool = std::make_shared<PathTool>(mInputManager, mSolarSystem, mAllSettings,
               mTimeControl, body->getCenterName(), body->getFrameName());
-          tool->setNumSamples(mPluginSettings.mPath.mNumSamples);
+          tool->setNumSamples(mPluginSettings.mPathSamples.get());
           mTools.push_back(tool);
         } else if (mNextTool == "Dip & Strike") {
           auto tool = std::make_shared<DipStrikeTool>(mInputManager, mSolarSystem, mAllSettings,
@@ -159,10 +254,10 @@ void Plugin::init() {
         } else if (mNextTool == "Polygon") {
           auto tool = std::make_shared<PolygonTool>(mInputManager, mSolarSystem, mAllSettings,
               mTimeControl, body->getCenterName(), body->getFrameName());
-          tool->setHeightDiff(mPluginSettings.mPolygon.mHeightDiff);
-          tool->setMaxAttempt(mPluginSettings.mPolygon.mMaxAttempt);
-          tool->setMaxPoints(mPluginSettings.mPolygon.mMaxPoints);
-          tool->setSleekness(mPluginSettings.mPolygon.mSleekness);
+          tool->setHeightDiff(mPluginSettings.mPolygonHeightDiff.get());
+          tool->setMaxAttempt(mPluginSettings.mPolygonMaxAttempt.get());
+          tool->setMaxPoints(mPluginSettings.mPolygonMaxPoints.get());
+          tool->setSleekness(mPluginSettings.mPolygonSleekness.get());
           mTools.push_back(tool);
         } else if (mNextTool != "none") {
           logger().warn("Failed to create tool '{}': This is an unknown tool type!", mNextTool);
@@ -177,6 +272,9 @@ void Plugin::init() {
     mNextTool = "none";
     mGuiManager->getGui()->callJavascript("CosmoScout.measurementTools.deselect");
   });
+
+  // Load settings.
+  onLoad();
 
   logger().info("Loading done.");
 }
@@ -196,6 +294,9 @@ void Plugin::deInit() {
   mInputManager->pButtons[0].disconnect(mOnClickConnection);
   mInputManager->sOnDoubleClick.disconnect(mOnDoubleClickConnection);
 
+  mAllSettings->onLoad().disconnect(mOnLoadConnection);
+  mAllSettings->onSave().disconnect(mOnSaveConnection);
+
   logger().info("Unloading done.");
 }
 
@@ -212,6 +313,32 @@ void Plugin::update() {
       ++it;
     }
   }
+
+  for (auto it = mPluginSettings.mFlags.begin(); it != mPluginSettings.mFlags.end();) {
+    if ((*it)->pShouldDelete.get()) {
+      it = mPluginSettings.mFlags.erase(it);
+    } else {
+      (*it)->update();
+      ++it;
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void Plugin::onLoad() {
+  sInputManager = mInputManager;
+  sSolarSystem  = mSolarSystem;
+  sSettings     = mAllSettings;
+  sTimeControl  = mTimeControl;
+
+  // Read settings from JSON.
+  from_json(mAllSettings->mPlugins.at("csp-measurement-tools"), mPluginSettings);
+
+  sInputManager.reset();
+  sSolarSystem.reset();
+  sSettings.reset();
+  sTimeControl.reset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
