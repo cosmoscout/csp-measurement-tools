@@ -19,9 +19,11 @@ class Tool;
 
 namespace csp::measurementtools {
 
-class FlagTool;
+class DipStrikeTool;
 class EllipseTool;
+class FlagTool;
 class PathTool;
+class PolygonTool;
 
 /// This plugin enables the user to measure different things on the surface of planets and moons.
 /// See README.md for details.
@@ -29,11 +31,11 @@ class Plugin : public cs::core::PluginBase {
  public:
   struct Settings {
 
-    // std::vector<DipStrike> mDipStrikes;
-    std::vector<std::shared_ptr<EllipseTool>> mEllipses;
-    std::vector<std::shared_ptr<FlagTool>>    mFlags;
-    std::vector<std::shared_ptr<PathTool>>    mPaths;
-    // std::vector<Polygon>   mPolygons;
+    std::vector<std::shared_ptr<DipStrikeTool>> mDipStrikes;
+    std::vector<std::shared_ptr<EllipseTool>>   mEllipses;
+    std::vector<std::shared_ptr<FlagTool>>      mFlags;
+    std::vector<std::shared_ptr<PathTool>>      mPaths;
+    std::vector<std::shared_ptr<PolygonTool>>   mPolygons;
 
     cs::utils::DefaultProperty<float>   mPolygonHeightDiff{1.002F};
     cs::utils::DefaultProperty<int32_t> mPolygonMaxAttempt{5};
@@ -52,8 +54,6 @@ class Plugin : public cs::core::PluginBase {
 
   Settings    mPluginSettings{};
   std::string mNextTool = "none";
-
-  std::list<std::shared_ptr<cs::core::tools::Tool>> mTools;
 
   int mOnClickConnection       = -1;
   int mOnDoubleClickConnection = -1;

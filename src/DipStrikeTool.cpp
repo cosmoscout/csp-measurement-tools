@@ -154,10 +154,10 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
       }));
 
   mGuiItem->registerCallback("setSize", "Sets the size of the dip and strike plane.",
-      std::function([this](double val) { mSizeFactor = static_cast<float>(val); }));
+      std::function([this](double val) { pSize = static_cast<float>(val); }));
 
   mGuiItem->registerCallback("setOpacity", "Sets the opacity of the dip and strike plane.",
-      std::function([this](double val) { mOpacity = static_cast<float>(val); }));
+      std::function([this](double val) { pOpacity = static_cast<float>(val); }));
 
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 
@@ -166,7 +166,7 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
 
   // update on height scale change
   mScaleConnection = mSettings->mGraphics.pHeightScale.connectAndTouch(
-      [this](float /*h*/) { calculateDipAndStrike(); });
+      [this](float /*h*/) { mVerticesDirty = true; });
 
   // create circle geometry
   std::vector<glm::vec2> vPositions;
@@ -184,8 +184,14 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
   mVAO.EnableAttributeArray(0);
   mVAO.SpecifyAttributeArrayFloat(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), 0, &mVBO);
 
-  // add one point initially
-  addPoint();
+  // Update text.
+  mTextConnection = pText.connectAndTouch(
+      [this](std::string const& value) { mGuiItem->callJavascript("setText", value); });
+
+  mGuiItem->registerCallback("onSetText",
+      "This is called whenever the text input of the tool's name changes.",
+      std::function(
+          [this](std::string&& value) { pText.setWithEmitForAllButOne(value, mTextConnection); }));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -196,6 +202,7 @@ DipStrikeTool::~DipStrikeTool() {
   mGuiItem->unregisterCallback("setAddPointMode");
   mGuiItem->unregisterCallback("setSize");
   mGuiItem->unregisterCallback("setOpacity");
+  mGuiItem->unregisterCallback("onSetText");
 
   mInputManager->unregisterSelectable(mGuiOpenGLNode.get());
 
@@ -205,20 +212,36 @@ DipStrikeTool::~DipStrikeTool() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void DipStrikeTool::setCenterName(std::string const& name) {
+  cs::core::tools::MultiPointTool::setCenterName(name);
+  mGuiAnchor->setCenterName(name);
+  mPlaneAnchor->setCenterName(name);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void DipStrikeTool::setFrameName(std::string const& name) {
+  cs::core::tools::MultiPointTool::setFrameName(name);
+  mGuiAnchor->setFrameName(name);
+  mPlaneAnchor->setFrameName(name);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void DipStrikeTool::onPointMoved() {
-  calculateDipAndStrike();
+  mVerticesDirty = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void DipStrikeTool::onPointAdded() {
-  calculateDipAndStrike();
+  mVerticesDirty = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void DipStrikeTool::onPointRemoved(int /*index*/) {
-  calculateDipAndStrike();
+  mVerticesDirty = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -257,10 +280,10 @@ void DipStrikeTool::calculateDipAndStrike() {
 
   // This seems to be the first time the tool is moved, so we have to store the distance to the
   // observer so that we can scale the tool later based on the observer's position.
-  if (mOriginalDistance < 0) {
-    mOriginalDistance = mSolarSystem->getObserver().getAnchorScale() *
-                        glm::length(mSolarSystem->getObserver().getRelativePosition(
-                            mTimeControl->pSimulationTime.get(), *mGuiAnchor));
+  if (pScaleDistance.get() < 0) {
+    pScaleDistance = mSolarSystem->getObserver().getAnchorScale() *
+                     glm::length(mSolarSystem->getObserver().getRelativePosition(
+                         mTimeControl->pSimulationTime.get(), *mGuiAnchor));
   }
 
   // calculate center of plane and normal
@@ -334,10 +357,15 @@ void DipStrikeTool::calculateDipAndStrike() {
 void DipStrikeTool::update() {
   MultiPointTool::update();
 
+  if (mVerticesDirty) {
+    calculateDipAndStrike();
+    mVerticesDirty = false;
+  }
+
   double simulationTime(mTimeControl->pSimulationTime.get());
 
   cs::core::SolarSystem::scaleRelativeToObserver(*mGuiAnchor, mSolarSystem->getObserver(),
-      simulationTime, mOriginalDistance, mSettings->mGraphics.pWidgetScale.get());
+      simulationTime, pScaleDistance.get(), mSettings->mGraphics.pWidgetScale.get());
   cs::core::SolarSystem::turnToObserver(
       *mGuiAnchor, mSolarSystem->getObserver(), simulationTime, false);
 }
@@ -363,14 +391,14 @@ bool DipStrikeTool::Do() {
   auto matMV = glm::make_mat4x4(glMatMV.data()) *
                glm::mat4(x.x, x.y, x.z, 0, y.x, y.y, y.z, 0, z.x, z.y, z.z, 0, 0, 0, mOffset, 1);
 
-  matMV = glm::scale(matMV, glm::vec3(static_cast<float>(mSize) * mSizeFactor));
+  matMV = glm::scale(matMV, glm::vec3(static_cast<float>(mSize) * pSize.get()));
 
   mShader.Bind();
   mVAO.Bind();
   glUniformMatrix4fv(
       mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glm::value_ptr(matMV));
   glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP.data());
-  mShader.SetUniform(mShader.GetUniformLocation("uOpacity"), mOpacity);
+  mShader.SetUniform(mShader.GetUniformLocation("uOpacity"), pOpacity.get());
   mShader.SetUniform(
       mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
 

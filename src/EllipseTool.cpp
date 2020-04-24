@@ -116,20 +116,20 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
     mAxes.at(0) = mHandles.at(0)->getAnchor()->getAnchorPosition() - center;
     mAxes.at(1) = mHandles.at(1)->getAnchor()->getAnchorPosition() - center;
 
-    calculateVertices();
+    mVerticesDirty = true;
   });
 
   for (int i(0); i < 2; ++i) {
     mHandleConnections.at(i) = mHandles.at(i)->pLngLat.connect([this, i](glm::dvec2 const& /*p*/) {
-      auto center = mCenterHandle.getAnchor()->getAnchorPosition();
-      mAxes.at(i) = mHandles.at(i)->getAnchor()->getAnchorPosition() - center;
-      calculateVertices();
+      auto center    = mCenterHandle.getAnchor()->getAnchorPosition();
+      mAxes.at(i)    = mHandles.at(i)->getAnchor()->getAnchorPosition() - center;
+      mVerticesDirty = true;
     });
   }
 
   // Whenever the height scale changes our vertex positions need to be updated.
   mScaleConnection =
-      mSettings->mGraphics.pHeightScale.connect([this](float /*h*/) { calculateVertices(); });
+      mSettings->mGraphics.pHeightScale.connect([this](float /*h*/) { mVerticesDirty = true; });
 
   // Delete the tool when the center handle is deleted.
   pShouldDelete.connectFrom(mCenterHandle.pShouldDelete);
@@ -227,7 +227,8 @@ cs::core::tools::Mark& EllipseTool::getSecondHandle() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void EllipseTool::setNumSamples(int const& numSamples) {
-  mNumSamples = numSamples;
+  mNumSamples    = numSamples;
+  mVerticesDirty = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -271,6 +272,11 @@ void EllipseTool::update() {
   mCenterHandle.update();
   mHandles.at(0)->update();
   mHandles.at(1)->update();
+
+  if (mVerticesDirty) {
+    calculateVertices();
+    mVerticesDirty = false;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

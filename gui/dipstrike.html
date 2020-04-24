@@ -69,6 +69,10 @@
       else $('.tool-body').removeClass('minimized');
     }
 
+    function setText(text) {
+      $(".text-input").val(text);
+    }
+
     var CosmoScout = new CosmoScoutAPI();
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -83,6 +87,7 @@
       setData(10, 10);
 
       $('[data-toggle="tooltip"]').tooltip({ delay: 500, placement: "auto", html: false });
+      $(".text-input").on("input", () => window.callNative("onSetText", $(".text-input").val()));
     });
 
   </script>

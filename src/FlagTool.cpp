@@ -53,7 +53,7 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
       std::function([this]() { pShouldDelete = true; }));
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 
-  // update text -------------------------------------------------------------
+  // Update text.
   mTextConnection = pText.connectAndTouch(
       [this](std::string const& value) { mGuiItem->callJavascript("setText", value); });
 
@@ -62,7 +62,7 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
       std::function(
           [this](std::string&& value) { pText.setWithEmitForAllButOne(value, mTextConnection); }));
 
-  // update position ---------------------------------------------------------
+  // Update position.
   pLngLat.connect([this](glm::dvec2 const& lngLat) {
     auto body = mSolarSystem->getBody(mAnchor->getCenterName());
     if (body) {
@@ -72,7 +72,7 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     }
   });
 
-  // update minimized state --------------------------------------------------
+  // Update minimized state.
   mDoubleClickConnection = mInputManager->sOnDoubleClick.connect([this]() {
     if (pHovered.get()) {
       pMinimized = !pMinimized.get();
@@ -102,6 +102,14 @@ FlagTool::~FlagTool() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void FlagTool::update() {
+  // This seems to be the first time the tool is updated, so we have to store the distance to the
+  // observer so that we can scale the tool later based on the observer's position.
+  if (pScaleDistance.get() < 0) {
+    pScaleDistance = mSolarSystem->getObserver().getAnchorScale() *
+                     glm::length(mSolarSystem->getObserver().getRelativePosition(
+                         mTimeControl->pSimulationTime.get(), *mAnchor));
+  }
+
   double simulationTime(mTimeControl->pSimulationTime.get());
 
   cs::core::SolarSystem::scaleRelativeToObserver(*mAnchor, mSolarSystem->getObserver(),

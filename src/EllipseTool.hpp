@@ -67,7 +67,8 @@ class EllipseTool : public IVistaOpenGLDraw, public cs::core::tools::Tool {
 
   std::shared_ptr<cs::scene::CelestialAnchorNode> mAnchor;
 
-  bool mFirstUpdate = true;
+  bool mVerticesDirty = false;
+  bool mFirstUpdate   = true;
 
   FlagTool                                              mCenterHandle;
   std::array<glm::dvec3, 2>                             mAxes;

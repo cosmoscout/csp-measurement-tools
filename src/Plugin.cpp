@@ -46,15 +46,72 @@ std::shared_ptr<cs::core::TimeControl>  sTimeControl;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+template <typename T>
+void updateTools(T& tools) {
+  for (auto it = tools.begin(); it != tools.end();) {
+    if ((*it)->pShouldDelete.get()) {
+      it = tools.erase(it);
+    } else {
+      (*it)->update();
+      ++it;
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename T>
+void deserializeTools(nlohmann::json const& j, std::string const& name, T& tools) {
+  auto array = j.find(name);
+  if (array != j.end()) {
+    tools.resize(array->size());
+    for (size_t i(0); i < tools.size(); ++i) {
+      array->at(i).get_to(tools[i]);
+    }
+  } else {
+    tools.clear();
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 } // namespace
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// void from_json(nlohmann::json const& j, Plugin::Settings::DipStrike& o) {
-// }
+void from_json(nlohmann::json const& j, std::shared_ptr<DipStrikeTool>& o) {
+  if (!o) {
+    o = std::make_shared<DipStrikeTool>(
+        sInputManager, sSolarSystem, sSettings, sTimeControl, "", "");
+  }
 
-// void to_json(nlohmann::json& j, Plugin::Settings::DipStrike const& o) {
-// }
+  std::string center, frame;
+  cs::core::Settings::deserialize(j, "center", center);
+  cs::core::Settings::deserialize(j, "frame", frame);
+  o->setCenterName(center);
+  o->setFrameName(frame);
+
+  cs::core::Settings::deserialize(j, "color", o->pColor);
+  cs::core::Settings::deserialize(j, "scaleDistance", o->pScaleDistance);
+  cs::core::Settings::deserialize(j, "size", o->pSize);
+  cs::core::Settings::deserialize(j, "opacity", o->pOpacity);
+  cs::core::Settings::deserialize(j, "text", o->pText);
+
+  std::vector<glm::dvec2> positions;
+  cs::core::Settings::deserialize(j, "positions", positions);
+  o->setPositions(positions);
+}
+
+void to_json(nlohmann::json& j, std::shared_ptr<DipStrikeTool> const& o) {
+  cs::core::Settings::serialize(j, "center", o->getCenterName());
+  cs::core::Settings::serialize(j, "frame", o->getFrameName());
+  cs::core::Settings::serialize(j, "color", o->pColor);
+  cs::core::Settings::serialize(j, "scaleDistance", o->pScaleDistance);
+  cs::core::Settings::serialize(j, "size", o->pSize);
+  cs::core::Settings::serialize(j, "opacity", o->pOpacity);
+  cs::core::Settings::serialize(j, "text", o->pText);
+  cs::core::Settings::serialize(j, "positions", o->getPositions());
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -153,83 +210,66 @@ void to_json(nlohmann::json& j, std::shared_ptr<PathTool> const& o) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// void from_json(nlohmann::json const& j, Plugin::Settings::Polygon& o) {
-// }
+void from_json(nlohmann::json const& j, std::shared_ptr<PolygonTool>& o) {
+  if (!o) {
+    o = std::make_shared<PolygonTool>(sInputManager, sSolarSystem, sSettings, sTimeControl, "", "");
+  }
 
-// void to_json(nlohmann::json& j, Plugin::Settings::Polygon const& o) {
-// }
+  std::string center, frame;
+  cs::core::Settings::deserialize(j, "center", center);
+  cs::core::Settings::deserialize(j, "frame", frame);
+  o->setCenterName(center);
+  o->setFrameName(frame);
+
+  cs::core::Settings::deserialize(j, "color", o->pColor);
+  cs::core::Settings::deserialize(j, "scaleDistance", o->pScaleDistance);
+  cs::core::Settings::deserialize(j, "showMesh", o->pShowMesh);
+  cs::core::Settings::deserialize(j, "text", o->pText);
+
+  std::vector<glm::dvec2> positions;
+  cs::core::Settings::deserialize(j, "positions", positions);
+  o->setPositions(positions);
+}
+
+void to_json(nlohmann::json& j, std::shared_ptr<PolygonTool> const& o) {
+  cs::core::Settings::serialize(j, "center", o->getCenterName());
+  cs::core::Settings::serialize(j, "frame", o->getFrameName());
+  cs::core::Settings::serialize(j, "color", o->pColor);
+  cs::core::Settings::serialize(j, "scaleDistance", o->pScaleDistance);
+  cs::core::Settings::serialize(j, "showMesh", o->pShowMesh);
+  cs::core::Settings::serialize(j, "text", o->pText);
+  cs::core::Settings::serialize(j, "positions", o->getPositions());
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void from_json(nlohmann::json const& j, Plugin::Settings& o) {
+  deserializeTools(j, "dipStrikes", o.mDipStrikes);
+  deserializeTools(j, "ellipses", o.mEllipses);
+  deserializeTools(j, "flags", o.mFlags);
+  deserializeTools(j, "paths", o.mPaths);
+  deserializeTools(j, "polygons", o.mPolygons);
+
   cs::core::Settings::deserialize(j, "polygonHeightDiff", o.mPolygonHeightDiff);
   cs::core::Settings::deserialize(j, "polygonMaxAttempt", o.mPolygonMaxAttempt);
   cs::core::Settings::deserialize(j, "polygonMaxPoints", o.mPolygonMaxPoints);
   cs::core::Settings::deserialize(j, "polygonSleekness", o.mPolygonSleekness);
   cs::core::Settings::deserialize(j, "ellipseSamples", o.mEllipseSamples);
   cs::core::Settings::deserialize(j, "pathSamples", o.mPathSamples);
-
-  // if (j.find("dipStrikes") != j.end()) {
-  //   cs::core::Settings::deserialize(j, "dipStrikes", o.mDipStrikes);
-  // } else {
-  //   o.mDipStrikes.clear();
-  // }
-
-  {
-    auto array = j.find("ellipses");
-    if (array != j.end()) {
-      o.mEllipses.resize(array->size());
-      for (size_t i(0); i < o.mEllipses.size(); ++i) {
-        array->at(i).get_to(o.mEllipses[i]);
-      }
-    } else {
-      o.mEllipses.clear();
-    }
-  }
-
-  {
-    auto array = j.find("flags");
-    if (array != j.end()) {
-      o.mFlags.resize(array->size());
-      for (size_t i(0); i < o.mFlags.size(); ++i) {
-        array->at(i).get_to(o.mFlags[i]);
-      }
-    } else {
-      o.mFlags.clear();
-    }
-  }
-
-  {
-    auto array = j.find("paths");
-    if (array != j.end()) {
-      o.mPaths.resize(array->size());
-      for (size_t i(0); i < o.mPaths.size(); ++i) {
-        array->at(i).get_to(o.mPaths[i]);
-      }
-    } else {
-      o.mPaths.clear();
-    }
-  }
-
-  // if (j.find("polygons") != j.end()) {
-  //   cs::core::Settings::deserialize(j, "polygons", o.mPolygons);
-  // } else {
-  //   o.mPolygons.clear();
-  // }
 }
 
 void to_json(nlohmann::json& j, Plugin::Settings const& o) {
+  cs::core::Settings::serialize(j, "dipStrikes", o.mDipStrikes);
+  cs::core::Settings::serialize(j, "ellipses", o.mEllipses);
+  cs::core::Settings::serialize(j, "flags", o.mFlags);
+  cs::core::Settings::serialize(j, "paths", o.mPaths);
+  cs::core::Settings::serialize(j, "polygons", o.mPolygons);
   cs::core::Settings::serialize(j, "polygonHeightDiff", o.mPolygonHeightDiff);
   cs::core::Settings::serialize(j, "polygonMaxAttempt", o.mPolygonMaxAttempt);
   cs::core::Settings::serialize(j, "polygonMaxPoints", o.mPolygonMaxPoints);
   cs::core::Settings::serialize(j, "polygonSleekness", o.mPolygonSleekness);
   cs::core::Settings::serialize(j, "ellipseSamples", o.mEllipseSamples);
   cs::core::Settings::serialize(j, "pathSamples", o.mPathSamples);
-  // cs::core::Settings::serialize(j, "dipStrikes", o.mDipStrikes);
-  cs::core::Settings::serialize(j, "ellipses", o.mEllipses);
-  cs::core::Settings::serialize(j, "flags", o.mFlags);
-  cs::core::Settings::serialize(j, "paths", o.mPaths);
-  // cs::core::Settings::serialize(j, "polygons", o.mPolygons);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -289,6 +329,7 @@ void Plugin::init() {
               mInputManager->pHoveredObject.get().mPosition, radii[0], radii[0])
                               .xy();
           mPluginSettings.mFlags.push_back(tool);
+
         } else if (mNextTool == "Landing Ellipse") {
           auto tool = std::make_shared<EllipseTool>(mInputManager, mSolarSystem, mAllSettings,
               mTimeControl, body->getCenterName(), body->getFrameName());
@@ -297,29 +338,37 @@ void Plugin::init() {
                                                 .xy();
           tool->setNumSamples(mPluginSettings.mEllipseSamples.get());
           mPluginSettings.mEllipses.push_back(tool);
+
         } else if (mNextTool == "Path") {
           auto tool = std::make_shared<PathTool>(mInputManager, mSolarSystem, mAllSettings,
               mTimeControl, body->getCenterName(), body->getFrameName());
           tool->setNumSamples(mPluginSettings.mPathSamples.get());
           tool->pAddPointMode = true;
+          tool->addPoint();
           mPluginSettings.mPaths.push_back(tool);
+
         } else if (mNextTool == "Dip & Strike") {
           auto tool = std::make_shared<DipStrikeTool>(mInputManager, mSolarSystem, mAllSettings,
               mTimeControl, body->getCenterName(), body->getFrameName());
           tool->pAddPointMode = true;
-          mTools.push_back(tool);
+          tool->addPoint();
+          mPluginSettings.mDipStrikes.push_back(tool);
+
         } else if (mNextTool == "Polygon") {
           auto tool = std::make_shared<PolygonTool>(mInputManager, mSolarSystem, mAllSettings,
               mTimeControl, body->getCenterName(), body->getFrameName());
-          tool->pAddPointMode = true;
           tool->setHeightDiff(mPluginSettings.mPolygonHeightDiff.get());
           tool->setMaxAttempt(mPluginSettings.mPolygonMaxAttempt.get());
           tool->setMaxPoints(mPluginSettings.mPolygonMaxPoints.get());
           tool->setSleekness(mPluginSettings.mPolygonSleekness.get());
-          mTools.push_back(tool);
+          tool->pAddPointMode = true;
+          tool->addPoint();
+          mPluginSettings.mPolygons.push_back(tool);
+
         } else if (mNextTool != "none") {
           logger().warn("Failed to create tool '{}': This is an unknown tool type!", mNextTool);
         }
+
         mNextTool = "none";
         mGuiManager->getGui()->callJavascript("CosmoScout.measurementTools.deselect");
       }
@@ -329,6 +378,42 @@ void Plugin::init() {
   mOnDoubleClickConnection = mInputManager->sOnDoubleClick.connect([this]() {
     mNextTool = "none";
     mGuiManager->getGui()->callJavascript("CosmoScout.measurementTools.deselect");
+  });
+
+  mPluginSettings.mPolygonHeightDiff.connect([this](float val) {
+    for (auto& p : mPluginSettings.mPolygons) {
+      p->setHeightDiff(val);
+    }
+  });
+
+  mPluginSettings.mPolygonMaxAttempt.connect([this](int32_t val) {
+    for (auto& p : mPluginSettings.mPolygons) {
+      p->setMaxAttempt(val);
+    }
+  });
+
+  mPluginSettings.mPolygonMaxPoints.connect([this](int32_t val) {
+    for (auto& p : mPluginSettings.mPolygons) {
+      p->setMaxPoints(val);
+    }
+  });
+
+  mPluginSettings.mPolygonSleekness.connect([this](int32_t val) {
+    for (auto& p : mPluginSettings.mPolygons) {
+      p->setSleekness(val);
+    }
+  });
+
+  mPluginSettings.mEllipseSamples.connect([this](int32_t val) {
+    for (auto& p : mPluginSettings.mEllipses) {
+      p->setNumSamples(val);
+    }
+  });
+
+  mPluginSettings.mPathSamples.connect([this](int32_t val) {
+    for (auto& p : mPluginSettings.mPaths) {
+      p->setNumSamples(val);
+    }
   });
 
   // Load settings.
@@ -363,41 +448,11 @@ void Plugin::deInit() {
 void Plugin::update() {
   // Update all registered tools. If the pShouldDelete property is set, the Tool is removed from the
   // list.
-  for (auto it = mTools.begin(); it != mTools.end();) {
-    if ((*it)->pShouldDelete.get()) {
-      it = mTools.erase(it);
-    } else {
-      (*it)->update();
-      ++it;
-    }
-  }
-
-  for (auto it = mPluginSettings.mEllipses.begin(); it != mPluginSettings.mEllipses.end();) {
-    if ((*it)->pShouldDelete.get()) {
-      it = mPluginSettings.mEllipses.erase(it);
-    } else {
-      (*it)->update();
-      ++it;
-    }
-  }
-
-  for (auto it = mPluginSettings.mFlags.begin(); it != mPluginSettings.mFlags.end();) {
-    if ((*it)->pShouldDelete.get()) {
-      it = mPluginSettings.mFlags.erase(it);
-    } else {
-      (*it)->update();
-      ++it;
-    }
-  }
-
-  for (auto it = mPluginSettings.mPaths.begin(); it != mPluginSettings.mPaths.end();) {
-    if ((*it)->pShouldDelete.get()) {
-      it = mPluginSettings.mPaths.erase(it);
-    } else {
-      (*it)->update();
-      ++it;
-    }
-  }
+  updateTools(mPluginSettings.mDipStrikes);
+  updateTools(mPluginSettings.mEllipses);
+  updateTools(mPluginSettings.mFlags);
+  updateTools(mPluginSettings.mPaths);
+  updateTools(mPluginSettings.mPolygons);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

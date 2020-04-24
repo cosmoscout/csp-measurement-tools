@@ -127,7 +127,7 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
       }));
 
   mGuiItem->registerCallback("showMesh", "Enables or disables the rendering of the surface grid.",
-      std::function([this]() { mShowMesh = !mShowMesh; }));
+      std::function([this]() { pShowMesh = !pShowMesh.get(); }));
 
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 
@@ -135,13 +135,17 @@ PolygonTool::PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
       mGuiNode.get(), static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
   // Whenever the height scale changes our vertex positions need to be updated
-  mScaleConnection = mSettings->mGraphics.pHeightScale.connectAndTouch([this](float /*h*/) {
-    updateLineVertices();
-    updateCalculation();
-  });
+  mScaleConnection = mSettings->mGraphics.pHeightScale.connectAndTouch(
+      [this](float /*h*/) { mVerticesDirty = true; });
 
-  // Add one point initially
-  addPoint();
+  // Update text.
+  mTextConnection = pText.connectAndTouch(
+      [this](std::string const& value) { mGuiItem->callJavascript("setText", value); });
+
+  mGuiItem->registerCallback("onSetText",
+      "This is called whenever the text input of the tool's name changes.",
+      std::function(
+          [this](std::string&& value) { pText.setWithEmitForAllButOne(value, mTextConnection); }));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -151,6 +155,7 @@ PolygonTool::~PolygonTool() {
   mGuiItem->unregisterCallback("deleteMe");
   mGuiItem->unregisterCallback("setAddPointMode");
   mGuiItem->unregisterCallback("showMesh");
+  mGuiItem->unregisterCallback("onSetText");
 
   mInputManager->unregisterSelectable(mGuiNode.get());
   mSolarSystem->unregisterAnchor(mGuiAnchor);
@@ -161,26 +166,52 @@ PolygonTool::~PolygonTool() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void PolygonTool::setHeightDiff(float const& hDiff) {
-  mHeightDiff = hDiff;
+void PolygonTool::setCenterName(std::string const& name) {
+  cs::core::tools::MultiPointTool::setCenterName(name);
+  mGuiAnchor->setCenterName(name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void PolygonTool::setMaxAttempt(int const& att) {
-  mMaxAttempt = att;
+void PolygonTool::setFrameName(std::string const& name) {
+  cs::core::tools::MultiPointTool::setFrameName(name);
+  mGuiAnchor->setFrameName(name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void PolygonTool::setMaxPoints(int const& points) {
-  mMaxPoints = points;
+void PolygonTool::setHeightDiff(float hDiff) {
+  if (mHeightDiff != hDiff) {
+    mHeightDiff    = hDiff;
+    mVerticesDirty = true;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void PolygonTool::setSleekness(int const& degree) {
-  mSleekness = degree;
+void PolygonTool::setMaxAttempt(uint32_t att) {
+  if (mMaxAttempt != att) {
+    mMaxAttempt    = att;
+    mVerticesDirty = true;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void PolygonTool::setMaxPoints(uint32_t points) {
+  if (mMaxPoints != points) {
+    mMaxPoints     = points;
+    mVerticesDirty = true;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void PolygonTool::setSleekness(uint32_t degree) {
+  if (mSleekness != degree) {
+    mSleekness     = degree;
+    mVerticesDirty = true;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -931,8 +962,7 @@ void PolygonTool::onPointMoved() {
     }
   }
 
-  updateLineVertices();
-  updateCalculation();
+  mVerticesDirty = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -946,8 +976,7 @@ void PolygonTool::onPointAdded() {
     }
   }
 
-  updateLineVertices();
-  updateCalculation();
+  mVerticesDirty = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -958,8 +987,7 @@ void PolygonTool::onPointRemoved(int /*index*/) {
     pAddPointMode = true;
   }
 
-  updateLineVertices();
-  updateCalculation();
+  mVerticesDirty = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -988,10 +1016,10 @@ void PolygonTool::updateLineVertices() {
 
   // This seems to be the first time the tool is moved, so we have to store the distance to the
   // observer so that we can scale the tool later based on the observer's position.
-  if (mOriginalDistance < 0) {
-    mOriginalDistance = mSolarSystem->getObserver().getAnchorScale() *
-                        glm::length(mSolarSystem->getObserver().getRelativePosition(
-                            mTimeControl->pSimulationTime.get(), *mGuiAnchor));
+  if (pScaleDistance.get() < 0) {
+    pScaleDistance = mSolarSystem->getObserver().getAnchorScale() *
+                     glm::length(mSolarSystem->getObserver().getRelativePosition(
+                         mTimeControl->pSimulationTime.get(), *mGuiAnchor));
   }
 
   auto lastMark = mPoints.begin();
@@ -1110,7 +1138,7 @@ void PolygonTool::updateCalculation() {
   if (maxDist > radii[0]) {
     mGuiItem->callJavascript("setArea", 0);
     mGuiItem->callJavascript("setVolume", 0, 0);
-    mShowMesh = false;
+    pShowMesh = false;
     return;
   }
   // Converts maxDist to Voronoi plane (approx.)
@@ -1334,10 +1362,16 @@ void PolygonTool::updateCalculation() {
 void PolygonTool::update() {
   MultiPointTool::update();
 
+  if (mVerticesDirty) {
+    updateLineVertices();
+    updateCalculation();
+    mVerticesDirty = false;
+  }
+
   double simulationTime(mTimeControl->pSimulationTime.get());
 
   cs::core::SolarSystem::scaleRelativeToObserver(*mGuiAnchor, mSolarSystem->getObserver(),
-      simulationTime, mOriginalDistance, mSettings->mGraphics.pWidgetScale.get());
+      simulationTime, pScaleDistance.get(), mSettings->mGraphics.pWidgetScale.get());
   cs::core::SolarSystem::turnToObserver(
       *mGuiAnchor, mSolarSystem->getObserver(), simulationTime, false);
 }
@@ -1393,14 +1427,15 @@ bool PolygonTool::Do() {
   mShader.SetUniform(
       mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
 
-  mShader.SetUniform(mShader.GetUniformLocation("uColor"), 1.F, 1.F, 1.F, 1.F);
+  mShader.SetUniform(
+      mShader.GetUniformLocation("uColor"), pColor.get().r, pColor.get().g, pColor.get().b, 1.F);
 
   // Draws the linestrip
   glDrawArrays(GL_LINE_STRIP, 0, static_cast<int32_t>(mIndexCount));
   mVAO.Release();
 
   // For Delaunay
-  if (mShowMesh) {
+  if (pShowMesh.get()) {
     mVBO2.Bind(GL_ARRAY_BUFFER);
     mVBO2.BufferSubData(
         0, vRelativePositions2.size() * sizeof(glm::vec3), vRelativePositions2.data());
@@ -1410,7 +1445,8 @@ bool PolygonTool::Do() {
 
     mVAO2.Bind();
 
-    mShader.SetUniform(mShader.GetUniformLocation("uColor"), 0.5F, 0.5F, 1.F, 0.8F);
+    mShader.SetUniform(
+        mShader.GetUniformLocation("uColor"), pColor.get().r, pColor.get().g, pColor.get().b, 0.5F);
 
     glDisable(GL_DEPTH_TEST);
 

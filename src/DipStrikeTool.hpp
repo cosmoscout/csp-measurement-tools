@@ -38,6 +38,11 @@ namespace csp::measurementtools {
 /// given in degrees, where at 0° the peak is in the east and at 90° the peak is in the north.
 class DipStrikeTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointTool {
  public:
+  /// This text is shown on the ui and can be edited by the user.
+  cs::utils::Property<std::string> pText    = std::string("Dip & Strike");
+  cs::utils::Property<float>       pSize    = 1.5F;
+  cs::utils::Property<float>       pOpacity = 0.5F;
+
   DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
       std::shared_ptr<cs::core::SolarSystem> const&            pSolarSystem,
       std::shared_ptr<cs::core::Settings> const&               settings,
@@ -51,6 +56,12 @@ class DipStrikeTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPoin
   DipStrikeTool& operator=(DipStrikeTool&& other) = delete;
 
   ~DipStrikeTool() override;
+
+  // Gets or sets the SPICE center name for all points.
+  void setCenterName(std::string const& name) override;
+
+  /// Gets or sets the SPICE frame name for all points.
+  void setFrameName(std::string const& name) override;
 
   /// Called from Tools class.
   void update() override;
@@ -85,10 +96,12 @@ class DipStrikeTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPoin
   VistaBufferObject      mVBO;
   VistaGLSLShader        mShader;
 
-  double    mOriginalDistance = -1.0, mSize{};
+  bool      mVerticesDirty = false;
+  double    mSize{};
   glm::vec3 mNormal = glm::vec3(0.0), mMip = glm::vec3(0.0);
-  float     mOffset{}, mSizeFactor = 1.5F, mOpacity = 0.5;
+  float     mOffset{};
 
+  int mTextConnection  = -1;
   int mScaleConnection = -1;
 
   static const int   RESOLUTION;

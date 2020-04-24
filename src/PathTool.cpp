@@ -127,7 +127,7 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
   mScaleConnection = mSettings->mGraphics.pHeightScale.connectAndTouch(
       [this](float /*h*/) { mVerticesDirty = true; });
 
-  // update text
+  // Update text.
   mTextConnection = pText.connectAndTouch(
       [this](std::string const& value) { mGuiItem->callJavascript("setText", value); });
 
@@ -135,9 +135,6 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
       "This is called whenever the text input of the tool's name changes.",
       std::function(
           [this](std::string&& value) { pText.setWithEmitForAllButOne(value, mTextConnection); }));
-
-  // add one point initially
-  addPoint();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -169,7 +166,10 @@ void PathTool::setFrameName(std::string const& name) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void PathTool::setNumSamples(int const& numSamples) {
-  mNumSamples = numSamples;
+  if (mNumSamples != numSamples) {
+    mNumSamples    = numSamples;
+    mVerticesDirty = true;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
