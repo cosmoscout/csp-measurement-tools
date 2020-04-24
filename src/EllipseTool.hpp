@@ -17,6 +17,9 @@ namespace csp::measurementtools {
 /// points through which the edge has to go through.
 class EllipseTool : public IVistaOpenGLDraw, public cs::core::tools::Tool {
  public:
+  /// The ellipse and all handels are drawn with this color;
+  cs::utils::Property<glm::vec3> pColor = glm::vec3(0.75, 0.75, 1.0);
+
   EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
       std::shared_ptr<cs::core::SolarSystem> const&          pSolarSystem,
       std::shared_ptr<cs::core::Settings> const&             settings,
@@ -31,9 +34,11 @@ class EllipseTool : public IVistaOpenGLDraw, public cs::core::tools::Tool {
 
   ~EllipseTool() override;
 
+  /// Gets or sets the SPICE center name for all three handles.
   void               setCenterName(std::string const& name);
   std::string const& getCenterName() const;
 
+  /// Gets or sets the SPICE frame name for all three handles.
   void               setFrameName(std::string const& name);
   std::string const& getFrameName() const;
 

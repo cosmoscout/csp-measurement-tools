@@ -20,6 +20,8 @@
 
 namespace csp::measurementtools {
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 const char* EllipseTool::SHADER_VERT = R"(
 #version 330
 
@@ -37,23 +39,28 @@ void main()
 }
 )";
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 const char* EllipseTool::SHADER_FRAG = R"(
 #version 330
 
 in vec4 vPosition;
 
 uniform float uFarClip;
+uniform vec3 uColor;
 
 layout(location = 0) out vec4 oColor;
 
 void main()
 {
-    oColor = vec4(1.0);
+    oColor = vec4(uColor, 1.0);
    
     // linearize depth value
     gl_FragDepth = length(vPosition.xyz) / uFarClip;
 }
 )";
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     std::shared_ptr<cs::core::SolarSystem> const&                       pSolarSystem,
@@ -125,7 +132,12 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
       mSettings->mGraphics.pHeightScale.connect([this](float /*h*/) { calculateVertices(); });
 
   pShouldDelete.connectFrom(mCenterHandle.pShouldDelete);
+  mCenterHandle.pColor.connectFrom(pColor);
+  mHandles[0]->pColor.connectFrom(pColor);
+  mHandles[1]->pColor.connectFrom(pColor);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 EllipseTool::~EllipseTool() {
   // disconnect slots
@@ -133,10 +145,13 @@ EllipseTool::~EllipseTool() {
 
   mSolarSystem->unregisterAnchor(mAnchor);
   pShouldDelete.disconnect();
+  pColor.disconnectAll();
 
   auto* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
   pSG->GetRoot()->DisconnectChild(mOpenGLNode.get());
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void EllipseTool::setCenterName(std::string const& name) {
   mCenterHandle.getAnchor()->setCenterName(name);
@@ -145,9 +160,13 @@ void EllipseTool::setCenterName(std::string const& name) {
   mAnchor->setCenterName(name);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 std::string const& EllipseTool::getCenterName() const {
   return mAnchor->getCenterName();
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void EllipseTool::setFrameName(std::string const& name) {
   mCenterHandle.getAnchor()->setFrameName(name);
@@ -156,37 +175,55 @@ void EllipseTool::setFrameName(std::string const& name) {
   mAnchor->setFrameName(name);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 std::string const& EllipseTool::getFrameName() const {
   return mAnchor->getFrameName();
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 FlagTool const& EllipseTool::getCenterHandle() const {
   return mCenterHandle;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 cs::core::tools::Mark const& EllipseTool::getFirstHandle() const {
   return *mHandles.at(0);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 cs::core::tools::Mark const& EllipseTool::getSecondHandle() const {
   return *mHandles.at(1);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 FlagTool& EllipseTool::getCenterHandle() {
   return mCenterHandle;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 cs::core::tools::Mark& EllipseTool::getFirstHandle() {
   return *mHandles.at(0);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 cs::core::tools::Mark& EllipseTool::getSecondHandle() {
   return *mHandles.at(1);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void EllipseTool::setNumSamples(int const& numSamples) {
   mNumSamples = numSamples;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void EllipseTool::calculateVertices() {
   auto radii  = cs::core::SolarSystem::getRadii(mCenterHandle.getAnchor()->getCenterName());
@@ -221,11 +258,15 @@ void EllipseTool::calculateVertices() {
   mVBO.Release();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void EllipseTool::update() {
   mCenterHandle.update();
   mHandles.at(0)->update();
   mHandles.at(1)->update();
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool EllipseTool::Do() {
   glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_LINE_BIT);
@@ -250,6 +291,8 @@ bool EllipseTool::Do() {
   glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP.data());
 
   mShader.SetUniform(
+      mShader.GetUniformLocation("uColor"), pColor.get().r, pColor.get().g, pColor.get().b);
+  mShader.SetUniform(
       mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
 
   // draw the linestrip
@@ -261,6 +304,8 @@ bool EllipseTool::Do() {
   return true;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 bool EllipseTool::GetBoundingBox(VistaBoundingBox& bb) {
   std::array fMin{-0.1F, -0.1F, -0.1F};
   std::array fMax{0.1F, 0.1F, 0.1F};
@@ -268,4 +313,7 @@ bool EllipseTool::GetBoundingBox(VistaBoundingBox& bb) {
   bb.SetBounds(fMin.data(), fMax.data());
   return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 } // namespace csp::measurementtools
