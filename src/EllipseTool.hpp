@@ -17,7 +17,7 @@ namespace csp::measurementtools {
 /// points through which the edge has to go through.
 class EllipseTool : public IVistaOpenGLDraw, public cs::core::tools::Tool {
  public:
-  /// The ellipse and all handels are drawn with this color;
+  /// The ellipse and all handels are drawn with this color.
   cs::utils::Property<glm::vec3> pColor = glm::vec3(0.75, 0.75, 1.0);
 
   EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,

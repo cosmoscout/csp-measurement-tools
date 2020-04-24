@@ -191,11 +191,15 @@
       line.data([data]).attr("d", line_func);
     }
 
+    function setText(text) {
+      $(".text-input").val(text);
+    }
 
     // entry point ---------------------------------------------------------
     $(document).ready(function () {
       initProfileLineGraph();
       $('[data-toggle="tooltip"]').tooltip({ delay: 500, placement: "auto", html: false });
+      $(".text-input").on("input", () => window.callNative("onSetText", $(".text-input").val()));
     });
 
   </script>

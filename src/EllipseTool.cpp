@@ -127,14 +127,21 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
     });
   }
 
-  // whenever the height scale changes our vertex positions need to be updated
+  // Whenever the height scale changes our vertex positions need to be updated.
   mScaleConnection =
       mSettings->mGraphics.pHeightScale.connect([this](float /*h*/) { calculateVertices(); });
 
+  // Delete the tool when the center handle is deleted.
   pShouldDelete.connectFrom(mCenterHandle.pShouldDelete);
+
+  // Adjust the color of all handles according to the tool's color.
   mCenterHandle.pColor.connectFrom(pColor);
   mHandles[0]->pColor.connectFrom(pColor);
   mHandles[1]->pColor.connectFrom(pColor);
+
+  // Adjust the scaling of all handles according to the center handle's scaling.
+  mHandles[0]->pScaleDistance.connectFrom(mCenterHandle.pScaleDistance);
+  mHandles[1]->pScaleDistance.connectFrom(mCenterHandle.pScaleDistance);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -21,6 +21,7 @@ namespace csp::measurementtools {
 
 class FlagTool;
 class EllipseTool;
+class PathTool;
 
 /// This plugin enables the user to measure different things on the surface of planets and moons.
 /// See README.md for details.
@@ -31,7 +32,7 @@ class Plugin : public cs::core::PluginBase {
     // std::vector<DipStrike> mDipStrikes;
     std::vector<std::shared_ptr<EllipseTool>> mEllipses;
     std::vector<std::shared_ptr<FlagTool>>    mFlags;
-    // std::vector<Path>      mPaths;
+    std::vector<std::shared_ptr<PathTool>>    mPaths;
     // std::vector<Polygon>   mPolygons;
 
     cs::utils::DefaultProperty<float>   mPolygonHeightDiff{1.002F};
