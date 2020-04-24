@@ -85,7 +85,8 @@ void from_json(nlohmann::json const& j, std::shared_ptr<DipStrikeTool>& o) {
         sInputManager, sSolarSystem, sSettings, sTimeControl, "", "");
   }
 
-  std::string center, frame;
+  std::string center;
+  std::string frame;
   cs::core::Settings::deserialize(j, "center", center);
   cs::core::Settings::deserialize(j, "frame", frame);
   o->setCenterName(center);
@@ -120,7 +121,8 @@ void from_json(nlohmann::json const& j, std::shared_ptr<EllipseTool>& o) {
     o = std::make_shared<EllipseTool>(sInputManager, sSolarSystem, sSettings, sTimeControl, "", "");
   }
 
-  std::string center, frame;
+  std::string center;
+  std::string frame;
   cs::core::Settings::deserialize(j, "center", center);
   cs::core::Settings::deserialize(j, "frame", frame);
   o->setCenterName(center);
@@ -154,7 +156,8 @@ void from_json(nlohmann::json const& j, std::shared_ptr<FlagTool>& o) {
     o = std::make_shared<FlagTool>(sInputManager, sSolarSystem, sSettings, sTimeControl, "", "");
   }
 
-  std::string center, frame;
+  std::string center;
+  std::string frame;
   cs::core::Settings::deserialize(j, "center", center);
   cs::core::Settings::deserialize(j, "frame", frame);
   o->getAnchor()->setCenterName(center);
@@ -184,7 +187,8 @@ void from_json(nlohmann::json const& j, std::shared_ptr<PathTool>& o) {
     o = std::make_shared<PathTool>(sInputManager, sSolarSystem, sSettings, sTimeControl, "", "");
   }
 
-  std::string center, frame;
+  std::string center;
+  std::string frame;
   cs::core::Settings::deserialize(j, "center", center);
   cs::core::Settings::deserialize(j, "frame", frame);
   o->setCenterName(center);
@@ -215,7 +219,8 @@ void from_json(nlohmann::json const& j, std::shared_ptr<PolygonTool>& o) {
     o = std::make_shared<PolygonTool>(sInputManager, sSolarSystem, sSettings, sTimeControl, "", "");
   }
 
-  std::string center, frame;
+  std::string center;
+  std::string frame;
   cs::core::Settings::deserialize(j, "center", center);
   cs::core::Settings::deserialize(j, "frame", frame);
   o->setCenterName(center);

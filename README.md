@@ -21,13 +21,13 @@ The given values present some good starting values for your customization, howev
   "plugins": {
     ...
     "csp-measurement-tools": {
-      "polygonHeightDiff": 1.002, // Maximum allowed relative height difference along an edged
+      "polygonHeightDiff": 1.002, // Maximum allowed relative height difference along an edge
       "polygonMaxAttempt": 5,     // Maximum mesh refinement operations
       "polygonMaxPoints": 1000,   // Maximum number of vertices in the generated mesh
-      "polygonSleekness": 15      // Minium allowed triangle corner angle
+      "polygonSleekness": 15      // Minimum allowed triangle corner angle
       "ellipseSamples": 360       // Number of elevation samples taken along the ellipse
       "pathSamples": 256          // Number of elevation samples taken between path control points
-      "dipStrikes": []            // An array of currently active dip & Strike tools.
+      "dipStrikes": []            // An array of currently active dip & strike tools.
       "ellipses": []              // An array of currently active ellipse tools.
       "flags": []                 // An array of currently active flag tools.
       "paths": []                 // An array of currently active path tools.

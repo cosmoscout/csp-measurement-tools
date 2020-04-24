@@ -162,8 +162,8 @@ EllipseTool::~EllipseTool() {
 
 void EllipseTool::setCenterName(std::string const& name) {
   mCenterHandle.getAnchor()->setCenterName(name);
-  mHandles[0]->getAnchor()->setCenterName(name);
-  mHandles[1]->getAnchor()->setCenterName(name);
+  mHandles.at(0)->getAnchor()->setCenterName(name);
+  mHandles.at(1)->getAnchor()->setCenterName(name);
   mAnchor->setCenterName(name);
 }
 
@@ -177,8 +177,8 @@ std::string const& EllipseTool::getCenterName() const {
 
 void EllipseTool::setFrameName(std::string const& name) {
   mCenterHandle.getAnchor()->setFrameName(name);
-  mHandles[0]->getAnchor()->setFrameName(name);
-  mHandles[1]->getAnchor()->setFrameName(name);
+  mHandles.at(0)->getAnchor()->setFrameName(name);
+  mHandles.at(1)->getAnchor()->setFrameName(name);
   mAnchor->setFrameName(name);
 }
 
