@@ -34,9 +34,12 @@ namespace csp::measurementtools {
 /// The path tool is used to measure the distance and height along a path of lines.
 class PathTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointTool {
  public:
+  /// This text is shown on the ui and can be edited by the user.
+  cs::utils::Property<std::string> pText = std::string("Path");
+
   PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
       std::shared_ptr<cs::core::SolarSystem> const&       pSolarSystem,
-      std::shared_ptr<cs::core::GraphicsEngine> const&    graphicsEngine,
+      std::shared_ptr<cs::core::Settings> const&          settings,
       std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
       std::string const& sFrame);
 
@@ -47,6 +50,12 @@ class PathTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointTool
   PathTool& operator=(PathTool&& other) = delete;
 
   ~PathTool() override;
+
+  /// Gets or sets the SPICE center name for all points.
+  void setCenterName(std::string const& name) override;
+
+  /// Gets or sets the SPICE frame name for all points.
+  void setFrameName(std::string const& name) override;
 
   /// Called from Tools class.
   void update() override;
@@ -82,14 +91,13 @@ class PathTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointTool
   VistaBufferObject      mVBO;
   VistaGLSLShader        mShader;
 
-  double mOriginalDistance = -1.0;
-
   std::vector<glm::dvec3> mSampledPositions;
-  size_t                  mIndexCount = 0;
+  size_t                  mIndexCount    = 0;
+  bool                    mVerticesDirty = false;
 
   int mScaleConnection = -1;
-
-  int mNumSamples = 256;
+  int mTextConnection  = -1;
+  int mNumSamples      = 256;
 
   static const char* SHADER_VERT;
   static const char* SHADER_FRAG;

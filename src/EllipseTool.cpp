@@ -6,8 +6,8 @@
 
 #include "EllipseTool.hpp"
 
-#include "../../../src/cs-core/GraphicsEngine.hpp"
 #include "../../../src/cs-core/GuiManager.hpp"
+#include "../../../src/cs-core/Settings.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-scene/CelestialAnchorNode.hpp"
 #include "../../../src/cs-utils/convert.hpp"
@@ -19,6 +19,8 @@
 #include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
 
 namespace csp::measurementtools {
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const char* EllipseTool::SHADER_VERT = R"(
 #version 330
@@ -37,38 +39,43 @@ void main()
 }
 )";
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 const char* EllipseTool::SHADER_FRAG = R"(
 #version 330
 
 in vec4 vPosition;
 
 uniform float uFarClip;
+uniform vec3 uColor;
 
 layout(location = 0) out vec4 oColor;
 
 void main()
 {
-    oColor = vec4(1.0);
+    oColor = vec4(uColor, 1.0);
    
     // linearize depth value
     gl_FragDepth = length(vPosition.xyz) / uFarClip;
 }
 )";
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     std::shared_ptr<cs::core::SolarSystem> const&                       pSolarSystem,
-    std::shared_ptr<cs::core::GraphicsEngine> const&                    graphicsEngine,
+    std::shared_ptr<cs::core::Settings> const&                          settings,
     std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
     std::string const& sFrame)
     : mSolarSystem(pSolarSystem)
-    , mGraphicsEngine(graphicsEngine)
-    , mCenterHandle(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
+    , mSettings(settings)
+    , mCenterHandle(pInputManager, pSolarSystem, settings, pTimeControl, sCenter, sFrame)
     , mAxes({glm::dvec3(pSolarSystem->getObserver().getAnchorScale(), 0.0, 0.0),
           glm::dvec3(0.0, pSolarSystem->getObserver().getAnchorScale(), 0.0)})
     , mHandles({std::make_unique<cs::core::tools::Mark>(
-                    pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame),
+                    pInputManager, pSolarSystem, settings, pTimeControl, sCenter, sFrame),
           std::make_unique<cs::core::tools::Mark>(
-              pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)}) {
+              pInputManager, pSolarSystem, settings, pTimeControl, sCenter, sFrame)}) {
 
   mShader.InitVertexShaderFromString(SHADER_VERT);
   mShader.InitFragmentShaderFromString(SHADER_FRAG);
@@ -92,9 +99,9 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
       mOpenGLNode.get(), static_cast<int>(cs::utils::DrawOrder::eOpaqueItems));
 
-  getCenterHandle().pLngLat.connect([this](glm::dvec2 const& /*lngLat*/) {
-    auto center = getCenterHandle().getAnchor()->getAnchorPosition();
-    auto radii  = cs::core::SolarSystem::getRadii(mAnchor->getCenterName());
+  mCenterHandle.pLngLat.connect([this](glm::dvec2 const& /*lngLat*/) {
+    auto center = mCenterHandle.getAnchor()->getAnchorPosition();
+    auto radii  = cs::core::SolarSystem::getRadii(mCenterHandle.getAnchor()->getCenterName());
 
     if (mFirstUpdate) {
       for (int i(0); i < 2; ++i) {
@@ -109,67 +116,127 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
     mAxes.at(0) = mHandles.at(0)->getAnchor()->getAnchorPosition() - center;
     mAxes.at(1) = mHandles.at(1)->getAnchor()->getAnchorPosition() - center;
 
-    calculateVertices();
+    mVerticesDirty = true;
   });
 
   for (int i(0); i < 2; ++i) {
     mHandleConnections.at(i) = mHandles.at(i)->pLngLat.connect([this, i](glm::dvec2 const& /*p*/) {
-      auto center = getCenterHandle().getAnchor()->getAnchorPosition();
-      mAxes.at(i) = mHandles.at(i)->getAnchor()->getAnchorPosition() - center;
-      calculateVertices();
+      auto center    = mCenterHandle.getAnchor()->getAnchorPosition();
+      mAxes.at(i)    = mHandles.at(i)->getAnchor()->getAnchorPosition() - center;
+      mVerticesDirty = true;
     });
   }
 
-  // whenever the height scale changes our vertex positions need to be updated
+  // Whenever the height scale changes our vertex positions need to be updated.
   mScaleConnection =
-      mGraphicsEngine->pHeightScale.connectAndTouch([this](float /*h*/) { calculateVertices(); });
+      mSettings->mGraphics.pHeightScale.connect([this](float /*h*/) { mVerticesDirty = true; });
 
+  // Delete the tool when the center handle is deleted.
   pShouldDelete.connectFrom(mCenterHandle.pShouldDelete);
+
+  // Adjust the color of all handles according to the tool's color.
+  mCenterHandle.pColor.connectFrom(pColor);
+  mHandles[0]->pColor.connectFrom(pColor);
+  mHandles[1]->pColor.connectFrom(pColor);
+
+  // Adjust the scaling of all handles according to the center handle's scaling.
+  mHandles[0]->pScaleDistance.connectFrom(mCenterHandle.pScaleDistance);
+  mHandles[1]->pScaleDistance.connectFrom(mCenterHandle.pScaleDistance);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 EllipseTool::~EllipseTool() {
   // disconnect slots
-  mGraphicsEngine->pHeightScale.disconnect(mScaleConnection);
+  mSettings->mGraphics.pHeightScale.disconnect(mScaleConnection);
 
   mSolarSystem->unregisterAnchor(mAnchor);
+  pShouldDelete.disconnect();
+  pColor.disconnectAll();
 
   auto* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
   pSG->GetRoot()->DisconnectChild(mOpenGLNode.get());
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void EllipseTool::setCenterName(std::string const& name) {
+  mCenterHandle.getAnchor()->setCenterName(name);
+  mHandles.at(0)->getAnchor()->setCenterName(name);
+  mHandles.at(1)->getAnchor()->setCenterName(name);
+  mAnchor->setCenterName(name);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+std::string const& EllipseTool::getCenterName() const {
+  return mAnchor->getCenterName();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void EllipseTool::setFrameName(std::string const& name) {
+  mCenterHandle.getAnchor()->setFrameName(name);
+  mHandles.at(0)->getAnchor()->setFrameName(name);
+  mHandles.at(1)->getAnchor()->setFrameName(name);
+  mAnchor->setFrameName(name);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+std::string const& EllipseTool::getFrameName() const {
+  return mAnchor->getFrameName();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 FlagTool const& EllipseTool::getCenterHandle() const {
   return mCenterHandle;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 cs::core::tools::Mark const& EllipseTool::getFirstHandle() const {
   return *mHandles.at(0);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 cs::core::tools::Mark const& EllipseTool::getSecondHandle() const {
   return *mHandles.at(1);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 FlagTool& EllipseTool::getCenterHandle() {
   return mCenterHandle;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 cs::core::tools::Mark& EllipseTool::getFirstHandle() {
   return *mHandles.at(0);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 cs::core::tools::Mark& EllipseTool::getSecondHandle() {
   return *mHandles.at(1);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void EllipseTool::setNumSamples(int const& numSamples) {
-  mNumSamples = numSamples;
+  mNumSamples    = numSamples;
+  mVerticesDirty = true;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void EllipseTool::calculateVertices() {
-  auto radii  = cs::core::SolarSystem::getRadii(mAnchor->getCenterName());
-  auto center = getCenterHandle().getAnchor()->getAnchorPosition();
-  auto normal =
-      cs::utils::convert::lngLatToNormal(getCenterHandle().pLngLat.get(), radii[0], radii[0]);
+  auto radii  = cs::core::SolarSystem::getRadii(mCenterHandle.getAnchor()->getCenterName());
+  auto center = mCenterHandle.getAnchor()->getAnchorPosition();
+  auto normal = cs::utils::convert::lngLatToNormal(mCenterHandle.pLngLat.get(), radii[0], radii[0]);
 
   mAnchor->setAnchorPosition(center);
 
@@ -188,7 +255,7 @@ void EllipseTool::calculateVertices() {
 
     double height = mSolarSystem->getBody(mCenterHandle.getAnchor()->getCenterName())
                         ->getHeight(lngLatHeight.xy());
-    height *= mGraphicsEngine->pHeightScale.get();
+    height *= mSettings->mGraphics.pHeightScale.get();
     absPosition = cs::utils::convert::toCartesian(lngLatHeight.xy(), radii[0], radii[0], height);
 
     vRelativePositions[i] = absPosition - center;
@@ -199,11 +266,20 @@ void EllipseTool::calculateVertices() {
   mVBO.Release();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void EllipseTool::update() {
   mCenterHandle.update();
   mHandles.at(0)->update();
   mHandles.at(1)->update();
+
+  if (mVerticesDirty) {
+    calculateVertices();
+    mVerticesDirty = false;
+  }
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool EllipseTool::Do() {
   glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_LINE_BIT);
@@ -228,6 +304,8 @@ bool EllipseTool::Do() {
   glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP.data());
 
   mShader.SetUniform(
+      mShader.GetUniformLocation("uColor"), pColor.get().r, pColor.get().g, pColor.get().b);
+  mShader.SetUniform(
       mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
 
   // draw the linestrip
@@ -239,6 +317,8 @@ bool EllipseTool::Do() {
   return true;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 bool EllipseTool::GetBoundingBox(VistaBoundingBox& bb) {
   std::array fMin{-0.1F, -0.1F, -0.1F};
   std::array fMax{0.1F, 0.1F, 0.1F};
@@ -246,4 +326,7 @@ bool EllipseTool::GetBoundingBox(VistaBoundingBox& bb) {
   bb.SetBounds(fMin.data(), fMax.data());
   return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 } // namespace csp::measurementtools

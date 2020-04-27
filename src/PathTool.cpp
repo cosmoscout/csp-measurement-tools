@@ -6,9 +6,9 @@
 
 #include "PathTool.hpp"
 
-#include "../../../src/cs-core/GraphicsEngine.hpp"
 #include "../../../src/cs-core/GuiManager.hpp"
 #include "../../../src/cs-core/InputManager.hpp"
+#include "../../../src/cs-core/Settings.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-core/TimeControl.hpp"
 #include "../../../src/cs-core/tools/DeletableMark.hpp"
@@ -49,13 +49,14 @@ const char* PathTool::SHADER_FRAG = R"(
 
 in vec4 vPosition;
 
+uniform vec3 uColor;
 uniform float uFarClip;
 
 layout(location = 0) out vec4 oColor;
 
 void main()
 {
-    oColor = vec4(1.0);
+    oColor = vec4(uColor, 1.0);
     gl_FragDepth = length(vPosition.xyz) / uFarClip;
 }
 )";
@@ -64,10 +65,10 @@ void main()
 
 PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     std::shared_ptr<cs::core::SolarSystem> const&                 pSolarSystem,
-    std::shared_ptr<cs::core::GraphicsEngine> const&              graphicsEngine,
+    std::shared_ptr<cs::core::Settings> const&                    settings,
     std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
     std::string const& sFrame)
-    : MultiPointTool(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
+    : MultiPointTool(pInputManager, pSolarSystem, settings, pTimeControl, sCenter, sFrame)
     , mGuiArea(std::make_unique<cs::gui::WorldSpaceGuiArea>(760, 475))
     , mGuiItem(std::make_unique<cs::gui::GuiItem>("file://../share/resources/gui/path.html")) {
 
@@ -123,19 +124,26 @@ PathTool::PathTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
       mGuiAnchor.get(), static_cast<int>(cs::utils::DrawOrder::eTransparentItems));
 
   // whenever the height scale changes our vertex positions need to be updated
-  mScaleConnection =
-      mGraphicsEngine->pHeightScale.connectAndTouch([this](float /*h*/) { updateLineVertices(); });
+  mScaleConnection = mSettings->mGraphics.pHeightScale.connectAndTouch(
+      [this](float /*h*/) { mVerticesDirty = true; });
 
-  // add one point initially
-  addPoint();
+  // Update text.
+  mTextConnection = pText.connectAndTouch(
+      [this](std::string const& value) { mGuiItem->callJavascript("setText", value); });
+
+  mGuiItem->registerCallback("onSetText",
+      "This is called whenever the text input of the tool's name changes.",
+      std::function(
+          [this](std::string&& value) { pText.setWithEmitForAllButOne(value, mTextConnection); }));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 PathTool::~PathTool() {
-  mGraphicsEngine->pHeightScale.disconnect(mScaleConnection);
+  mSettings->mGraphics.pHeightScale.disconnect(mScaleConnection);
   mGuiItem->unregisterCallback("deleteMe");
   mGuiItem->unregisterCallback("setAddPointMode");
+  mGuiItem->unregisterCallback("onSetText");
 
   mInputManager->unregisterSelectable(mGuiOpenGLNode.get());
   mSolarSystem->unregisterAnchor(mGuiAnchor);
@@ -143,8 +151,25 @@ PathTool::~PathTool() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void PathTool::setCenterName(std::string const& name) {
+  cs::core::tools::MultiPointTool::setCenterName(name);
+  mGuiAnchor->setCenterName(name);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void PathTool::setFrameName(std::string const& name) {
+  cs::core::tools::MultiPointTool::setFrameName(name);
+  mGuiAnchor->setFrameName(name);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void PathTool::setNumSamples(int const& numSamples) {
-  mNumSamples = numSamples;
+  if (mNumSamples != numSamples) {
+    mNumSamples    = numSamples;
+    mVerticesDirty = true;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -180,19 +205,19 @@ glm::dvec4 PathTool::getInterpolatedPosBetweenTwoMarks(cs::core::tools::Deletabl
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void PathTool::onPointMoved() {
-  updateLineVertices();
+  mVerticesDirty = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void PathTool::onPointAdded() {
-  updateLineVertices();
+  mVerticesDirty = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void PathTool::onPointRemoved(int /*index*/) {
-  updateLineVertices();
+  mVerticesDirty = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -212,7 +237,7 @@ void PathTool::updateLineVertices() {
     averagePosition += mark->getAnchor()->getAnchorPosition() / static_cast<double>(mPoints.size());
   }
 
-  double h_scale      = mGraphicsEngine->pHeightScale.get();
+  double h_scale      = mSettings->mGraphics.pHeightScale.get();
   auto   radii        = cs::core::SolarSystem::getRadii(getCenterName());
   auto   lngLatHeight = cs::utils::convert::toLngLatHeight(averagePosition, radii[0], radii[0]);
   double height       = body ? body->getHeight(lngLatHeight.xy()) * h_scale : 0.0;
@@ -222,10 +247,10 @@ void PathTool::updateLineVertices() {
 
   // This seems to be the first time the tool is moved, so we have to store the distance to the
   // observer so that we can scale the tool later based on the observer's position.
-  if (mOriginalDistance < 0) {
-    mOriginalDistance = mSolarSystem->getObserver().getAnchorScale() *
-                        glm::length(mSolarSystem->getObserver().getRelativePosition(
-                            mTimeControl->pSimulationTime.get(), *mGuiAnchor));
+  if (pScaleDistance.get() < 0) {
+    pScaleDistance = mSolarSystem->getObserver().getAnchorScale() *
+                     glm::length(mSolarSystem->getObserver().getRelativePosition(
+                         mTimeControl->pSimulationTime.get(), *mGuiAnchor));
   }
 
   auto lastMark = mPoints.begin();
@@ -284,10 +309,15 @@ void PathTool::updateLineVertices() {
 void PathTool::update() {
   MultiPointTool::update();
 
+  if (mVerticesDirty) {
+    updateLineVertices();
+    mVerticesDirty = false;
+  }
+
   double simulationTime(mTimeControl->pSimulationTime.get());
 
   cs::core::SolarSystem::scaleRelativeToObserver(*mGuiAnchor, mSolarSystem->getObserver(),
-      simulationTime, mOriginalDistance, mGraphicsEngine->pWidgetScale.get());
+      simulationTime, pScaleDistance.get(), mSettings->mGraphics.pWidgetScale.get());
   cs::core::SolarSystem::turnToObserver(
       *mGuiAnchor, mSolarSystem->getObserver(), simulationTime, false);
 }
@@ -335,6 +365,8 @@ bool PathTool::Do() {
   glUniformMatrix4fv(mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glMatMV.data());
   glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP.data());
 
+  mShader.SetUniform(
+      mShader.GetUniformLocation("uColor"), pColor.get().r, pColor.get().g, pColor.get().b);
   mShader.SetUniform(
       mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
 

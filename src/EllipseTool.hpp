@@ -17,9 +17,12 @@ namespace csp::measurementtools {
 /// points through which the edge has to go through.
 class EllipseTool : public IVistaOpenGLDraw, public cs::core::tools::Tool {
  public:
+  /// The ellipse and all handels are drawn with this color.
+  cs::utils::Property<glm::vec3> pColor = glm::vec3(0.75, 0.75, 1.0);
+
   EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
       std::shared_ptr<cs::core::SolarSystem> const&          pSolarSystem,
-      std::shared_ptr<cs::core::GraphicsEngine> const&       graphicsEngine,
+      std::shared_ptr<cs::core::Settings> const&             settings,
       std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
       std::string const& sFrame);
 
@@ -30,6 +33,14 @@ class EllipseTool : public IVistaOpenGLDraw, public cs::core::tools::Tool {
   EllipseTool& operator=(EllipseTool&& other) = delete;
 
   ~EllipseTool() override;
+
+  /// Gets or sets the SPICE center name for all three handles.
+  void               setCenterName(std::string const& name);
+  std::string const& getCenterName() const;
+
+  /// Gets or sets the SPICE frame name for all three handles.
+  void               setFrameName(std::string const& name);
+  std::string const& getFrameName() const;
 
   FlagTool const&              getCenterHandle() const;
   cs::core::tools::Mark const& getFirstHandle() const;
@@ -50,13 +61,14 @@ class EllipseTool : public IVistaOpenGLDraw, public cs::core::tools::Tool {
  private:
   void calculateVertices();
 
-  std::shared_ptr<cs::core::SolarSystem>    mSolarSystem;
-  std::shared_ptr<cs::core::GraphicsEngine> mGraphicsEngine;
-  std::shared_ptr<cs::core::TimeControl>    mTimeControl;
+  std::shared_ptr<cs::core::SolarSystem> mSolarSystem;
+  std::shared_ptr<cs::core::Settings>    mSettings;
+  std::shared_ptr<cs::core::TimeControl> mTimeControl;
 
   std::shared_ptr<cs::scene::CelestialAnchorNode> mAnchor;
 
-  bool mFirstUpdate = true;
+  bool mVerticesDirty = false;
+  bool mFirstUpdate   = true;
 
   FlagTool                                              mCenterHandle;
   std::array<glm::dvec3, 2>                             mAxes;

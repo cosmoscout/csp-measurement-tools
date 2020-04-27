@@ -34,9 +34,15 @@ namespace csp::measurementtools {
 /// displays the bounding box of the selected polygon, which can be copied for cache generator.
 class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointTool {
  public:
+  /// This text is shown on the ui and can be edited by the user.
+  cs::utils::Property<std::string> pText = std::string("Polygon");
+
+  /// Displays the generated mesh for area and volume computations.
+  cs::utils::Property<bool> pShowMesh = false;
+
   PolygonTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
       std::shared_ptr<cs::core::SolarSystem> const&          pSolarSystem,
-      std::shared_ptr<cs::core::GraphicsEngine> const&       graphicsEngine,
+      std::shared_ptr<cs::core::Settings> const&             settings,
       std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
       std::string const& sFrame);
 
@@ -48,6 +54,12 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
 
   ~PolygonTool() override;
 
+  // Gets or sets the SPICE center name for all points.
+  void setCenterName(std::string const& name) override;
+
+  /// Gets or sets the SPICE frame name for all points.
+  void setFrameName(std::string const& name) override;
+
   /// Called from Tools class
   void update() override;
 
@@ -55,10 +67,10 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
   bool Do() override;
   bool GetBoundingBox(VistaBoundingBox& bb) override;
 
-  void setHeightDiff(float const& hDiff);
-  void setMaxAttempt(int const& att);
-  void setMaxPoints(int const& points);
-  void setSleekness(int const& degree);
+  void setHeightDiff(float hDiff);
+  void setMaxAttempt(uint32_t att);
+  void setMaxPoints(uint32_t points);
+  void setSleekness(uint32_t degree);
 
  private:
   void updateLineVertices();
@@ -114,11 +126,11 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
   VistaBufferObject      mVBO2;
   VistaGLSLShader        mShader;
 
-  double mOriginalDistance = -1.0;
-
   std::vector<glm::dvec3> mSampledPositions;
-  size_t                  mIndexCount = 0;
+  size_t                  mIndexCount    = 0;
+  bool                    mVerticesDirty = false;
 
+  int mTextConnection  = -1;
   int mScaleConnection = -1;
 
   // minLng,maxLng,minLat,maxLat
@@ -130,7 +142,6 @@ class PolygonTool : public IVistaOpenGLDraw, public cs::core::tools::MultiPointT
   std::vector<glm::dvec3>        mTriangulation;
   glm::dvec3                     mNormal      = glm::dvec3(0.0);
   glm::dvec3                     mMiddlePoint = glm::dvec3(0.0);
-  bool                           mShowMesh    = false;
   size_t                         mIndexCount2 = 0;
 
   // For triangle fineness

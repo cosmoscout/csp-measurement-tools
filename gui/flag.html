@@ -171,6 +171,7 @@
     // entry point ---------------------------------------------------------
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip({ delay: 500, placement: "auto", html: false });
+      $(".text-input").on("input", () => window.callNative("onSetText", $(".text-input").val()));
     });
 
   </script>

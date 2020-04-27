@@ -6,9 +6,9 @@
 
 #include "FlagTool.hpp"
 
-#include "../../../src/cs-core/GraphicsEngine.hpp"
 #include "../../../src/cs-core/GuiManager.hpp"
 #include "../../../src/cs-core/InputManager.hpp"
+#include "../../../src/cs-core/Settings.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-core/TimeControl.hpp"
 #include "../../../src/cs-scene/CelestialAnchorNode.hpp"
@@ -25,10 +25,10 @@ namespace csp::measurementtools {
 
 FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     std::shared_ptr<cs::core::SolarSystem> const&                 pSolarSystem,
-    std::shared_ptr<cs::core::GraphicsEngine> const&              graphicsEngine,
+    std::shared_ptr<cs::core::Settings> const&                    settings,
     std::shared_ptr<cs::core::TimeControl> const& pTimeControl, std::string const& sCenter,
     std::string const& sFrame)
-    : Mark(pInputManager, pSolarSystem, graphicsEngine, pTimeControl, sCenter, sFrame)
+    : Mark(pInputManager, pSolarSystem, settings, pTimeControl, sCenter, sFrame)
     , mGuiArea(std::make_unique<cs::gui::WorldSpaceGuiArea>(420, 400))
     , mGuiItem(std::make_unique<cs::gui::GuiItem>("file://../share/resources/gui/flag.html")) {
   auto* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
@@ -53,7 +53,7 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
       std::function([this]() { pShouldDelete = true; }));
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 
-  // update text -------------------------------------------------------------
+  // Update text.
   mTextConnection = pText.connectAndTouch(
       [this](std::string const& value) { mGuiItem->callJavascript("setText", value); });
 
@@ -62,7 +62,7 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
       std::function(
           [this](std::string&& value) { pText.setWithEmitForAllButOne(value, mTextConnection); }));
 
-  // update position ---------------------------------------------------------
+  // Update position.
   pLngLat.connect([this](glm::dvec2 const& lngLat) {
     auto body = mSolarSystem->getBody(mAnchor->getCenterName());
     if (body) {
@@ -72,7 +72,7 @@ FlagTool::FlagTool(std::shared_ptr<cs::core::InputManager> const& pInputManager,
     }
   });
 
-  // update minimized state --------------------------------------------------
+  // Update minimized state.
   mDoubleClickConnection = mInputManager->sOnDoubleClick.connect([this]() {
     if (pHovered.get()) {
       pMinimized = !pMinimized.get();
@@ -102,10 +102,18 @@ FlagTool::~FlagTool() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void FlagTool::update() {
+  // This seems to be the first time the tool is updated, so we have to store the distance to the
+  // observer so that we can scale the tool later based on the observer's position.
+  if (pScaleDistance.get() < 0) {
+    pScaleDistance = mSolarSystem->getObserver().getAnchorScale() *
+                     glm::length(mSolarSystem->getObserver().getRelativePosition(
+                         mTimeControl->pSimulationTime.get(), *mAnchor));
+  }
+
   double simulationTime(mTimeControl->pSimulationTime.get());
 
   cs::core::SolarSystem::scaleRelativeToObserver(*mAnchor, mSolarSystem->getObserver(),
-      simulationTime, mOriginalDistance, mGraphicsEngine->pWidgetScale.get());
+      simulationTime, pScaleDistance.get(), mSettings->mGraphics.pWidgetScale.get());
   cs::core::SolarSystem::turnToObserver(
       *mAnchor, mSolarSystem->getObserver(), simulationTime, true);
 }
