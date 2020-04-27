@@ -155,9 +155,15 @@ DipStrikeTool::DipStrikeTool(std::shared_ptr<cs::core::InputManager> const& pInp
 
   mGuiItem->registerCallback("setSize", "Sets the size of the dip and strike plane.",
       std::function([this](double val) { pSize = static_cast<float>(val); }));
+  pSize.connectAndTouch([this](float value) {
+    mGuiItem->callJavascript("CosmoScout.gui.setSliderValue", "setSize", false, value);
+  });
 
   mGuiItem->registerCallback("setOpacity", "Sets the opacity of the dip and strike plane.",
       std::function([this](double val) { pOpacity = static_cast<float>(val); }));
+  pOpacity.connectAndTouch([this](float value) {
+    mGuiItem->callJavascript("CosmoScout.gui.setSliderValue", "setOpacity", false, value);
+  });
 
   mGuiItem->setCursorChangeCallback([](cs::gui::Cursor c) { cs::core::GuiManager::setCursor(c); });
 

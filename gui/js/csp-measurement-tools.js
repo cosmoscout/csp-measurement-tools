@@ -11,13 +11,6 @@
     name = 'measurementTools';
 
     /**
-     * @inheritDoc
-     */
-    init() {
-      CosmoScout.gui.initSlider('graphics.setWidgetScale', 0.2, 2.0, 0.01, [0.6]);
-    }
-
-    /**
      * TODO
      * @param name {string}
      * @param icon {string}
