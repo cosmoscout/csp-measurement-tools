@@ -97,7 +97,7 @@ EllipseTool::EllipseTool(std::shared_ptr<cs::core::InputManager> const& pInputMa
   mOpenGLNode.reset(pSG->NewOpenGLNode(mAnchor.get(), this));
 
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-      mOpenGLNode.get(), static_cast<int>(cs::utils::DrawOrder::eOpaqueItems));
+      mOpenGLNode.get(), static_cast<int>(cs::utils::DrawOrder::eOpaqueNonHDR));
 
   mCenterHandle.pLngLat.connect([this](glm::dvec2 const& /*lngLat*/) {
     auto center = mCenterHandle.getAnchor()->getAnchorPosition();
