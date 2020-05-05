@@ -208,26 +208,18 @@
 
 <body class="loaded" style="overflow: hidden">
   <div class="tool-body" style="width: 750px">
-    <div class="row">
-      <div class="col-9">
-        <input type='text' class='text-input' value='Path' />
-      </div>
-      <div class="row col-3">
-        <div class="col-6">
-          <a class="btn glass block" data-toggle="tooltip" title='Add new Points'
-            onclick="window.callNative('setAddPointMode', true)">
-            <i class=" material-icons">add</i>
-          </a>
-        </div>
-        <div class="col-6">
-          <a class="btn glass block" data-toggle="tooltip" title='Delete'
-            onclick="window.callNative('deleteMe')">
-            <i class=" material-icons">delete_forever</i>
-          </a>
-        </div>
-      </div>
-      <svg id="profile-line-chart"></svg>
+    <div class="d-flex mb-3">
+      <input type='text' class='text-input form-control flex-grow-1' value='Path' />
+      <a class="btn light-glass" data-toggle="tooltip" title='Add new Points'
+        onclick="window.callNative('setAddPointMode', true)">
+        <i class=" material-icons">add_circle</i>
+      </a>
+      <a class="btn light-glass" data-toggle="tooltip" title='Delete'
+        onclick="window.callNative('deleteMe')">
+        <i class=" material-icons">close</i>
+      </a>
     </div>
+    <svg id="profile-line-chart"></svg>
   </div>
 </body>
 

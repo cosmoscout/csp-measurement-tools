@@ -89,30 +89,20 @@
 
 <body style="overflow: hidden">
   <div class="tool-body" style="width: 580px">
-    <div class="row">
-      <div class="col-7">
-        <input type='text' class='text-input' value='Polygon' />
-      </div>
-      <div class="row col-5">
-        <div class="col-4">
-          <a class="btn glass block" data-toggle="tooltip" title='Show Delaunay-Triangulation mesh'
-            onclick="window.callNative('showMesh', true)">
-            <i class=" material-icons">ac_unit</i>
-          </a>
-        </div>
-        <div class="col-4">
-          <a class="btn glass block" data-toggle="tooltip" title='Add new Points'
-            onclick="window.callNative('setAddPointMode', true)">
-            <i class=" material-icons">add</i>
-          </a>
-        </div>
-        <div class="col-4">
-          <a class="btn glass block" data-toggle="tooltip" title='Delete'
-            onclick="window.callNative('deleteMe')">
-            <i class=" material-icons">delete_forever</i>
-          </a>
-        </div>
-      </div>
+    <div class="d-flex mb-3">
+      <input type='text' class='text-input form-control flex-grow-1' value='Polygon' />
+      <a class="btn light-glass" data-toggle="tooltip" title='Show Delaunay-Triangulation mesh'
+        onclick="window.callNative('showMesh', true)">
+        <i class=" material-icons">ac_unit</i>
+      </a>
+      <a class="btn light-glass" data-toggle="tooltip" title='Add new Points'
+        onclick="window.callNative('setAddPointMode', true)">
+        <i class=" material-icons">add_circle</i>
+      </a>
+      <a class="btn light-glass" data-toggle="tooltip" title='Delete'
+        onclick="window.callNative('deleteMe')">
+        <i class=" material-icons">close</i>
+      </a>
     </div>
 
     <div class="row">
