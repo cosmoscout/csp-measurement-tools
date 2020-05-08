@@ -5,7 +5,8 @@
   top: 0;
   font-size: 1.4rem;
   background-color: rgba(20, 20, 20, 0.5);
-  border: 5px solid var(--cs-border-color);
+  border: 3px solid var(--cs-border-color);
+  border-radius: 8px;
 }
 
 .tool-body.minimized {
